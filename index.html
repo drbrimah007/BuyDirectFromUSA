@@ -92,11 +92,13 @@
                 <div class="mt-5 grid gap-4 sm:grid-cols-2">
                   <div>
                     <label class="mb-2 block text-sm font-semibold text-slate-700">Request type</label>
-                    <select id="rfq-type" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900">
+                    <select id="rfq-type" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" onchange="updateRFQFields()">
                       <option value="product_sourcing">Product sourcing</option>
                       <option value="supplier_match">Supplier match</option>
                       <option value="private_label">Private label</option>
                       <option value="bulk_quote">Bulk quote request</option>
+                      <option value="distributor_search">Distributor search</option>
+                      <option value="compliance_help">Compliance help</option>
                     </select>
                   </div>
                   <div>
@@ -123,6 +125,9 @@
                     <label class="mb-2 block text-sm font-semibold text-slate-700">Your email</label>
                     <input id="rfq-email" type="email" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" placeholder="you@company.com" />
                   </div>
+                  <!-- Dynamic fields based on request type -->
+                  <div id="rfq-dynamic" class="sm:col-span-2 space-y-3" style="display:none;"></div>
+
                   <div class="sm:col-span-2">
                     <label class="mb-2 block text-sm font-semibold text-slate-700">Notes / special requirements</label>
                     <textarea id="rfq-notes" rows="2" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" placeholder="Any additional details..."></textarea>
@@ -480,6 +485,60 @@
     </div>
   <script type="module">
   import { submitRequest } from './js/requests.js';
+
+  // Dynamic RFQ fields based on request type
+  window.updateRFQFields = function() {
+    const type = document.getElementById('rfq-type').value;
+    const el = document.getElementById('rfq-dynamic');
+    const fields = {
+      private_label: `
+        <div><label class="mb-1 block text-sm font-semibold text-slate-700">Brand name</label>
+        <input id="rfq-brand" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="Your brand name"></div>
+        <div><label class="mb-1 block text-sm font-semibold text-slate-700">Label language</label>
+        <input id="rfq-lang" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="English, Arabic, French..."></div>
+        <div><label class="mb-1 block text-sm font-semibold text-slate-700">Artwork ready?</label>
+        <select id="rfq-artwork" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
+          <option>Yes — ready to send</option><option>No — need design help</option><option>Partially ready</option>
+        </select></div>`,
+      bulk_quote: `
+        <div><label class="mb-1 block text-sm font-semibold text-slate-700">Minimum order quantity</label>
+        <input id="rfq-moq" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="e.g. 500 units, 1 container"></div>
+        <div><label class="mb-1 block text-sm font-semibold text-slate-700">Delivery timeline</label>
+        <input id="rfq-timeline" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="e.g. Within 30 days"></div>
+        <div><label class="mb-1 block text-sm font-semibold text-slate-700">Budget range</label>
+        <input id="rfq-budget" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="e.g. $5,000 - $20,000"></div>`,
+      supplier_match: `
+        <div><label class="mb-1 block text-sm font-semibold text-slate-700">Target pricing</label>
+        <input id="rfq-pricing" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="e.g. $2-3 per unit"></div>
+        <div><label class="mb-1 block text-sm font-semibold text-slate-700">Required certifications</label>
+        <input id="rfq-certs" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="FDA, Halal, ISO..."></div>
+        <div><label class="mb-1 block text-sm font-semibold text-slate-700">Supplier type preference</label>
+        <select id="rfq-suptype" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
+          <option>Manufacturer</option><option>Distributor</option><option>Trading company</option><option>Any</option>
+        </select></div>`,
+      compliance_help: `
+        <div><label class="mb-1 block text-sm font-semibold text-slate-700">Documents already available</label>
+        <input id="rfq-docs" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="COO, Halal cert, FDA..."></div>
+        <div><label class="mb-1 block text-sm font-semibold text-slate-700">What help do you need?</label>
+        <select id="rfq-helptype" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
+          <option>Import documentation</option><option>Labeling requirements</option><option>Certification guidance</option><option>Full compliance review</option>
+        </select></div>`,
+      distributor_search: `
+        <div><label class="mb-1 block text-sm font-semibold text-slate-700">Distribution channels</label>
+        <select id="rfq-channel" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
+          <option>Retail</option><option>Wholesale</option><option>Online</option><option>Institutional</option><option>Multiple channels</option>
+        </select></div>
+        <div><label class="mb-1 block text-sm font-semibold text-slate-700">Territory size</label>
+        <input id="rfq-territory" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="National, regional, city..."></div>`
+    };
+    if (fields[type]) {
+      el.innerHTML = fields[type];
+      el.style.display = '';
+    } else {
+      el.innerHTML = '';
+      el.style.display = 'none';
+    }
+  };
 
   window.submitRFQ = async function() {
     const product = document.getElementById('rfq-product').value.trim();
