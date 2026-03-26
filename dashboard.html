@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuyDirectFromUSA — Operator Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+  .deal-card { transition: all 0.15s; }
+  .deal-card:hover { background: #f8fafc; }
+  .deal-card.active { background: #eff6ff; border-left: 3px solid #3b82f6; }
+  .tab-btn { transition: all 0.15s; }
+  .tab-btn.active { background: #0f172a; color: #fff; }
+  .status-pill { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.03em; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .fade-in { animation: fadeIn 0.2s ease; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+<!-- Top Bar -->
+<header class="border-b border-slate-200 bg-white">
+  <div class="flex items-center justify-between px-6 py-3">
+    <div class="flex items-center gap-4">
+      <div class="text-lg font-bold"><span class="text-slate-950">Buy</span><span class="bg-gradient-to-r from-blue-700 to-red-700 bg-clip-text text-transparent">DirectFromUSA</span></div>
+      <span class="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full font-medium">Operator Dashboard</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="user-name" class="text-sm font-medium text-slate-600"></span>
+      <button onclick="handleLogout()" class="text-sm text-slate-500 hover:text-slate-900">Sign Out</button>
+    </div>
+  </div>
+</header>
+
+<!-- Login (shown if not authenticated) -->
+<div id="login-screen" class="flex items-center justify-center min-h-[calc(100vh-52px)]">
+  <div class="bg-white rounded-2xl shadow-lg p-8 max-w-sm w-full mx-4">
+    <h2 class="text-xl font-bold mb-1">Operator Login</h2>
+    <p class="text-sm text-slate-500 mb-6">Sign in to manage sourcing requests</p>
+    <div class="mb-4"><label class="block text-sm font-semibold text-slate-600 mb-1">Email</label><input type="email" id="login-email" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm" placeholder="you@company.com"></div>
+    <div class="mb-4"><label class="block text-sm font-semibold text-slate-600 mb-1">Password</label><input type="password" id="login-pass" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm"></div>
+    <button onclick="handleLogin()" class="w-full bg-sky-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-sky-700">Sign In</button>
+    <p id="login-error" class="text-red-600 text-sm mt-3 hidden"></p>
+  </div>
+</div>
+
+<!-- Dashboard (shown after auth) -->
+<div id="dashboard" class="hidden">
+  <div class="flex h-[calc(100vh-52px)]">
+
+    <!-- LEFT: Pipeline -->
+    <div class="w-80 border-r border-slate-200 bg-white flex flex-col flex-shrink-0">
+      <!-- Pipeline tabs -->
+      <div class="p-3 border-b border-slate-200">
+        <div class="flex flex-wrap gap-1" id="pipeline-tabs"></div>
+      </div>
+      <!-- Deal list -->
+      <div class="flex-1 overflow-y-auto" id="deal-list">
+        <div class="p-4 text-center text-slate-400 text-sm">Loading...</div>
+      </div>
+      <!-- New deal button -->
+      <div class="p-3 border-t border-slate-200">
+        <button onclick="openNewDealModal()" class="w-full bg-sky-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-sky-700">+ New Request</button>
+      </div>
+    </div>
+
+    <!-- CENTER: Deal Detail -->
+    <div class="flex-1 overflow-y-auto" id="deal-detail">
+      <div class="flex items-center justify-center h-full text-slate-400">
+        <div class="text-center">
+          <div class="text-4xl mb-3">📋</div>
+          <p class="font-medium">Select a deal to view details</p>
+          <p class="text-sm mt-1">Or create a new sourcing request</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: AI Panel -->
+    <div class="w-80 border-l border-slate-200 bg-white flex flex-col flex-shrink-0">
+      <div class="p-4 border-b border-slate-200">
+        <h3 class="font-bold text-sm">AI Assistant</h3>
+        <p class="text-xs text-slate-500 mt-1">Suggestions for selected deal</p>
+      </div>
+      <div class="flex-1 overflow-y-auto p-4" id="ai-panel">
+        <div class="text-center text-slate-400 text-sm py-8">Select a deal to see AI suggestions</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal container -->
+<div id="modal-root"></div>
+
+<script type="module">
+import { supabase } from './js/supabase.js';
+import { listDeals, getDeal, createDeal, changeDealStatus, sendDealMessage, getDealMessages, getDealNotes, addDealNote, getDealSuppliers, matchSupplier, DEAL_STATUSES, STATUS_COLORS, URGENCY_COLORS } from './js/deals.js';
+import { listSuppliers, autoMatchSuppliers } from './js/suppliers.js';
+
+let currentUser = null;
+let currentDealId = null;
+let currentFilter = 'new';
+
+// ── Auth ──────────────────────────────────────────────────────────
+window.handleLogin = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.classList.add('hidden');
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+  if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); return; }
+  enterDashboard(data.user);
+};
+
+window.handleLogout = async function() {
+  await supabase.auth.signOut();
+  currentUser = null;
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+};
+
+async function enterDashboard(user) {
+  currentUser = user;
+  const { data: profile } = await supabase.from('users').select('display_name, role').eq('id', user.id).single();
+  document.getElementById('user-name').textContent = profile?.display_name || user.email;
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+  renderPipelineTabs();
+  loadDeals('new');
+}
+
+// ── Pipeline Tabs ─────────────────────────────────────────────────
+function renderPipelineTabs() {
+  const tabs = ['new','ai_reviewed','in_progress','awaiting_supplier','quote_ready','awaiting_client','negotiating','closed_won'];
+  const el = document.getElementById('pipeline-tabs');
+  el.innerHTML = tabs.map(s =>
+    `<button class="tab-btn text-xs px-3 py-1.5 rounded-lg font-medium ${s === currentFilter ? 'active' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}" onclick="filterDeals('${s}')">${DEAL_STATUSES[s] || s}</button>`
+  ).join('');
+}
+
+window.filterDeals = function(status) {
+  currentFilter = status;
+  renderPipelineTabs();
+  loadDeals(status);
+};
+
+// ── Load Deals ────────────────────────────────────────────────────
+async function loadDeals(status) {
+  const listEl = document.getElementById('deal-list');
+  listEl.innerHTML = '<div class="p-4 text-center text-slate-400 text-sm">Loading...</div>';
+  const deals = await listDeals({ status });
+  if (deals.length === 0) {
+    listEl.innerHTML = '<div class="p-6 text-center text-slate-400 text-sm">No deals in this stage</div>';
+    return;
+  }
+  listEl.innerHTML = deals.map(d => {
+    const urgColor = URGENCY_COLORS[d.urgency] || '#64748b';
+    const statusColor = STATUS_COLORS[d.status] || '#94a3b8';
+    return `<div class="deal-card px-4 py-3 border-b border-slate-100 cursor-pointer ${d.id === currentDealId ? 'active' : ''}" onclick="selectDeal('${d.id}')">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <p class="font-semibold text-sm truncate">${esc(d.product_needed || 'Untitled')}</p>
+          <p class="text-xs text-slate-500 truncate">${esc(d.client_name || d.client_email || '—')} ${d.client_company ? '· ' + esc(d.client_company) : ''}</p>
+        </div>
+        <span class="status-pill flex-shrink-0" style="background:${statusColor}15;color:${statusColor};">${d.urgency === 'urgent' ? '🔴 ' : ''}${DEAL_STATUSES[d.status] || d.status}</span>
+      </div>
+      <div class="flex items-center gap-3 mt-2 text-xs text-slate-400">
+        <span>${esc(d.country_name || d.target_country || '—')}</span>
+        <span>${esc(d.category_name || '—')}</span>
+        <span>${d.message_count || 0} msgs</span>
+        <span>${d.supplier_count || 0} suppliers</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Select Deal ───────────────────────────────────────────────────
+window.selectDeal = async function(id) {
+  currentDealId = id;
+  // Re-highlight in list
+  document.querySelectorAll('.deal-card').forEach(c => c.classList.toggle('active', c.onclick?.toString().includes(id)));
+  const d = await getDeal(id);
+  if (!d) return;
+  const messages = await getDealMessages(id);
+  const notes = await getDealNotes(id);
+  const suppliers = await getDealSuppliers(id);
+
+  const statusColor = STATUS_COLORS[d.status] || '#94a3b8';
+  const urgColor = URGENCY_COLORS[d.urgency] || '#64748b';
+
+  document.getElementById('deal-detail').innerHTML = `<div class="fade-in">
+    <!-- Header -->
+    <div class="p-6 border-b border-slate-200 bg-white">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold">${esc(d.product_needed || 'Untitled Request')}</h2>
+          <div class="flex items-center gap-3 mt-2 text-sm">
+            <span class="status-pill" style="background:${statusColor}15;color:${statusColor};">${DEAL_STATUSES[d.status]}</span>
+            <span class="status-pill" style="background:${urgColor}15;color:${urgColor};">${d.urgency}</span>
+            <span class="text-slate-500">${esc(d.request_type?.replace('_',' ') || '')}</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <select onchange="changeDealStatusUI('${d.id}', this.value)" class="text-sm border border-slate-200 rounded-lg px-3 py-1.5">
+            ${Object.entries(DEAL_STATUSES).map(([k,v]) => `<option value="${k}" ${k === d.status ? 'selected' : ''}>${v}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="border-b border-slate-200 bg-white px-6">
+      <div class="flex gap-6 text-sm font-medium">
+        <button class="py-3 border-b-2 border-sky-600 text-sky-700" onclick="showDealTab('overview','${d.id}')">Overview</button>
+        <button class="py-3 text-slate-500 hover:text-slate-900" onclick="showDealTab('messages','${d.id}')">Messages (${messages.length})</button>
+        <button class="py-3 text-slate-500 hover:text-slate-900" onclick="showDealTab('suppliers','${d.id}')">Suppliers (${suppliers.length})</button>
+        <button class="py-3 text-slate-500 hover:text-slate-900" onclick="showDealTab('notes','${d.id}')">Notes (${notes.length})</button>
+      </div>
+    </div>
+
+    <!-- Overview -->
+    <div class="p-6" id="deal-tab-content">
+      <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="bg-slate-50 rounded-xl p-4">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Client</p>
+          <p class="font-bold mt-1">${esc(d.client_name || '—')}</p>
+          <p class="text-sm text-slate-500">${esc(d.client_email || '')}</p>
+          ${d.client_company ? `<p class="text-sm text-slate-500">${esc(d.client_company)}</p>` : ''}
+        </div>
+        <div class="bg-slate-50 rounded-xl p-4">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Destination</p>
+          <p class="font-bold mt-1">${esc(d.country_name || d.target_country || '—')}</p>
+          <p class="text-sm text-slate-500">${esc(d.country_region || d.target_region || '')}</p>
+        </div>
+        <div class="bg-slate-50 rounded-xl p-4">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Category</p>
+          <p class="font-bold mt-1">${esc(d.category_name || '—')}</p>
+        </div>
+        <div class="bg-slate-50 rounded-xl p-4">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Quantity</p>
+          <p class="font-bold mt-1">${esc(d.quantity || '—')}</p>
+          ${d.packaging ? `<p class="text-sm text-slate-500">${esc(d.packaging)}</p>` : ''}
+        </div>
+        ${d.budget_range ? `<div class="bg-slate-50 rounded-xl p-4">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Budget</p>
+          <p class="font-bold mt-1">${esc(d.budget_range)}</p>
+        </div>` : ''}
+        ${d.certifications ? `<div class="bg-slate-50 rounded-xl p-4">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Certifications</p>
+          <p class="font-bold mt-1">${esc(d.certifications)}</p>
+        </div>` : ''}
+      </div>
+      ${d.special_notes ? `<div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+        <p class="text-xs font-semibold text-amber-700 uppercase mb-1">Special Notes</p>
+        <p class="text-sm">${esc(d.special_notes)}</p>
+      </div>` : ''}
+      ${d.private_label ? `<div class="bg-purple-50 border border-purple-200 rounded-xl p-3 mb-6 text-sm font-semibold text-purple-700">Private Label Requested</div>` : ''}
+      ${d.ai_summary ? `<div class="bg-sky-50 border border-sky-200 rounded-xl p-4">
+        <p class="text-xs font-semibold text-sky-700 uppercase mb-1">AI Summary</p>
+        <p class="text-sm">${esc(d.ai_summary)}</p>
+      </div>` : ''}
+    </div>
+  </div>`;
+
+  // AI Panel
+  renderAiPanel(d, suppliers);
+};
+
+// ── Deal Tabs ─────────────────────────────────────────────────────
+window.showDealTab = async function(tab, dealId) {
+  const el = document.getElementById('deal-tab-content');
+  if (!el) return;
+
+  if (tab === 'messages') {
+    const msgs = await getDealMessages(dealId);
+    el.innerHTML = `<div class="space-y-3">
+      ${msgs.map(m => `<div class="rounded-xl p-3 ${m.is_internal ? 'bg-amber-50 border border-amber-200' : m.is_ai_draft ? 'bg-sky-50 border border-sky-200' : 'bg-white border border-slate-200'}">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs font-semibold ${m.is_internal ? 'text-amber-700' : m.is_ai_draft ? 'text-sky-700' : 'text-slate-600'}">${esc(m.sender?.display_name || 'System')} ${m.is_internal ? '(Internal)' : m.is_ai_draft ? '(AI Draft)' : ''}</span>
+          <span class="text-xs text-slate-400">${new Date(m.created_at).toLocaleString()}</span>
+        </div>
+        <p class="text-sm">${esc(m.body)}</p>
+        ${m.is_ai_draft && !m.approved ? `<div class="flex gap-2 mt-2">
+          <button onclick="approveMsg('${m.id}')" class="text-xs bg-green-600 text-white px-3 py-1 rounded-lg font-semibold">Approve</button>
+          <button onclick="editMsg('${m.id}','${esc(m.body).replace(/'/g, "\\'")}')" class="text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-lg font-semibold">Edit</button>
+        </div>` : ''}
+      </div>`).join('') || '<p class="text-slate-400 text-sm">No messages yet.</p>'}
+      <div class="flex gap-2 mt-4">
+        <input type="text" id="msg-input" placeholder="Type a message..." class="flex-1 border border-slate-200 rounded-xl px-4 py-2 text-sm">
+        <button onclick="sendMsg('${dealId}')" class="bg-sky-600 text-white px-4 py-2 rounded-xl text-sm font-semibold">Send</button>
+        <button onclick="sendMsg('${dealId}', true)" class="bg-amber-500 text-white px-4 py-2 rounded-xl text-sm font-semibold" title="Internal note">Internal</button>
+      </div>
+    </div>`;
+  } else if (tab === 'suppliers') {
+    const suppliers = await getDealSuppliers(dealId);
+    el.innerHTML = `<div>
+      <div class="flex justify-between items-center mb-4">
+        <h4 class="font-bold text-sm">Matched Suppliers</h4>
+        <button onclick="openMatchSupplierModal('${dealId}')" class="bg-sky-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold">+ Match Supplier</button>
+      </div>
+      ${suppliers.map(ds => `<div class="border border-slate-200 rounded-xl p-3 mb-2">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="font-semibold text-sm">${esc(ds.supplier?.company_name || '—')}</p>
+            <p class="text-xs text-slate-500">${esc(ds.supplier?.contact_name || '')} ${ds.supplier?.verified ? '✓ Verified' : ''} ${ds.supplier?.preferred ? '⭐ Preferred' : ''}</p>
+          </div>
+          <span class="status-pill" style="background:#f1f5f9;color:#475569;">${ds.status}</span>
+        </div>
+      </div>`).join('') || '<p class="text-slate-400 text-sm">No suppliers matched yet.</p>'}
+    </div>`;
+  } else if (tab === 'notes') {
+    const notes = await getDealNotes(dealId);
+    el.innerHTML = `<div class="space-y-3">
+      ${notes.map(n => `<div class="border border-slate-200 rounded-xl p-3">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs font-semibold text-slate-600">${esc(n.user?.display_name || 'User')} <span class="text-slate-400 font-normal">${n.note_type !== 'general' ? '(' + n.note_type + ')' : ''}</span></span>
+          <span class="text-xs text-slate-400">${new Date(n.created_at).toLocaleString()}</span>
+        </div>
+        <p class="text-sm">${esc(n.body)}</p>
+      </div>`).join('') || '<p class="text-slate-400 text-sm">No notes yet.</p>'}
+      <div class="flex gap-2 mt-4">
+        <input type="text" id="note-input" placeholder="Add a note..." class="flex-1 border border-slate-200 rounded-xl px-4 py-2 text-sm">
+        <select id="note-type" class="border border-slate-200 rounded-xl px-3 py-2 text-xs">
+          <option value="general">General</option><option value="risk">Risk</option><option value="compliance">Compliance</option><option value="supplier">Supplier</option>
+        </select>
+        <button onclick="addNote('${dealId}')" class="bg-sky-600 text-white px-4 py-2 rounded-xl text-sm font-semibold">Add</button>
+      </div>
+    </div>`;
+  } else {
+    selectDeal(dealId); // re-render overview
+  }
+};
+
+// ── AI Panel ──────────────────────────────────────────────────────
+function renderAiPanel(deal, suppliers) {
+  const panel = document.getElementById('ai-panel');
+  panel.innerHTML = `<div class="fade-in space-y-4">
+    <div class="bg-sky-50 border border-sky-200 rounded-xl p-4">
+      <p class="text-xs font-semibold text-sky-700 uppercase mb-2">Request Summary</p>
+      <p class="text-sm"><strong>${esc(deal.product_needed)}</strong> for ${esc(deal.country_name || deal.target_country || 'unknown market')}</p>
+      <p class="text-xs text-slate-500 mt-1">Qty: ${esc(deal.quantity || '—')} · Pkg: ${esc(deal.packaging || '—')}</p>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-xl p-4">
+      <p class="text-xs font-semibold text-slate-600 uppercase mb-2">Suggested Actions</p>
+      <div class="space-y-2 text-sm">
+        ${deal.status === 'new' ? '<div class="bg-sky-50 rounded-lg p-2 text-sky-700">→ Review request and classify</div>' : ''}
+        ${suppliers.length === 0 ? '<div class="bg-amber-50 rounded-lg p-2 text-amber-700">→ Match suppliers to this request</div>' : ''}
+        ${deal.status === 'awaiting_supplier' ? '<div class="bg-purple-50 rounded-lg p-2 text-purple-700">→ Follow up with suppliers</div>' : ''}
+        ${deal.status === 'quote_ready' ? '<div class="bg-green-50 rounded-lg p-2 text-green-700">→ Send quote summary to client</div>' : ''}
+        <div class="bg-slate-50 rounded-lg p-2 text-slate-600">→ Add internal notes for context</div>
+      </div>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-xl p-4">
+      <p class="text-xs font-semibold text-slate-600 uppercase mb-2">Quick Draft</p>
+      <textarea id="ai-draft" rows="4" class="w-full border border-slate-200 rounded-lg p-3 text-sm" placeholder="AI would generate a draft response here..."></textarea>
+      <div class="flex gap-2 mt-2">
+        <button onclick="sendAiDraft('${deal.id}')" class="flex-1 bg-sky-600 text-white py-1.5 rounded-lg text-xs font-semibold">Send as Draft</button>
+        <button onclick="generateAiDraft('${deal.id}')" class="flex-1 bg-slate-200 text-slate-700 py-1.5 rounded-lg text-xs font-semibold">Generate</button>
+      </div>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-xl p-4">
+      <p class="text-xs font-semibold text-slate-600 uppercase mb-2">Matched Suppliers (${suppliers.length})</p>
+      ${suppliers.slice(0,3).map(s => `<div class="text-sm py-1 border-b border-slate-100 last:border-0">${esc(s.supplier?.company_name || '—')} <span class="text-xs text-slate-400">${s.status}</span></div>`).join('') || '<p class="text-xs text-slate-400">None yet</p>'}
+    </div>
+  </div>`;
+}
+
+// ── Action Handlers ───────────────────────────────────────────────
+window.changeDealStatusUI = async function(id, newStatus) {
+  await changeDealStatus(id, newStatus, currentUser.id);
+  loadDeals(currentFilter);
+  selectDeal(id);
+};
+
+window.sendMsg = async function(dealId, internal = false) {
+  const input = document.getElementById('msg-input');
+  const body = input?.value.trim();
+  if (!body) return;
+  await sendDealMessage(dealId, currentUser.id, { body, isInternal: internal, visibleTo: internal ? 'internal' : 'all' });
+  input.value = '';
+  showDealTab('messages', dealId);
+};
+
+window.addNote = async function(dealId) {
+  const body = document.getElementById('note-input')?.value.trim();
+  const type = document.getElementById('note-type')?.value || 'general';
+  if (!body) return;
+  await addDealNote(dealId, currentUser.id, body, type);
+  showDealTab('notes', dealId);
+};
+
+window.sendAiDraft = async function(dealId) {
+  const body = document.getElementById('ai-draft')?.value.trim();
+  if (!body) return;
+  await sendDealMessage(dealId, currentUser.id, { body, isAiDraft: true, visibleTo: 'internal' });
+  document.getElementById('ai-draft').value = '';
+  showDealTab('messages', dealId);
+};
+
+window.generateAiDraft = function(dealId) {
+  document.getElementById('ai-draft').value = 'Thank you for your sourcing request. We have reviewed your requirements and are currently matching you with suitable U.S. suppliers. We will provide a shortlist within 24-48 hours.\n\nPlease let us know if you have any additional specifications.';
+};
+
+// ── New Deal Modal ────────────────────────────────────────────────
+window.openNewDealModal = function() {
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onclick="if(event.target===this)closeModal()">
+    <div class="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <h3 class="text-lg font-bold mb-4">New Sourcing Request</h3>
+      <div class="space-y-3">
+        <div><label class="block text-sm font-semibold text-slate-600 mb-1">Client Name *</label><input id="nd-name" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm"></div>
+        <div><label class="block text-sm font-semibold text-slate-600 mb-1">Client Email *</label><input id="nd-email" type="email" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm"></div>
+        <div><label class="block text-sm font-semibold text-slate-600 mb-1">Product Needed *</label><input id="nd-product" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm" placeholder="Full cream milk powder"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-sm font-semibold text-slate-600 mb-1">Target Country</label><input id="nd-country" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm" placeholder="Saudi Arabia"></div>
+          <div><label class="block text-sm font-semibold text-slate-600 mb-1">Urgency</label><select id="nd-urgency" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm">
+            <option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option><option value="low">Low</option>
+          </select></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-sm font-semibold text-slate-600 mb-1">Quantity</label><input id="nd-qty" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm" placeholder="1 container"></div>
+          <div><label class="block text-sm font-semibold text-slate-600 mb-1">Packaging</label><input id="nd-pkg" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm" placeholder="25kg bags"></div>
+        </div>
+        <div><label class="block text-sm font-semibold text-slate-600 mb-1">Notes</label><textarea id="nd-notes" rows="2" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm"></textarea></div>
+      </div>
+      <div class="flex gap-2 mt-4 justify-end">
+        <button onclick="closeModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold">Cancel</button>
+        <button onclick="submitNewDeal()" class="px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-semibold">Create Deal</button>
+      </div>
+    </div>
+  </div>`;
+};
+
+window.closeModal = function() { document.getElementById('modal-root').innerHTML = ''; };
+
+window.submitNewDeal = async function() {
+  const name = document.getElementById('nd-name').value.trim();
+  const email = document.getElementById('nd-email').value.trim();
+  const product = document.getElementById('nd-product').value.trim();
+  if (!name || !email || !product) return alert('Name, email, and product required.');
+  await createDeal({
+    clientName: name, clientEmail: email, productNeeded: product,
+    targetCountry: document.getElementById('nd-country').value.trim(),
+    urgency: document.getElementById('nd-urgency').value,
+    quantity: document.getElementById('nd-qty').value.trim(),
+    packaging: document.getElementById('nd-pkg').value.trim(),
+    specialNotes: document.getElementById('nd-notes').value.trim()
+  });
+  closeModal();
+  loadDeals(currentFilter);
+};
+
+window.openMatchSupplierModal = async function(dealId) {
+  const suppliers = await listSuppliers({ verified: true });
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onclick="if(event.target===this)closeModal()">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <h3 class="text-lg font-bold mb-4">Match Supplier</h3>
+      ${suppliers.map(s => `<div class="flex justify-between items-center py-2 border-b border-slate-100">
+        <div><p class="font-semibold text-sm">${esc(s.company_name)}</p><p class="text-xs text-slate-500">${esc(s.contact_name || '')} ${s.verified ? '✓' : ''}</p></div>
+        <button onclick="doMatchSupplier('${dealId}','${s.id}')" class="bg-sky-600 text-white px-3 py-1 rounded-lg text-xs font-semibold">Match</button>
+      </div>`).join('') || '<p class="text-slate-400 text-sm">No suppliers available.</p>'}
+      <button onclick="closeModal()" class="mt-4 w-full py-2 border border-slate-200 rounded-xl text-sm font-semibold">Close</button>
+    </div>
+  </div>`;
+};
+
+window.doMatchSupplier = async function(dealId, supplierId) {
+  await matchSupplier(dealId, supplierId);
+  closeModal();
+  showDealTab('suppliers', dealId);
+};
+
+// ── Utils ─────────────────────────────────────────────────────────
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+// ── Auto-login ────────────────────────────────────────────────────
+const { data: { session } } = await supabase.auth.getSession();
+if (session?.user) enterDashboard(session.user);
+</script>
+</body>
+</html>
