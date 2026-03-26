@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuyDirectFromUSA — Client Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>body { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }</style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+<header class="border-b border-slate-200 bg-white">
+  <div class="flex items-center justify-between px-6 py-3 max-w-5xl mx-auto">
+    <div class="text-lg font-bold"><span class="text-slate-950">Buy</span><span class="bg-gradient-to-r from-blue-700 to-red-700 bg-clip-text text-transparent">DirectFromUSA</span></div>
+    <div class="flex items-center gap-3">
+      <span id="portal-user" class="text-sm font-medium text-slate-600"></span>
+      <button onclick="portalLogout()" class="text-sm text-slate-500 hover:text-slate-900">Sign Out</button>
+    </div>
+  </div>
+</header>
+
+<!-- Auth -->
+<div id="portal-login" class="flex items-center justify-center min-h-[calc(100vh-52px)]">
+  <div class="bg-white rounded-2xl shadow-lg p-8 max-w-sm w-full mx-4">
+    <h2 class="text-xl font-bold mb-1">Client Portal</h2>
+    <p class="text-sm text-slate-500 mb-6">Track your sourcing requests and quotes</p>
+    <div class="mb-3"><label class="block text-sm font-semibold text-slate-600 mb-1">Email</label><input type="email" id="p-email" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm"></div>
+    <div class="mb-3"><label class="block text-sm font-semibold text-slate-600 mb-1">Password</label><input type="password" id="p-pass" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm"></div>
+    <button onclick="portalLogin()" class="w-full bg-sky-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-sky-700 mb-3">Sign In</button>
+    <button onclick="portalSignup()" class="w-full border border-slate-200 text-slate-700 py-2.5 rounded-xl font-semibold text-sm hover:bg-slate-50">Create Account</button>
+    <p id="p-error" class="text-red-600 text-sm mt-3 hidden"></p>
+  </div>
+</div>
+
+<!-- Portal Content -->
+<div id="portal-content" class="hidden max-w-5xl mx-auto px-6 py-8">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold">My Sourcing Requests</h2>
+    <a href="index.html" class="bg-sky-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-sky-700">+ New Request</a>
+  </div>
+  <div id="requests-list"><p class="text-slate-400 text-sm">Loading...</p></div>
+</div>
+
+<script type="module">
+import { supabase } from './js/supabase.js';
+import { myRequests } from './js/requests.js';
+
+const STATUSES = {
+  new: { label: 'New', bg: '#ede9fe', color: '#6d28d9' },
+  ai_reviewed: { label: 'Reviewing', bg: '#e0e7ff', color: '#4338ca' },
+  in_progress: { label: 'In Progress', bg: '#dbeafe', color: '#1d4ed8' },
+  awaiting_supplier: { label: 'Finding Suppliers', bg: '#fef3c7', color: '#92400e' },
+  quote_ready: { label: 'Quote Ready', bg: '#d1fae5', color: '#065f46' },
+  awaiting_client: { label: 'Awaiting Your Reply', bg: '#cffafe', color: '#0e7490' },
+  negotiating: { label: 'Negotiating', bg: '#ffedd5', color: '#9a3412' },
+  closed_won: { label: 'Completed', bg: '#d1fae5', color: '#065f46' },
+  closed_lost: { label: 'Closed', bg: '#f1f5f9', color: '#64748b' }
+};
+
+let portalUser = null;
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+window.portalLogin = async function() {
+  const email = document.getElementById('p-email').value.trim();
+  const pass = document.getElementById('p-pass').value;
+  const err = document.getElementById('p-error');
+  err.classList.add('hidden');
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+  if (error) { err.textContent = error.message; err.classList.remove('hidden'); return; }
+  enterPortal(data.user);
+};
+
+window.portalSignup = async function() {
+  const email = document.getElementById('p-email').value.trim();
+  const pass = document.getElementById('p-pass').value;
+  const err = document.getElementById('p-error');
+  err.classList.add('hidden');
+  if (!email || !pass) { err.textContent = 'Email and password required'; err.classList.remove('hidden'); return; }
+  const { data, error } = await supabase.auth.signUp({ email, password: pass, options: { data: { display_name: email.split('@')[0] } } });
+  if (error) { err.textContent = error.message; err.classList.remove('hidden'); return; }
+  if (data.user) enterPortal(data.user);
+};
+
+window.portalLogout = async function() {
+  await supabase.auth.signOut();
+  portalUser = null;
+  document.getElementById('portal-content').classList.add('hidden');
+  document.getElementById('portal-login').classList.remove('hidden');
+};
+
+async function enterPortal(user) {
+  portalUser = user;
+  document.getElementById('portal-user').textContent = user.email;
+  document.getElementById('portal-login').classList.add('hidden');
+  document.getElementById('portal-content').classList.remove('hidden');
+  loadRequests();
+}
+
+async function loadRequests() {
+  const el = document.getElementById('requests-list');
+  const requests = await myRequests(portalUser.id);
+  if (requests.length === 0) {
+    el.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+      <p class="text-slate-500 mb-4">No requests yet. Submit your first sourcing request.</p>
+      <a href="index.html" class="bg-sky-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm inline-block hover:bg-sky-700">Submit Request</a>
+    </div>`;
+    return;
+  }
+  el.innerHTML = requests.map(r => {
+    const s = STATUSES[r.status] || STATUSES.new;
+    return `<div class="bg-white rounded-2xl border border-slate-200 p-5 mb-3 hover:shadow-sm transition">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h3 class="font-bold text-lg">${esc(r.product_needed)}</h3>
+          <p class="text-sm text-slate-500 mt-1">${esc(r.request_type?.replace('_', ' ') || '')} ${r.target_country ? '· ' + esc(r.target_country) : ''} ${r.category?.name ? '· ' + esc(r.category.name) : ''}</p>
+          <div class="flex gap-3 mt-2 text-xs text-slate-400">
+            ${r.quantity ? `<span>Qty: ${esc(r.quantity)}</span>` : ''}
+            ${r.packaging ? `<span>Pkg: ${esc(r.packaging)}</span>` : ''}
+            <span>${new Date(r.created_at).toLocaleDateString()}</span>
+          </div>
+        </div>
+        <span class="text-xs font-bold px-3 py-1 rounded-full flex-shrink-0" style="background:${s.bg};color:${s.color};">${s.label}</span>
+      </div>
+      ${r.special_notes ? `<div class="mt-3 bg-slate-50 rounded-xl p-3 text-sm text-slate-600">${esc(r.special_notes)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// Auto-login
+const { data: { session } } = await supabase.auth.getSession();
+if (session?.user) enterPortal(session.user);
+</script>
+</body>
+</html>
