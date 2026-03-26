@@ -76,22 +76,7 @@
               AI-assisted sourcing, verified suppliers, and concierge-style trade support for buyers, distributors, retailers, and importers looking for strong U.S. supply.
             </p>
 
-            <div class="mt-8 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur">
-              <div class="flex flex-col gap-3 lg:flex-row">
-                <input
-                  type="text"
-                  value="Full cream milk powder for Saudi Arabia"
-                  class="w-full rounded-2xl border border-white/10 bg-white px-5 py-4 text-base text-slate-900 outline-none ring-0"
-                  readonly
-                />
-                <button class="rounded-2xl bg-sky-600 px-6 py-4 text-base font-semibold text-white transition hover:bg-sky-700">Search</button>
-              </div>
-              <div class="mt-4 flex flex-wrap gap-2 text-sm">
-                <span class="rounded-full bg-white/10 px-3 py-2 text-slate-200">Find UAE-ready food products</span>
-                <span class="rounded-full bg-white/10 px-3 py-2 text-slate-200">Compare milk powder suppliers</span>
-                <span class="rounded-full bg-white/10 px-3 py-2 text-slate-200">What documents are needed for Saudi?</span>
-              </div>
-            </div>
+            <!-- Search bar moved to right column -->
 
             <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur">
               <div class="rounded-[1.5rem] bg-white p-5 text-slate-900">
@@ -161,42 +146,61 @@
             </div>
           </div>
 
-          <div class="rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur">
-            <div class="rounded-[1.5rem] bg-white p-5 text-slate-900">
-              <div class="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
-                <div>
-                  <p class="text-sm font-semibold text-sky-700">Live sourcing preview</p>
-                  <h3 class="mt-1 text-xl font-bold text-slate-950">Whole Milk Powder 26&#8211;28%</h3>
-                </div>
-                <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Saudi Ready</span>
+          <div class="space-y-6">
+            <!-- Search bar (moved from left) -->
+            <div class="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur">
+              <div class="flex flex-col gap-3 lg:flex-row">
+                <input
+                  type="text"
+                  placeholder="Pampers, milk powder, water filters..."
+                  class="w-full rounded-2xl border border-white/10 bg-white px-5 py-4 text-base text-slate-900 outline-none ring-0"
+                />
+                <button class="rounded-2xl bg-sky-600 px-6 py-4 text-base font-semibold text-white transition hover:bg-sky-700 whitespace-nowrap">Search</button>
               </div>
-
-              <div class="mt-4 grid gap-4 sm:grid-cols-2">
-                <div class="rounded-2xl bg-slate-50 p-4">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">MOQ</p>
-                  <p class="mt-2 text-lg font-bold">1 container</p>
-                </div>
-                <div class="rounded-2xl bg-slate-50 p-4">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Packaging</p>
-                  <p class="mt-2 text-lg font-bold">25kg bags</p>
-                </div>
-                <div class="rounded-2xl bg-slate-50 p-4">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Supplier</p>
-                  <p class="mt-2 text-lg font-bold">Verified U.S. Exporter</p>
-                </div>
-                <div class="rounded-2xl bg-slate-50 p-4">
-                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Documents</p>
-                  <p class="mt-2 text-lg font-bold">COO &bull; Label &bull; Halal</p>
-                </div>
+              <div class="mt-3 flex flex-wrap gap-2 text-sm">
+                <span class="rounded-full bg-white/10 px-3 py-2 text-slate-200 cursor-pointer hover:bg-white/20">Find UAE-ready food products</span>
+                <span class="rounded-full bg-white/10 px-3 py-2 text-slate-200 cursor-pointer hover:bg-white/20">Compare milk powder suppliers</span>
+                <span class="rounded-full bg-white/10 px-3 py-2 text-slate-200 cursor-pointer hover:bg-white/20">What documents are needed for Saudi?</span>
               </div>
+            </div>
 
-              <div class="mt-4 rounded-2xl border border-slate-200 p-4">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <p class="text-sm font-semibold text-slate-900">AI recommendation</p>
-                    <p class="mt-1 text-sm text-slate-600">Good fit for Saudi and UAE distributors. Verify Arabic labeling before RFQ.</p>
+            <!-- Featured Sourcing Opportunity (ad block) -->
+            <div class="rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur lg:sticky lg:top-24 h-fit">
+              <div class="rounded-[1.5rem] bg-slate-950 p-6 text-white">
+                <!-- Image -->
+                <div class="mb-4 overflow-hidden rounded-xl border border-white/10">
+                  <img src="tridentbubble.avif" alt="Trident Nanobubble System" class="w-full h-44 object-cover" />
+                </div>
+                <!-- Header -->
+                <div class="border-b border-white/10 pb-4">
+                  <p class="text-sm font-semibold text-sky-300">Featured Sourcing Opportunity</p>
+                  <h3 class="mt-1 text-2xl font-bold">Nanobubble Water Treatment System</h3>
+                  <p class="mt-2 text-sm text-slate-300">Advanced U.S. water technology for agriculture, aquaculture, and industrial treatment systems.</p>
+                </div>
+                <!-- Details -->
+                <div class="mt-5 space-y-3">
+                  <div class="rounded-2xl bg-white/5 p-4">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Applications</p>
+                    <p class="mt-1 text-sm">Water treatment &bull; Agriculture &bull; Fish farming &bull; Industrial use</p>
                   </div>
-                  <button class="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Request Quote</button>
+                  <div class="rounded-2xl bg-white/5 p-4">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Why it matters</p>
+                    <p class="mt-1 text-sm">Improves oxygen levels, reduces contaminants, and increases system efficiency.</p>
+                  </div>
+                  <div class="rounded-2xl bg-white/5 p-4">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Markets</p>
+                    <p class="mt-1 text-sm">GCC &bull; Africa &bull; Infrastructure projects &bull; Agriculture</p>
+                  </div>
+                </div>
+                <!-- Positioning -->
+                <div class="mt-5 rounded-2xl border border-white/10 p-4">
+                  <p class="text-sm font-semibold">Positioning</p>
+                  <p class="mt-2 text-sm text-slate-300">High-value U.S. equipment with strong margins and demand in water and agriculture sectors.</p>
+                </div>
+                <!-- CTA -->
+                <div class="mt-6 flex flex-col gap-3">
+                  <button class="w-full rounded-2xl bg-sky-600 px-5 py-3 font-semibold text-white shadow-lg shadow-sky-900/30 transition hover:bg-sky-700">Request Details</button>
+                  <button class="w-full rounded-2xl border border-white/20 px-5 py-3 font-semibold text-white transition hover:bg-white/10">Source Similar Products</button>
                 </div>
               </div>
             </div>
