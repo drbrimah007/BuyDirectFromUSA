@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BuyDirectFromUSA.com</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      .market-rotator {
+        position: relative;
+        display: inline-block;
+        width: 11ch;
+        height: 1.1em;
+        vertical-align: baseline;
+        overflow: hidden;
+      }
+      .market-rotator span {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        opacity: 0;
+        transform: translateY(100%);
+        animation: rotateMarkets 12s linear infinite;
+        white-space: nowrap;
+      }
+      .market-rotator span:nth-child(1) { animation-delay: 0s; }
+      .market-rotator span:nth-child(2) { animation-delay: 3s; }
+      .market-rotator span:nth-child(3) { animation-delay: 6s; }
+      .market-rotator span:nth-child(4) { animation-delay: 9s; }
+      @keyframes rotateMarkets {
+        0%, 100% { opacity: 0; transform: translateY(100%); }
+        8%, 22% { opacity: 1; transform: translateY(0); }
+        30% { opacity: 0; transform: translateY(-100%); }
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900">
+    <div class="min-h-screen">
+      <header class="border-b border-slate-200 bg-white/90 backdrop-blur">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+          <div>
+            <div class="text-xl font-bold tracking-tight text-slate-950">
+              <span class="text-slate-950">Buy</span><span class="bg-gradient-to-r from-blue-700 to-red-700 bg-clip-text text-transparent">DirectFromUSA</span><span class="text-blue-700">.com</span>
+            </div>
+            <div class="text-xs text-slate-500">AI-supported sourcing concierge for GCC, Africa, Europe, and worldwide buyers</div>
+          </div>
+          <nav class="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
+            <a href="#categories" class="transition hover:text-slate-950">Categories</a>
+            <a href="#products" class="transition hover:text-slate-950">Products</a>
+            <a href="#ai" class="transition hover:text-slate-950">AI Assistant</a>
+            <a href="#suppliers" class="transition hover:text-slate-950">Suppliers</a>
+          </nav>
+          <div class="flex items-center gap-3">
+            <button class="hidden rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm md:inline-flex">Sign In</button>
+            <button class="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700">Request Sourcing</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="relative overflow-hidden bg-slate-950 text-white">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(2,132,199,0.28),_transparent_35%),radial-gradient(circle_at_left,_rgba(16,185,129,0.16),_transparent_30%)]"></div>
+        <div class="relative mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-2 lg:px-8 lg:py-24">
+          <div>
+            <div class="inline-flex items-center rounded-full border border-sky-400/20 bg-white/5 px-4 py-2 text-sm font-medium text-sky-200">
+              Export-ready U.S. products &bull; sourcing concierge model &bull; sourcing pros since 2007
+            </div>
+            <h1 class="mt-6 max-w-4xl text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
+              <span class="block">Source U.S. Products</span>
+              <span class="mt-2 block">for <span class="text-sky-400 market-rotator"><span>GCC</span><span>Africa</span><span>Europe</span><span>Worldwide</span></span></span>
+            </h1>
+            <p class="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
+              AI-assisted sourcing, verified suppliers, and concierge-style trade support for buyers, distributors, retailers, and importers looking for strong U.S. supply.
+            </p>
+
+            <div class="mt-8 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur">
+              <div class="flex flex-col gap-3 lg:flex-row">
+                <input
+                  type="text"
+                  value="Full cream milk powder for Saudi Arabia"
+                  class="w-full rounded-2xl border border-white/10 bg-white px-5 py-4 text-base text-slate-900 outline-none ring-0"
+                  readonly
+                />
+                <button class="rounded-2xl bg-sky-600 px-6 py-4 text-base font-semibold text-white transition hover:bg-sky-700">Search</button>
+              </div>
+              <div class="mt-4 flex flex-wrap gap-2 text-sm">
+                <span class="rounded-full bg-white/10 px-3 py-2 text-slate-200">Find UAE-ready food products</span>
+                <span class="rounded-full bg-white/10 px-3 py-2 text-slate-200">Compare milk powder suppliers</span>
+                <span class="rounded-full bg-white/10 px-3 py-2 text-slate-200">What documents are needed for Saudi?</span>
+              </div>
+            </div>
+
+            <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur">
+              <div class="rounded-[1.5rem] bg-white p-5 text-slate-900">
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <p class="text-sm font-semibold text-sky-700">Dynamic request form</p>
+                    <h3 class="mt-1 text-xl font-bold text-slate-950">Request custom sourcing</h3>
+                    <p class="mt-2 text-sm text-slate-600">A smart RFQ preview that changes fields based on request type and destination market.</p>
+                  </div>
+                  <span class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">RFQ</span>
+                </div>
+
+                <div class="mt-5 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">Request type</label>
+                    <select class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900">
+                      <option>Product sourcing</option>
+                      <option>Supplier match</option>
+                      <option>Private label</option>
+                      <option>Bulk quote request</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">Target market</label>
+                    <select class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900">
+                      <option>Saudi Arabia</option>
+                      <option>UAE</option>
+                      <option>Kenya</option>
+                      <option>Ghana</option>
+                    </select>
+                  </div>
+                  <div class="sm:col-span-2">
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">Product needed</label>
+                    <input class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" value="Full cream milk powder" />
+                  </div>
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">Quantity / volume</label>
+                    <input class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" value="1 container per month" />
+                  </div>
+                  <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">Packaging / format</label>
+                    <input class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" value="25kg bags" />
+                  </div>
+                  <div class="sm:col-span-2 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
+                    Dynamic behavior example: if the user selects <strong>Private label</strong>, show branding, label language, and packaging design. If they select <strong>Bulk quote request</strong>, show MOQ, delivery timeline, and compliance fields.
+                  </div>
+                </div>
+
+                <div class="mt-5 flex flex-col gap-3 sm:flex-row">
+                  <button class="rounded-2xl bg-sky-600 px-6 py-3 font-semibold text-white shadow-lg shadow-sky-200">Submit Request</button>
+                  <button class="rounded-2xl border border-slate-300 px-6 py-3 font-semibold text-slate-800">Open Full RFQ</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+              <button class="rounded-2xl bg-sky-600 px-6 py-3 font-semibold text-white shadow-lg shadow-sky-900/30 transition hover:-translate-y-0.5 hover:bg-sky-700">Request Sourcing</button>
+              <button class="rounded-2xl border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10">Browse Products</button>
+            </div>
+
+            <div class="mt-8 flex flex-wrap gap-6 text-sm text-slate-300">
+              <div>&#10004; Verified suppliers</div>
+              <div>&#10004; RFQ workflow</div>
+              <div>&#10004; Market-specific guidance</div>
+              <div>&#10004; AI-assisted matching</div>
+              <div>&#10004; Sourcing concierge support</div>
+            </div>
+          </div>
+
+          <div class="rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur">
+            <div class="rounded-[1.5rem] bg-white p-5 text-slate-900">
+              <div class="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
+                <div>
+                  <p class="text-sm font-semibold text-sky-700">Live sourcing preview</p>
+                  <h3 class="mt-1 text-xl font-bold text-slate-950">Whole Milk Powder 26&#8211;28%</h3>
+                </div>
+                <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Saudi Ready</span>
+              </div>
+
+              <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                <div class="rounded-2xl bg-slate-50 p-4">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">MOQ</p>
+                  <p class="mt-2 text-lg font-bold">1 container</p>
+                </div>
+                <div class="rounded-2xl bg-slate-50 p-4">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Packaging</p>
+                  <p class="mt-2 text-lg font-bold">25kg bags</p>
+                </div>
+                <div class="rounded-2xl bg-slate-50 p-4">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Supplier</p>
+                  <p class="mt-2 text-lg font-bold">Verified U.S. Exporter</p>
+                </div>
+                <div class="rounded-2xl bg-slate-50 p-4">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Documents</p>
+                  <p class="mt-2 text-lg font-bold">COO &bull; Label &bull; Halal</p>
+                </div>
+              </div>
+
+              <div class="mt-4 rounded-2xl border border-slate-200 p-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm font-semibold text-slate-900">AI recommendation</p>
+                    <p class="mt-1 text-sm text-slate-600">Good fit for Saudi and UAE distributors. Verify Arabic labeling before RFQ.</p>
+                  </div>
+                  <button class="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Request Quote</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+        <div class="grid gap-6 md:grid-cols-3">
+          <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+            <div class="text-sm font-semibold text-sky-700">Find Products</div>
+            <h3 class="mt-3 text-2xl font-bold text-slate-950">Browse export-ready listings</h3>
+            <p class="mt-3 leading-7 text-slate-600">Explore U.S. products prepared for international buyers, with destination suitability and document visibility.</p>
+            <button class="mt-6 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-800">Browse Categories</button>
+          </div>
+          <div class="rounded-[2rem] border border-sky-200 bg-sky-50 p-8 shadow-sm">
+            <div class="text-sm font-semibold text-sky-700">Request Sourcing</div>
+            <h3 class="mt-3 text-2xl font-bold text-slate-950">Tell us what you need</h3>
+            <p class="mt-3 leading-7 text-slate-600">Submit your product, destination, and packaging requirements. We match you with relevant U.S. suppliers.</p>
+            <button class="mt-6 rounded-2xl bg-sky-600 px-5 py-3 font-semibold text-white shadow-lg shadow-sky-200">Submit RFQ</button>
+          </div>
+          <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+            <div class="text-sm font-semibold text-sky-700">Become a Supplier</div>
+            <h3 class="mt-3 text-2xl font-bold text-slate-950">Sell into GCC and global markets</h3>
+            <p class="mt-3 leading-7 text-slate-600">List your products, upload export documents, and connect with verified distributors and buyers.</p>
+            <button class="mt-6 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-800">Join as Supplier</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="categories" class="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+        <div class="flex items-end justify-between gap-6">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">Categories</p>
+            <h2 class="mt-3 text-4xl font-bold tracking-tight text-slate-950">Best things to source from the U.S.</h2>
+            <p class="mt-4 max-w-3xl text-lg text-slate-600">Lead with practical, repeat-buy categories that buyers actually move across borders: dairy ingredients, shelf-stable foods, feminine care, medical consumables, filters, and emergency-use products.</p>
+          </div>
+          <button class="hidden rounded-2xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 lg:block">View all categories</button>
+        </div>
+
+        <div class="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-5">
+          <div class="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <div class="h-40 rounded-[1.5rem] bg-[linear-gradient(135deg,#e0f2fe,#f8fafc)]"></div>
+            <h3 class="mt-5 text-xl font-bold">Dairy / Milk Powder</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-600">Container-based, spec-driven products with repeat distributor demand.</p>
+          </div>
+          <div class="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <div class="h-40 rounded-[1.5rem] bg-[linear-gradient(135deg,#ecfccb,#f8fafc)]"></div>
+            <h3 class="mt-5 text-xl font-bold">Shelf-Stable Foods</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-600">Tuna, oats, snack items, pantry goods, and packaged foods with longer shelf life.</p>
+          </div>
+          <div class="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <div class="h-40 rounded-[1.5rem] bg-[linear-gradient(135deg,#fde2e8,#f8fafc)]"></div>
+            <h3 class="mt-5 text-xl font-bold">Feminine Care &amp; Personal Care</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-600">Pads, liners, wipes, and beauty/personal care lines where U.S. branding can carry value.</p>
+          </div>
+          <div class="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <div class="h-40 rounded-[1.5rem] bg-[linear-gradient(135deg,#dbeafe,#f8fafc)]"></div>
+            <h3 class="mt-5 text-xl font-bold">Medical Consumables</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-600">Practical consumables, gloves, disposables, and support products with clearer buying cycles.</p>
+          </div>
+          <div class="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <div class="h-40 rounded-[1.5rem] bg-[linear-gradient(135deg,#ccfbf1,#f8fafc)]"></div>
+            <h3 class="mt-5 text-xl font-bold">Water, Filters &amp; Emergency Supply</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-600">Filtration, infrastructure, and emergency-use products where reliability matters more than novelty.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="products" class="bg-white py-16">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+          <div class="flex items-end justify-between gap-6">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">Featured sourcing opportunities</p>
+              <h2 class="mt-3 text-4xl font-bold tracking-tight text-slate-950">What buyers actually come looking for</h2>
+              <p class="mt-4 max-w-3xl text-lg text-slate-600">Use the front page to feature the strongest, most sourceable products&#8212;not random catalog filler. Highlight what moves volume, solves a real import need, or gives buyers a reason to ask for concierge support.</p>
+            </div>
+            <button class="hidden rounded-2xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 lg:block">Browse all products</button>
+          </div>
+
+          <div class="mt-10 grid gap-6 lg:grid-cols-4">
+            <div class="rounded-[2rem] border border-slate-200 p-6 shadow-sm">
+              <div class="flex items-center justify-between gap-4">
+                <h3 class="text-xl font-bold">Full Cream Milk Powder</h3>
+                <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">High Demand</span>
+              </div>
+              <p class="mt-4 text-sm text-slate-600">MOQ: 1 container &bull; Markets: UAE, Saudi &bull; Docs: Available</p>
+              <button class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
+            </div>
+            <div class="rounded-[2rem] border border-slate-200 p-6 shadow-sm">
+              <div class="flex items-center justify-between gap-4">
+                <h3 class="text-xl font-bold">Shelf-Stable Tuna Packs</h3>
+                <span class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">Repeat Buy</span>
+              </div>
+              <p class="mt-4 text-sm text-slate-600">MOQ: Pallet+ &bull; Markets: GCC, Africa &bull; Docs: Labeling Support</p>
+              <button class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
+            </div>
+            <div class="rounded-[2rem] border border-slate-200 p-6 shadow-sm">
+              <div class="flex items-center justify-between gap-4">
+                <h3 class="text-xl font-bold">Feminine Care Packs</h3>
+                <span class="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">Consumer Category</span>
+              </div>
+              <p class="mt-4 text-sm text-slate-600">Pads, liners, wipes &bull; Private label or branded &bull; Good retail potential</p>
+              <button class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
+            </div>
+            <div class="rounded-[2rem] border border-slate-200 p-6 shadow-sm">
+              <div class="flex items-center justify-between gap-4">
+                <h3 class="text-xl font-bold">Industrial Water Filters</h3>
+                <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Project Supply</span>
+              </div>
+              <p class="mt-4 text-sm text-slate-600">MOQ: Project-based &bull; Markets: UAE, Qatar, Africa &bull; Docs: On Request</p>
+              <button class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+        <div class="grid gap-8 lg:grid-cols-2">
+          <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">Business model</p>
+            <h2 class="mt-3 text-3xl font-bold tracking-tight text-slate-950">This should be a sourcing concierge, not just a catalog</h2>
+            <p class="mt-4 text-lg leading-8 text-slate-600">The strongest model is to use the homepage to showcase the best sourceable products, then drive buyers into RFQs, private sourcing requests, and supplier matching. The site should feel like a trade desk with AI support, not a random product directory.</p>
+            <ul class="mt-6 space-y-3 text-sm text-slate-700">
+              <li>&bull; Public front page shows best opportunities and trust signals</li>
+              <li>&bull; RFQ and private sourcing bring in serious buyers</li>
+              <li>&bull; Concierge layer helps with spec matching, docs, and supplier introductions</li>
+              <li>&bull; Revenue can come from supplier subscriptions, sourcing fees, and closed-deal commissions</li>
+            </ul>
+          </div>
+          <div class="rounded-[2rem] border border-slate-200 bg-slate-950 p-8 text-white shadow-sm">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-300">Concierge sourcing</p>
+            <h2 class="mt-3 text-3xl font-bold tracking-tight">Help buyers get what they actually need</h2>
+            <p class="mt-4 text-lg leading-8 text-slate-300">Make the concierge offer explicit: tell buyers you can source hard-to-find items, compare suppliers, review documentation, and help shape a quote request before they waste time.</p>
+            <div class="mt-6 grid gap-3 sm:grid-cols-2">
+              <div class="rounded-2xl bg-white/5 p-4">Custom sourcing requests</div>
+              <div class="rounded-2xl bg-white/5 p-4">Distributor matching</div>
+              <div class="rounded-2xl bg-white/5 p-4">Compliance guidance</div>
+              <div class="rounded-2xl bg-white/5 p-4">Quote comparison support</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="ai" class="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+        <div class="grid gap-8 lg:grid-cols-2">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">AI Assistant</p>
+            <h2 class="mt-3 text-4xl font-bold tracking-tight text-slate-950">AI-assisted sourcing and concierge guidance</h2>
+            <p class="mt-4 max-w-xl text-lg text-slate-600">Use AI to narrow suppliers, compare product suitability, and identify documentation or destination issues before sending requests.</p>
+            <div class="mt-6 space-y-3 text-sm text-slate-700">
+              <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200">Can this product ship to Saudi Arabia?</div>
+              <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200">Which suppliers match this RFQ?</div>
+              <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200">What documents are missing for UAE?</div>
+              <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200">Compare three milk powder suppliers for GCC distribution.</div>
+            </div>
+          </div>
+          <div class="rounded-[2rem] border border-slate-200 bg-slate-950 p-5 shadow-xl">
+            <div class="rounded-[1.5rem] bg-slate-900 p-5 text-white">
+              <div class="rounded-2xl bg-white/5 p-4 text-sm text-slate-200">
+                Find U.S. suppliers for feminine care packs for Nairobi retail, private label options, and mixed-carton shipment support.
+              </div>
+              <div class="mt-4 rounded-2xl bg-sky-500/10 p-4 text-sm text-sky-100 ring-1 ring-sky-400/20">
+                Recommended next step: shortlist verified suppliers, confirm destination labeling requirements, and open a concierge-assisted RFQ.
+              </div>
+              <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                <div class="rounded-2xl bg-white/5 p-4">
+                  <p class="text-xs uppercase tracking-wide text-slate-400">Best market fit</p>
+                  <p class="mt-2 font-semibold">GCC &bull; Africa</p>
+                </div>
+                <div class="rounded-2xl bg-white/5 p-4">
+                  <p class="text-xs uppercase tracking-wide text-slate-400">Risk flag</p>
+                  <p class="mt-2 font-semibold">Verify labeling</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-slate-950 py-16 text-white">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+          <div class="grid gap-10 lg:grid-cols-3">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-300">How it works</p>
+              <h2 class="mt-3 text-4xl font-bold tracking-tight">Built for serious international sourcing</h2>
+            </div>
+            <div class="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+              <div class="text-sm font-semibold text-sky-300">01</div>
+              <h3 class="mt-3 text-xl font-bold">Submit your requirement</h3>
+              <p class="mt-3 text-slate-300">Tell us the product, destination, packaging, and volume you need.</p>
+            </div>
+            <div class="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+              <div class="text-sm font-semibold text-sky-300">02</div>
+              <h3 class="mt-3 text-xl font-bold">Get matched</h3>
+              <p class="mt-3 text-slate-300">We connect your request with suitable U.S. suppliers and export-ready offers.</p>
+            </div>
+          </div>
+          <div class="mt-6 grid gap-6 lg:grid-cols-3">
+            <div class="rounded-[2rem] border border-white/10 bg-white/5 p-6 lg:col-start-2">
+              <div class="text-sm font-semibold text-sky-300">03</div>
+              <h3 class="mt-3 text-xl font-bold">Review quotes and proceed</h3>
+              <p class="mt-3 text-slate-300">Move into pricing, documents, and supplier communication with fewer blind spots.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="suppliers" class="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+        <div class="rounded-[2rem] bg-gradient-to-r from-sky-600 to-cyan-500 px-8 py-12 text-white shadow-2xl">
+          <div class="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p class="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">For suppliers</p>
+              <h2 class="mt-3 text-4xl font-bold tracking-tight">Sell to GCC, Africa, Europe, and global buyers</h2>
+              <p class="mt-4 max-w-2xl text-lg text-white/90">List your products, upload export documents, and connect with buyers looking for U.S. supply.</p>
+            </div>
+            <div class="flex flex-col gap-3 sm:flex-row">
+              <button class="rounded-2xl bg-white px-6 py-3 font-semibold text-sky-700 shadow-lg">List Your Products</button>
+              <button class="rounded-2xl border border-white/40 px-6 py-3 font-semibold text-white">Talk to Sales</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="border-t border-slate-200 bg-white py-10">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+          <div class="flex flex-col items-center justify-between gap-6 md:flex-row">
+            <div>
+              <div class="text-lg font-bold tracking-tight">
+                <span class="text-slate-950">Buy</span><span class="bg-gradient-to-r from-blue-700 to-red-700 bg-clip-text text-transparent">DirectFromUSA</span><span class="text-blue-700">.com</span>
+              </div>
+              <p class="mt-1 text-sm text-slate-500">AI-supported sourcing concierge for international buyers</p>
+            </div>
+            <div class="flex gap-8 text-sm text-slate-500">
+              <a href="#" class="hover:text-slate-900">About</a>
+              <a href="#" class="hover:text-slate-900">For Suppliers</a>
+              <a href="#" class="hover:text-slate-900">Privacy</a>
+              <a href="#" class="hover:text-slate-900">Terms</a>
+              <a href="#" class="hover:text-slate-900">Contact</a>
+            </div>
+          </div>
+          <p class="mt-6 text-center text-xs text-slate-400">&copy; 2026 BuyDirectFromUSA.com. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
