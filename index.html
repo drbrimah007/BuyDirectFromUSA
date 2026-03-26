@@ -92,43 +92,48 @@
                 <div class="mt-5 grid gap-4 sm:grid-cols-2">
                   <div>
                     <label class="mb-2 block text-sm font-semibold text-slate-700">Request type</label>
-                    <select class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900">
-                      <option>Product sourcing</option>
-                      <option>Supplier match</option>
-                      <option>Private label</option>
-                      <option>Bulk quote request</option>
+                    <select id="rfq-type" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900">
+                      <option value="product_sourcing">Product sourcing</option>
+                      <option value="supplier_match">Supplier match</option>
+                      <option value="private_label">Private label</option>
+                      <option value="bulk_quote">Bulk quote request</option>
                     </select>
                   </div>
                   <div>
                     <label class="mb-2 block text-sm font-semibold text-slate-700">Target market</label>
-                    <select class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900">
-                      <option>Saudi Arabia</option>
-                      <option>UAE</option>
-                      <option>Kenya</option>
-                      <option>Ghana</option>
-                    </select>
+                    <input id="rfq-country" type="text" placeholder="Type any country..." class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" value="" />
                   </div>
                   <div class="sm:col-span-2">
                     <label class="mb-2 block text-sm font-semibold text-slate-700">Product needed</label>
-                    <input class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" value="Full cream milk powder" />
+                    <input id="rfq-product" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" placeholder="Full cream milk powder" />
                   </div>
                   <div>
                     <label class="mb-2 block text-sm font-semibold text-slate-700">Quantity / volume</label>
-                    <input class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" value="1 container per month" />
+                    <input id="rfq-qty" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" placeholder="1 container per month" />
                   </div>
                   <div>
                     <label class="mb-2 block text-sm font-semibold text-slate-700">Packaging / format</label>
-                    <input class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" value="25kg bags" />
+                    <input id="rfq-pkg" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" placeholder="25kg bags" />
                   </div>
-                  <div class="sm:col-span-2 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
-                    Dynamic behavior example: if the user selects <strong>Private label</strong>, show branding, label language, and packaging design. If they select <strong>Bulk quote request</strong>, show MOQ, delivery timeline, and compliance fields.
+                  <div class="sm:col-span-2">
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">Your name</label>
+                    <input id="rfq-name" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" placeholder="Your full name" />
+                  </div>
+                  <div class="sm:col-span-2">
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">Your email</label>
+                    <input id="rfq-email" type="email" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" placeholder="you@company.com" />
+                  </div>
+                  <div class="sm:col-span-2">
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">Notes / special requirements</label>
+                    <textarea id="rfq-notes" rows="2" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" placeholder="Any additional details..."></textarea>
                   </div>
                 </div>
 
                 <div class="mt-5 flex flex-col gap-3 sm:flex-row">
-                  <button class="rounded-2xl bg-sky-600 px-6 py-3 font-semibold text-white shadow-lg shadow-sky-200">Submit Request</button>
+                  <button id="rfq-submit-btn" onclick="submitRFQ()" class="rounded-2xl bg-sky-600 px-6 py-3 font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700">Submit Request</button>
                   <button class="rounded-2xl border border-slate-300 px-6 py-3 font-semibold text-slate-800">Open Full RFQ</button>
                 </div>
+                <div id="rfq-status" class="mt-3 text-sm hidden"></div>
               </div>
             </div>
 
@@ -473,5 +478,47 @@
         </div>
       </footer>
     </div>
+  <script type="module">
+  import { submitRequest } from './js/requests.js';
+
+  window.submitRFQ = async function() {
+    const product = document.getElementById('rfq-product').value.trim();
+    const name = document.getElementById('rfq-name').value.trim();
+    const email = document.getElementById('rfq-email').value.trim();
+    const status = document.getElementById('rfq-status');
+    const btn = document.getElementById('rfq-submit-btn');
+
+    if (!product) { status.textContent = 'Please enter the product needed.'; status.className = 'mt-3 text-sm text-red-600'; status.classList.remove('hidden'); return; }
+    if (!name || !email) { status.textContent = 'Please enter your name and email.'; status.className = 'mt-3 text-sm text-red-600'; status.classList.remove('hidden'); return; }
+
+    btn.disabled = true; btn.textContent = 'Submitting...';
+    status.classList.add('hidden');
+
+    const result = await submitRequest({
+      clientName: name,
+      clientEmail: email,
+      productNeeded: product,
+      requestType: document.getElementById('rfq-type').value,
+      targetCountry: document.getElementById('rfq-country').value.trim(),
+      quantity: document.getElementById('rfq-qty').value.trim(),
+      packaging: document.getElementById('rfq-pkg').value.trim(),
+      specialNotes: document.getElementById('rfq-notes').value.trim()
+    });
+
+    if (result.error) {
+      status.textContent = 'Error: ' + result.error;
+      status.className = 'mt-3 text-sm text-red-600';
+      btn.disabled = false; btn.textContent = 'Submit Request';
+    } else {
+      status.innerHTML = '<strong>Request submitted!</strong> Our sourcing team will review your requirements and get back to you within 24-48 hours.';
+      status.className = 'mt-3 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl p-3';
+      btn.textContent = 'Submitted';
+      // Clear form
+      ['rfq-product','rfq-qty','rfq-pkg','rfq-name','rfq-email','rfq-notes','rfq-country'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      setTimeout(() => { btn.disabled = false; btn.textContent = 'Submit Request'; }, 5000);
+    }
+    status.classList.remove('hidden');
+  };
+  </script>
   </body>
 </html>
