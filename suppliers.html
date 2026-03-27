@@ -165,6 +165,7 @@ window.doAddSupplier = async function() {
     website: document.getElementById('ns-web').value.trim(),
     moqRange: document.getElementById('ns-moq').value.trim(),
     privateLabel: document.getElementById('ns-pl').checked,
+    exportReady: document.getElementById('ns-export').checked,
     notes: document.getElementById('ns-notes').value.trim()
   });
   closeModal();

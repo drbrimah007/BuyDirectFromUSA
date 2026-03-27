@@ -101,7 +101,7 @@
 
 <script type="module">
 import { supabase } from './js/supabase.js';
-import { listDeals, getDeal, createDeal, changeDealStatus, sendDealMessage, getDealMessages, getDealNotes, addDealNote, getDealSuppliers, matchSupplier, DEAL_STATUSES, STATUS_COLORS, URGENCY_COLORS } from './js/deals.js';
+import { listDeals, getDeal, createDeal, changeDealStatus, sendDealMessage, getDealMessages, getDealNotes, addDealNote, getDealSuppliers, matchSupplier, approveAiDraft, DEAL_STATUSES, STATUS_COLORS, URGENCY_COLORS } from './js/deals.js';
 import { listSuppliers, autoMatchSuppliers } from './js/suppliers.js';
 
 let currentUser = null;
@@ -476,6 +476,20 @@ window.doMatchSupplier = async function(dealId, supplierId) {
   await matchSupplier(dealId, supplierId);
   closeModal();
   showDealTab('suppliers', dealId);
+};
+
+window.approveMsg = async function(messageId) {
+  if (!currentUser) return;
+  await approveAiDraft(messageId, currentUser.id);
+  if (currentDealId) showDealTab('messages', currentDealId);
+};
+
+window.editMsg = async function(messageId, body) {
+  const newBody = prompt('Edit message:', body);
+  if (!newBody || newBody === body) return;
+  const { error } = await supabase.from('deal_messages').update({ body: newBody }).eq('id', messageId);
+  if (error) { alert('Failed to update message.'); return; }
+  if (currentDealId) showDealTab('messages', currentDealId);
 };
 
 // ── Utils ─────────────────────────────────────────────────────────

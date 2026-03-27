@@ -7,8 +7,14 @@ export async function submitRequest({
   requestType = 'product_sourcing', productNeeded, categorySlug = '',
   targetCountry = '', targetRegion = '', quantity = '', packaging = '',
   urgency = 'normal', budgetRange = '', privateLabel = false,
-  certifications = '', specialNotes = ''
+  certifications = '', specialNotes = '', dynamicData = {}
 }) {
+  // Append dynamic form fields to special notes if present
+  const dynamicEntries = Object.entries(dynamicData).filter(([,v]) => v);
+  if (dynamicEntries.length > 0) {
+    const dynamicText = dynamicEntries.map(([k,v]) => `${k}: ${v}`).join('\n');
+    specialNotes = specialNotes ? specialNotes + '\n\n--- Additional Details ---\n' + dynamicText : dynamicText;
+  }
   // Resolve category ID from slug
   let categoryId = null;
   if (categorySlug) {
@@ -16,7 +22,12 @@ export async function submitRequest({
     if (cat) categoryId = cat.id;
   }
 
-  const { data, error } = await supabase.from('deals').insert({
+  // Anonymous submitters have no SELECT policy on deals, so .select().single()
+  // after insert triggers a second RLS check that fails for the anon role.
+  // Authenticated users (logged-in clients) can safely return the row.
+  const isAuthenticated = !!clientId;
+
+  let query = supabase.from('deals').insert({
     client_id: clientId,
     client_name: clientName, client_email: clientEmail,
     client_company: clientCompany, client_country: clientCountry,
@@ -26,7 +37,13 @@ export async function submitRequest({
     urgency, budget_range: budgetRange, private_label: privateLabel,
     certifications, special_notes: specialNotes,
     status: 'new'
-  }).select().single();
+  });
+
+  // Only request the row back when the caller is authenticated —
+  // anon has INSERT-only access and no SELECT policy on deals.
+  if (isAuthenticated) query = query.select().single();
+
+  const { data, error } = await query;
 
   if (error) console.error('[submitRequest]', error.message);
   return { data, error: error?.message };

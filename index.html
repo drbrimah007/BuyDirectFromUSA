@@ -553,15 +553,31 @@
     btn.disabled = true; btn.textContent = 'Submitting...';
     status.classList.add('hidden');
 
+    // Collect dynamic fields based on request type
+    const requestType = document.getElementById('rfq-type').value;
+    const dynamicData = {};
+    const dynamicFields = {
+      private_label: ['rfq-brand','rfq-lang','rfq-artwork'],
+      bulk_quote: ['rfq-moq','rfq-timeline','rfq-budget'],
+      supplier_match: ['rfq-pricing','rfq-certs','rfq-suptype'],
+      compliance_help: ['rfq-docs','rfq-helptype'],
+      distributor_search: ['rfq-channel','rfq-territory']
+    };
+    (dynamicFields[requestType] || []).forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.value) dynamicData[id.replace('rfq-','')] = el.value.trim();
+    });
+
     const result = await submitRequest({
       clientName: name,
       clientEmail: email,
       productNeeded: product,
-      requestType: document.getElementById('rfq-type').value,
+      requestType,
       targetCountry: document.getElementById('rfq-country').value.trim(),
       quantity: document.getElementById('rfq-qty').value.trim(),
       packaging: document.getElementById('rfq-pkg').value.trim(),
-      specialNotes: document.getElementById('rfq-notes').value.trim()
+      specialNotes: document.getElementById('rfq-notes').value.trim(),
+      dynamicData
     });
 
     if (result.error) {

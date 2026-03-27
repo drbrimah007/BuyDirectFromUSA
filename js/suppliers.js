@@ -18,12 +18,12 @@ export async function getSupplier(id) {
   return data;
 }
 
-export async function createSupplier({ companyName, contactName, email, phone, website, country = 'US', usState, categories = [], marketsServed = [], certifications = [], moqRange, privateLabel = false, notes }) {
+export async function createSupplier({ companyName, contactName, email, phone, website, country = 'US', usState, categories = [], marketsServed = [], certifications = [], moqRange, privateLabel = false, exportReady = true, notes }) {
   const { data, error } = await supabase.from('suppliers').insert({
     company_name: companyName, contact_name: contactName || '', email: email || '',
     phone: phone || '', website: website || '', country, us_state: usState || '',
     categories, markets_served: marketsServed, certifications, moq_range: moqRange || '',
-    private_label: privateLabel, notes: notes || ''
+    private_label: privateLabel, export_ready: exportReady, notes: notes || ''
   }).select().single();
   if (error) console.error('[createSupplier]', error.message);
   return data;

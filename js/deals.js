@@ -40,7 +40,7 @@ export async function getDeal(id) {
 export async function createDeal({
   clientId, clientName, clientEmail, clientCompany, clientCountry,
   requestType, productNeeded, categoryId, targetCountry, targetRegion,
-  quantity, packaging, urgency = 'normal', budgetRange, privatLabel = false,
+  quantity, packaging, urgency = 'normal', budgetRange, privateLabel = false,
   certifications, specialNotes
 }) {
   const { data, error } = await supabase
@@ -53,7 +53,7 @@ export async function createDeal({
       category_id: categoryId || null, target_country: targetCountry || '',
       target_region: targetRegion || '', quantity: quantity || '',
       packaging: packaging || '', urgency,
-      budget_range: budgetRange || '', private_label: privatLabel,
+      budget_range: budgetRange || '', private_label: privateLabel,
       certifications: certifications || '', special_notes: specialNotes || '',
       status: 'new'
     })
