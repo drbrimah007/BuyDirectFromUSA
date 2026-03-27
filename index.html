@@ -55,8 +55,8 @@
             <a href="#suppliers" class="transition hover:text-slate-950">Suppliers</a>
           </nav>
           <div class="flex items-center gap-3">
-            <button class="hidden rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm md:inline-flex">Sign In</button>
-            <button class="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700">Request Sourcing</button>
+            <a href="dashboard.html" class="hidden rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm md:inline-flex">Sign In</a>
+            <button onclick="document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('rfq-product').focus();" class="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700">Request Sourcing</button>
           </div>
         </div>
       </header>
@@ -136,15 +136,15 @@
 
                 <div class="mt-5 flex flex-col gap-3 sm:flex-row">
                   <button id="rfq-submit-btn" onclick="submitRFQ()" class="rounded-2xl bg-sky-600 px-6 py-3 font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700">Submit Request</button>
-                  <button class="rounded-2xl border border-slate-300 px-6 py-3 font-semibold text-slate-800">Open Full RFQ</button>
+                  <button onclick="document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('rfq-product').focus();" class="rounded-2xl border border-slate-300 px-6 py-3 font-semibold text-slate-800">Open Full RFQ</button>
                 </div>
                 <div id="rfq-status" class="mt-3 text-sm hidden"></div>
               </div>
             </div>
 
             <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-              <button class="rounded-2xl bg-sky-600 px-6 py-3 font-semibold text-white shadow-lg shadow-sky-900/30 transition hover:-translate-y-0.5 hover:bg-sky-700">Request Sourcing</button>
-              <button class="rounded-2xl border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10">Browse Products</button>
+              <button onclick="document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('rfq-product').focus();" class="rounded-2xl bg-sky-600 px-6 py-3 font-semibold text-white shadow-lg shadow-sky-900/30 transition hover:-translate-y-0.5 hover:bg-sky-700">Request Sourcing</button>
+              <button onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})" class="rounded-2xl border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10">Browse Products</button>
             </div>
 
             <div class="mt-8 flex flex-wrap gap-6 text-sm text-slate-300">
@@ -191,7 +191,7 @@
                       <p class="text-sm font-semibold text-slate-900">AI recommendation</p>
                       <p class="mt-1 text-sm text-slate-600">Good fit for Saudi and UAE distributors. Verify Arabic labeling before RFQ.</p>
                     </div>
-                    <button class="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Request Quote</button>
+                    <button onclick="document.getElementById('rfq-product').value='Whole Milk Powder 26-28%';document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Request Quote</button>
                   </div>
                 </div>
               </div>
@@ -200,13 +200,13 @@
             <!-- Search bar -->
             <div class="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-2xl backdrop-blur">
               <div class="flex flex-col gap-3 lg:flex-row">
-                <input type="text" placeholder="Pampers, milk powder, water filters..." class="w-full rounded-2xl border border-white/10 bg-white px-5 py-4 text-base text-slate-900 outline-none ring-0" />
-                <button class="rounded-2xl bg-sky-600 px-6 py-4 text-base font-semibold text-white transition hover:bg-sky-700 whitespace-nowrap">Search</button>
+                <input id="hero-search" type="text" placeholder="Pampers, milk powder, water filters..." class="w-full rounded-2xl border border-white/10 bg-white px-5 py-4 text-base text-slate-900 outline-none ring-0" onkeydown="if(event.key==='Enter'){document.getElementById('rfq-product').value=this.value;document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});}" />
+                <button onclick="var v=document.getElementById('hero-search').value;if(v){document.getElementById('rfq-product').value=v;document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});}" class="rounded-2xl bg-sky-600 px-6 py-4 text-base font-semibold text-white transition hover:bg-sky-700 whitespace-nowrap">Search</button>
               </div>
               <div class="mt-3 flex flex-wrap gap-2 text-sm">
-                <span class="rounded-full bg-white/10 px-3 py-2 text-slate-200 cursor-pointer hover:bg-white/20">Find UAE-ready food products</span>
-                <span class="rounded-full bg-white/10 px-3 py-2 text-slate-200 cursor-pointer hover:bg-white/20">Compare milk powder suppliers</span>
-                <span class="rounded-full bg-white/10 px-3 py-2 text-slate-200 cursor-pointer hover:bg-white/20">What documents are needed for Saudi?</span>
+                <span onclick="document.getElementById('rfq-product').value='UAE-ready food products';document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="rounded-full bg-white/10 px-3 py-2 text-slate-200 cursor-pointer hover:bg-white/20">Find UAE-ready food products</span>
+                <span onclick="document.getElementById('rfq-product').value='Milk powder';document.getElementById('rfq-notes').value='Looking to compare multiple suppliers';document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="rounded-full bg-white/10 px-3 py-2 text-slate-200 cursor-pointer hover:bg-white/20">Compare milk powder suppliers</span>
+                <span onclick="document.getElementById('rfq-type').value='compliance_help';updateRFQFields();document.getElementById('rfq-country').value='Saudi Arabia';document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="rounded-full bg-white/10 px-3 py-2 text-slate-200 cursor-pointer hover:bg-white/20">What documents are needed for Saudi?</span>
               </div>
             </div>
 
@@ -236,8 +236,8 @@
                   <p class="mt-1 text-xs text-slate-300">High-value U.S. equipment with strong margins in water and agriculture sectors.</p>
                 </div>
                 <div class="mt-4 flex gap-3">
-                  <button class="flex-1 rounded-2xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-900/30 transition hover:bg-sky-700">Request Details</button>
-                  <button class="flex-1 rounded-2xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">Source Similar</button>
+                  <button onclick="document.getElementById('rfq-product').value='Nanobubble Water Treatment System';document.getElementById('rfq-notes').value='Interested in Trident nanobubble system for agriculture/aquaculture';document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="flex-1 rounded-2xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-900/30 transition hover:bg-sky-700">Request Details</button>
+                  <button onclick="document.getElementById('rfq-product').value='Water treatment systems';document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="flex-1 rounded-2xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">Source Similar</button>
                 </div>
               </div>
             </div>
@@ -251,19 +251,19 @@
             <div class="text-sm font-semibold text-sky-700">Find Products</div>
             <h3 class="mt-3 text-2xl font-bold text-slate-950">Browse export-ready listings</h3>
             <p class="mt-3 leading-7 text-slate-600">Explore U.S. products prepared for international buyers, with destination suitability and document visibility.</p>
-            <button class="mt-6 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-800">Browse Categories</button>
+            <button onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})" class="mt-6 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-800">Browse Categories</button>
           </div>
           <div class="rounded-[2rem] border border-sky-200 bg-sky-50 p-8 shadow-sm">
             <div class="text-sm font-semibold text-sky-700">Request Sourcing</div>
             <h3 class="mt-3 text-2xl font-bold text-slate-950">Tell us what you need</h3>
             <p class="mt-3 leading-7 text-slate-600">Submit your product, destination, and packaging requirements. We match you with relevant U.S. suppliers.</p>
-            <button class="mt-6 rounded-2xl bg-sky-600 px-5 py-3 font-semibold text-white shadow-lg shadow-sky-200">Submit RFQ</button>
+            <button onclick="document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('rfq-product').focus();" class="mt-6 rounded-2xl bg-sky-600 px-5 py-3 font-semibold text-white shadow-lg shadow-sky-200">Submit RFQ</button>
           </div>
           <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
             <div class="text-sm font-semibold text-sky-700">Become a Supplier</div>
             <h3 class="mt-3 text-2xl font-bold text-slate-950">Sell into GCC and global markets</h3>
             <p class="mt-3 leading-7 text-slate-600">List your products, upload export documents, and connect with verified distributors and buyers.</p>
-            <button class="mt-6 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-800">Join as Supplier</button>
+            <button onclick="document.getElementById('suppliers').scrollIntoView({behavior:'smooth'})" class="mt-6 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-800">Join as Supplier</button>
           </div>
         </div>
       </section>
@@ -275,7 +275,7 @@
             <h2 class="mt-3 text-4xl font-bold tracking-tight text-slate-950">Best things to source from the U.S.</h2>
             <p class="mt-4 max-w-3xl text-lg text-slate-600">Lead with practical, repeat-buy categories that buyers actually move across borders: dairy ingredients, shelf-stable foods, feminine care, medical consumables, filters, and emergency-use products.</p>
           </div>
-          <button class="hidden rounded-2xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 lg:block">View all categories</button>
+          <button onclick="document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('rfq-product').focus();" class="hidden rounded-2xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 lg:block">View all categories</button>
         </div>
 
         <div class="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-5">
@@ -315,7 +315,7 @@
               <h2 class="mt-3 text-4xl font-bold tracking-tight text-slate-950">What buyers actually come looking for</h2>
               <p class="mt-4 max-w-3xl text-lg text-slate-600">Use the front page to feature the strongest, most sourceable products&#8212;not random catalog filler. Highlight what moves volume, solves a real import need, or gives buyers a reason to ask for concierge support.</p>
             </div>
-            <button class="hidden rounded-2xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 lg:block">Browse all products</button>
+            <button onclick="document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('rfq-product').focus();" class="hidden rounded-2xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 lg:block">Browse all products</button>
           </div>
 
           <div class="mt-10 grid gap-6 lg:grid-cols-4">
@@ -325,7 +325,7 @@
                 <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">High Demand</span>
               </div>
               <p class="mt-4 text-sm text-slate-600">MOQ: 1 container &bull; Markets: UAE, Saudi &bull; Docs: Available</p>
-              <button class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
+              <button onclick="document.getElementById('rfq-product').value='Full Cream Milk Powder';document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
             </div>
             <div class="rounded-[2rem] border border-slate-200 p-6 shadow-sm">
               <div class="flex items-center justify-between gap-4">
@@ -333,7 +333,7 @@
                 <span class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">Repeat Buy</span>
               </div>
               <p class="mt-4 text-sm text-slate-600">MOQ: Pallet+ &bull; Markets: GCC, Africa &bull; Docs: Labeling Support</p>
-              <button class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
+              <button onclick="document.getElementById('rfq-product').value='Shelf-Stable Tuna Packs';document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
             </div>
             <div class="rounded-[2rem] border border-slate-200 p-6 shadow-sm">
               <div class="flex items-center justify-between gap-4">
@@ -341,7 +341,7 @@
                 <span class="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">Consumer Category</span>
               </div>
               <p class="mt-4 text-sm text-slate-600">Pads, liners, wipes &bull; Private label or branded &bull; Good retail potential</p>
-              <button class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
+              <button onclick="document.getElementById('rfq-product').value='Feminine Care Packs';document.getElementById('rfq-type').value='private_label';updateRFQFields();document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
             </div>
             <div class="rounded-[2rem] border border-slate-200 p-6 shadow-sm">
               <div class="flex items-center justify-between gap-4">
@@ -349,7 +349,7 @@
                 <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Project Supply</span>
               </div>
               <p class="mt-4 text-sm text-slate-600">MOQ: Project-based &bull; Markets: UAE, Qatar, Africa &bull; Docs: On Request</p>
-              <button class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
+              <button onclick="document.getElementById('rfq-product').value='Industrial Water Filters';document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
             </div>
           </div>
         </div>
@@ -455,8 +455,8 @@
               <p class="mt-4 max-w-2xl text-lg text-white/90">List your products, upload export documents, and connect with buyers looking for U.S. supply.</p>
             </div>
             <div class="flex flex-col gap-3 sm:flex-row">
-              <button class="rounded-2xl bg-white px-6 py-3 font-semibold text-sky-700 shadow-lg">List Your Products</button>
-              <button class="rounded-2xl border border-white/40 px-6 py-3 font-semibold text-white">Talk to Sales</button>
+              <a href="suppliers.html" class="rounded-2xl bg-white px-6 py-3 font-semibold text-sky-700 shadow-lg text-center">List Your Products</a>
+              <button onclick="document.getElementById('rfq-product').value='Supplier inquiry';document.getElementById('rfq-notes').value='I am a U.S. supplier interested in listing my products on BuyDirectFromUSA.';document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="rounded-2xl border border-white/40 px-6 py-3 font-semibold text-white">Talk to Sales</button>
             </div>
           </div>
         </div>
@@ -472,11 +472,11 @@
               <p class="mt-1 text-sm text-slate-500">AI-supported sourcing concierge for international buyers</p>
             </div>
             <div class="flex gap-8 text-sm text-slate-500">
-              <a href="#" class="hover:text-slate-900">About</a>
-              <a href="#" class="hover:text-slate-900">For Suppliers</a>
+              <a href="#ai" class="hover:text-slate-900">About</a>
+              <a href="#suppliers" class="hover:text-slate-900">For Suppliers</a>
               <a href="#" class="hover:text-slate-900">Privacy</a>
               <a href="#" class="hover:text-slate-900">Terms</a>
-              <a href="#" class="hover:text-slate-900">Contact</a>
+              <a href="mailto:info@buydirectfromusa.com" class="hover:text-slate-900">Contact</a>
             </div>
           </div>
           <p class="mt-6 text-center text-xs text-slate-400">&copy; 2026 BuyDirectFromUSA.com. All rights reserved.</p>
