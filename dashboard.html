@@ -384,7 +384,7 @@ window.sendMsg = async function(dealId, internal = false) {
   const body = input?.value.trim();
   if (!body) return;
   await sendDealMessage(dealId, currentUser.id, { body, isInternal: internal, visibleTo: internal ? 'internal' : 'all' });
-  input.value = '';
+  if (input) input.value = '';
   showDealTab('messages', dealId);
 };
 
@@ -400,12 +400,14 @@ window.sendAiDraft = async function(dealId) {
   const body = document.getElementById('ai-draft')?.value.trim();
   if (!body) return;
   await sendDealMessage(dealId, currentUser.id, { body, isAiDraft: true, visibleTo: 'internal' });
-  document.getElementById('ai-draft').value = '';
+  const draftEl = document.getElementById('ai-draft');
+  if (draftEl) draftEl.value = '';
   showDealTab('messages', dealId);
 };
 
 window.generateAiDraft = function(dealId) {
-  document.getElementById('ai-draft').value = 'Thank you for your sourcing request. We have reviewed your requirements and are currently matching you with suitable U.S. suppliers. We will provide a shortlist within 24-48 hours.\n\nPlease let us know if you have any additional specifications.';
+  const draftEl = document.getElementById('ai-draft');
+  if (draftEl) draftEl.value = 'Thank you for your sourcing request. We have reviewed your requirements and are currently matching you with suitable U.S. suppliers. We will provide a shortlist within 24-48 hours.\n\nPlease let us know if you have any additional specifications.';
 };
 
 // ── New Deal Modal ────────────────────────────────────────────────
