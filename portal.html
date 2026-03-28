@@ -109,7 +109,7 @@ async function loadRequests() {
   }
   el.innerHTML = requests.map(r => {
     const s = STATUSES[r.status] || STATUSES.new;
-    return `<div class="bg-white rounded-2xl border border-slate-200 p-5 mb-3 hover:shadow-sm transition">
+    return `<div class="bg-white rounded-2xl border border-slate-200 p-5 mb-3 hover:shadow-sm transition cursor-pointer" onclick="openRequestDetail('${r.id}')">
       <div class="flex items-start justify-between gap-4">
         <div>
           <h3 class="font-bold text-lg">${esc(r.product_needed)}</h3>
@@ -126,6 +126,73 @@ async function loadRequests() {
     </div>`;
   }).join('');
 }
+
+window.openRequestDetail = async function(dealId) {
+  const el = document.getElementById('requests-list');
+  el.innerHTML = '<p class="text-slate-400 text-sm">Loading...</p>';
+
+  // Load deal details and messages
+  const { data: deal } = await supabase.from('deals').select('*').eq('id', dealId).single();
+  if (!deal) { loadRequests(); return; }
+
+  const { data: messages } = await supabase.from('deal_messages').select('*, sender:users(display_name)')
+    .eq('deal_id', dealId).in('visible_to', ['all', 'client']).order('created_at', { ascending: true });
+
+  const s = STATUSES[deal.status] || STATUSES.new;
+  const msgs = messages || [];
+
+  el.innerHTML = `
+    <button onclick="loadRequests()" class="text-sm text-sky-600 font-semibold mb-4 inline-block">&larr; Back to all requests</button>
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 mb-4">
+      <div class="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <h3 class="font-bold text-xl">${esc(deal.product_needed)}</h3>
+          <p class="text-sm text-slate-500 mt-1">${esc(deal.request_type?.replace('_', ' ') || '')} ${deal.target_country ? '· ' + esc(deal.target_country) : ''}</p>
+        </div>
+        <span class="text-xs font-bold px-3 py-1 rounded-full" style="background:${s.bg};color:${s.color};">${s.label}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+        <div class="bg-slate-50 rounded-xl p-3"><p class="text-xs font-semibold text-slate-500 uppercase">Quantity</p><p class="mt-1 font-semibold">${esc(deal.quantity || '—')}</p></div>
+        <div class="bg-slate-50 rounded-xl p-3"><p class="text-xs font-semibold text-slate-500 uppercase">Packaging</p><p class="mt-1 font-semibold">${esc(deal.packaging || '—')}</p></div>
+        <div class="bg-slate-50 rounded-xl p-3"><p class="text-xs font-semibold text-slate-500 uppercase">Urgency</p><p class="mt-1 font-semibold">${esc(deal.urgency || 'normal')}</p></div>
+        <div class="bg-slate-50 rounded-xl p-3"><p class="text-xs font-semibold text-slate-500 uppercase">Submitted</p><p class="mt-1 font-semibold">${new Date(deal.created_at).toLocaleDateString()}</p></div>
+      </div>
+      ${deal.special_notes ? `<div class="bg-slate-50 rounded-xl p-3 text-sm text-slate-600 mb-4"><p class="text-xs font-semibold text-slate-500 uppercase mb-1">Notes</p>${esc(deal.special_notes)}</div>` : ''}
+      ${deal.ai_summary ? `<div class="bg-sky-50 border border-sky-200 rounded-xl p-3 text-sm"><p class="text-xs font-semibold text-sky-700 uppercase mb-1">Sourcing Summary</p>${esc(deal.ai_summary)}</div>` : ''}
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6">
+      <h4 class="font-bold text-lg mb-4">Messages</h4>
+      <div id="portal-msgs" class="space-y-3 mb-4 max-h-96 overflow-y-auto">
+        ${msgs.length === 0 ? '<p class="text-slate-400 text-sm">No messages yet. Our team will reach out when we have updates.</p>' :
+          msgs.map(m => `<div class="rounded-xl p-3 ${m.sender_id === portalUser.id ? 'bg-sky-50 border border-sky-200 ml-8' : 'bg-slate-50 border border-slate-200 mr-8'}">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-xs font-semibold ${m.sender_id === portalUser.id ? 'text-sky-700' : 'text-slate-600'}">${m.sender_id === portalUser.id ? 'You' : esc(m.sender?.display_name || 'Sourcing Team')}</span>
+              <span class="text-xs text-slate-400">${new Date(m.created_at).toLocaleString()}</span>
+            </div>
+            <p class="text-sm">${esc(m.body)}</p>
+          </div>`).join('')}
+      </div>
+      <div class="flex gap-2">
+        <input type="text" id="portal-msg-input" placeholder="Type a message..." class="flex-1 border border-slate-200 rounded-xl px-4 py-2 text-sm" onkeydown="if(event.key==='Enter')sendPortalMsg('${dealId}')">
+        <button onclick="sendPortalMsg('${dealId}')" class="bg-sky-600 text-white px-4 py-2 rounded-xl text-sm font-semibold">Send</button>
+      </div>
+    </div>`;
+  // Scroll to latest message
+  const msgsEl = document.getElementById('portal-msgs');
+  if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
+};
+
+window.sendPortalMsg = async function(dealId) {
+  const input = document.getElementById('portal-msg-input');
+  const body = input?.value.trim();
+  if (!body || !portalUser) return;
+  input.value = '';
+  await supabase.from('deal_messages').insert({
+    deal_id: dealId, sender_id: portalUser.id, body, visible_to: 'all'
+  });
+  openRequestDetail(dealId);
+};
 
 // Auto-login
 const { data: { session } } = await supabase.auth.getSession();

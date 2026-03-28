@@ -103,6 +103,7 @@
 import { supabase } from './js/supabase.js';
 import { listDeals, getDeal, createDeal, changeDealStatus, sendDealMessage, getDealMessages, getDealNotes, addDealNote, getDealSuppliers, matchSupplier, approveAiDraft, DEAL_STATUSES, STATUS_COLORS, URGENCY_COLORS } from './js/deals.js';
 import { listSuppliers, autoMatchSuppliers } from './js/suppliers.js';
+import { generateRequestSummary, generateDraftResponse, suggestNextActions, saveAiSummary } from './js/ai-helper.js';
 
 let currentUser = null;
 let currentDealId = null;
@@ -188,6 +189,7 @@ window.selectDeal = async function(id) {
   document.querySelectorAll('.deal-card').forEach(c => c.classList.toggle('active', c.onclick?.toString().includes(id)));
   const d = await getDeal(id);
   if (!d) return;
+  _currentDeal = d;
   const messages = await getDealMessages(id);
   const notes = await getDealNotes(id);
   const suppliers = await getDealSuppliers(id);
@@ -340,29 +342,36 @@ window.showDealTab = async function(tab, dealId) {
 
 // ── AI Panel ──────────────────────────────────────────────────────
 function renderAiPanel(deal, suppliers) {
+  const summary = deal.ai_summary || generateRequestSummary(deal);
+  const actions = suggestNextActions({ ...deal, supplier_count: suppliers.length });
+  const priorityColors = { high: 'bg-red-50 text-red-700', medium: 'bg-amber-50 text-amber-700', low: 'bg-slate-50 text-slate-600' };
   const panel = document.getElementById('ai-panel');
   panel.innerHTML = `<div class="fade-in space-y-4">
     <div class="bg-sky-50 border border-sky-200 rounded-xl p-4">
-      <p class="text-xs font-semibold text-sky-700 uppercase mb-2">Request Summary</p>
-      <p class="text-sm"><strong>${esc(deal.product_needed)}</strong> for ${esc(deal.country_name || deal.target_country || 'unknown market')}</p>
-      <p class="text-xs text-slate-500 mt-1">Qty: ${esc(deal.quantity || '—')} · Pkg: ${esc(deal.packaging || '—')}</p>
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-xs font-semibold text-sky-700 uppercase">AI Summary</p>
+        ${!deal.ai_summary ? `<button onclick="saveAiSummaryUI('${deal.id}')" class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded font-semibold">Save to Deal</button>` : '<span class="text-[10px] text-sky-500">Saved</span>'}
+      </div>
+      <p class="text-sm">${esc(summary)}</p>
     </div>
     <div class="bg-white border border-slate-200 rounded-xl p-4">
       <p class="text-xs font-semibold text-slate-600 uppercase mb-2">Suggested Actions</p>
       <div class="space-y-2 text-sm">
-        ${deal.status === 'new' ? '<div class="bg-sky-50 rounded-lg p-2 text-sky-700">→ Review request and classify</div>' : ''}
-        ${suppliers.length === 0 ? '<div class="bg-amber-50 rounded-lg p-2 text-amber-700">→ Match suppliers to this request</div>' : ''}
-        ${deal.status === 'awaiting_supplier' ? '<div class="bg-purple-50 rounded-lg p-2 text-purple-700">→ Follow up with suppliers</div>' : ''}
-        ${deal.status === 'quote_ready' ? '<div class="bg-green-50 rounded-lg p-2 text-green-700">→ Send quote summary to client</div>' : ''}
-        <div class="bg-slate-50 rounded-lg p-2 text-slate-600">→ Add internal notes for context</div>
+        ${actions.map(a => `<div class="${priorityColors[a.priority] || 'bg-slate-50 text-slate-600'} rounded-lg p-2">→ ${esc(a.label)}</div>`).join('') || '<div class="bg-green-50 rounded-lg p-2 text-green-700">No pending actions</div>'}
       </div>
     </div>
     <div class="bg-white border border-slate-200 rounded-xl p-4">
       <p class="text-xs font-semibold text-slate-600 uppercase mb-2">Quick Draft</p>
-      <textarea id="ai-draft" rows="4" class="w-full border border-slate-200 rounded-lg p-3 text-sm" placeholder="AI would generate a draft response here..."></textarea>
+      <div class="flex gap-1 mb-2 flex-wrap">
+        <button onclick="genDraft('${deal.id}','acknowledgement')" class="text-[10px] bg-slate-100 px-2 py-1 rounded font-semibold hover:bg-slate-200">Acknowledge</button>
+        <button onclick="genDraft('${deal.id}','need_info')" class="text-[10px] bg-slate-100 px-2 py-1 rounded font-semibold hover:bg-slate-200">Need Info</button>
+        <button onclick="genDraft('${deal.id}','supplier_shortlist')" class="text-[10px] bg-slate-100 px-2 py-1 rounded font-semibold hover:bg-slate-200">Shortlist</button>
+        <button onclick="genDraft('${deal.id}','quote_ready')" class="text-[10px] bg-slate-100 px-2 py-1 rounded font-semibold hover:bg-slate-200">Quote Ready</button>
+        <button onclick="genDraft('${deal.id}','compliance_alert')" class="text-[10px] bg-slate-100 px-2 py-1 rounded font-semibold hover:bg-slate-200">Compliance</button>
+      </div>
+      <textarea id="ai-draft" rows="4" class="w-full border border-slate-200 rounded-lg p-3 text-sm" placeholder="Click a draft type above or write your own..."></textarea>
       <div class="flex gap-2 mt-2">
         <button onclick="sendAiDraft('${deal.id}')" class="flex-1 bg-sky-600 text-white py-1.5 rounded-lg text-xs font-semibold">Send as Draft</button>
-        <button onclick="generateAiDraft('${deal.id}')" class="flex-1 bg-slate-200 text-slate-700 py-1.5 rounded-lg text-xs font-semibold">Generate</button>
       </div>
     </div>
     <div class="bg-white border border-slate-200 rounded-xl p-4">
@@ -405,9 +414,20 @@ window.sendAiDraft = async function(dealId) {
   showDealTab('messages', dealId);
 };
 
-window.generateAiDraft = function(dealId) {
+// AI draft generation using deal context
+let _currentDeal = null;
+window.genDraft = function(dealId, type) {
   const draftEl = document.getElementById('ai-draft');
-  if (draftEl) draftEl.value = 'Thank you for your sourcing request. We have reviewed your requirements and are currently matching you with suitable U.S. suppliers. We will provide a shortlist within 24-48 hours.\n\nPlease let us know if you have any additional specifications.';
+  if (!draftEl || !_currentDeal) return;
+  draftEl.value = generateDraftResponse(_currentDeal, type);
+};
+
+window.saveAiSummaryUI = async function(dealId) {
+  if (!_currentDeal) return;
+  const summary = generateRequestSummary(_currentDeal);
+  await saveAiSummary(dealId, summary);
+  _currentDeal.ai_summary = summary;
+  toast('AI summary saved to deal.');
 };
 
 // ── New Deal Modal ────────────────────────────────────────────────
@@ -496,6 +516,7 @@ window.editMsg = async function(messageId, body) {
 
 // ── Utils ─────────────────────────────────────────────────────────
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function toast(msg) { const el = document.createElement('div'); el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;animation:fadeIn .2s;'; el.textContent = msg; document.body.appendChild(el); setTimeout(() => el.remove(), 3000); }
 
 // ── Auto-login ────────────────────────────────────────────────────
 const { data: { session } } = await supabase.auth.getSession();
