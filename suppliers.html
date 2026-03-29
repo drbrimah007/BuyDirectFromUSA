@@ -85,7 +85,7 @@ async function loadSuppliers() {
       </tr></thead>
       <tbody>
         ${suppliers.map(s => `<tr class="border-b border-slate-100 supplier-row hover:bg-slate-50" data-search="${esc(s.company_name + ' ' + s.contact_name + ' ' + s.email + ' ' + s.us_state).toLowerCase()}">
-          <td class="px-4 py-3 font-semibold">${esc(s.company_name)} ${s.preferred ? '<span class="text-amber-500">⭐</span>' : ''} ${s.verified ? '<span class="text-green-600 text-xs">✓</span>' : ''}</td>
+          <td class="px-4 py-3 font-semibold"><a href="#" onclick="event.preventDefault();event.stopPropagation();openSupplierDetail('${s.id}')" class="text-sky-700 hover:underline">${esc(s.company_name)}</a> ${s.preferred ? '<span class="text-amber-500">⭐</span>' : ''} ${s.verified ? '<span class="text-green-600 text-xs">✓</span>' : ''}</td>
           <td class="px-4 py-3 text-slate-600">${esc(s.contact_name || '—')}</td>
           <td class="px-4 py-3 text-slate-500">${esc(s.email || '—')}</td>
           <td class="px-4 py-3 text-slate-500">${esc(s.us_state || '—')}</td>
@@ -223,6 +223,116 @@ window.doEditSupplier = async function(id) {
   });
   closeModal();
   loadSuppliers();
+};
+
+// ── Supplier Detail Modal ──────────────────────────────────────────
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+window.openSupplierDetail = async function(id) {
+  const s = await getSupplier(id);
+  if (!s) return alert('Supplier not found.');
+
+  // Fetch deals matched to this supplier
+  const { data: dealLinks } = await supabase.from('deal_suppliers')
+    .select('*, deal:deals(id, product_needed, client_name, status)')
+    .eq('supplier_id', id);
+  const deals = (dealLinks || []).filter(dl => dl.deal);
+
+  const products = s.products || [];
+  const certs = (s.certifications || []);
+
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onclick="if(event.target===this)closeModal()">
+    <div class="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <h3 class="text-xl font-bold">${escHtml(s.company_name)}</h3>
+          <div class="flex items-center gap-2 mt-1">
+            ${s.verified ? '<span class="text-xs font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Verified</span>' : '<span class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">Pending</span>'}
+            ${s.preferred ? '<span class="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Preferred</span>' : ''}
+            ${s.export_ready ? '<span class="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Export Ready</span>' : ''}
+            ${s.private_label ? '<span class="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">Private Label</span>' : ''}
+          </div>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold leading-none">&times;</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-5">
+        <div class="bg-slate-50 rounded-xl p-3">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Contact</p>
+          <p class="font-semibold text-sm mt-1">${escHtml(s.contact_name || '—')}</p>
+        </div>
+        <div class="bg-slate-50 rounded-xl p-3">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Email</p>
+          <p class="text-sm mt-1">${s.email ? `<a href="mailto:${escHtml(s.email)}" class="text-sky-700 hover:underline">${escHtml(s.email)}</a>` : '—'}</p>
+        </div>
+        <div class="bg-slate-50 rounded-xl p-3">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Phone</p>
+          <p class="text-sm mt-1">${escHtml(s.phone || '—')}</p>
+        </div>
+        <div class="bg-slate-50 rounded-xl p-3">
+          <p class="text-xs font-semibold text-slate-500 uppercase">U.S. State</p>
+          <p class="text-sm mt-1">${escHtml(s.us_state || '—')}</p>
+        </div>
+        <div class="bg-slate-50 rounded-xl p-3">
+          <p class="text-xs font-semibold text-slate-500 uppercase">Website</p>
+          <p class="text-sm mt-1">${s.website ? `<a href="${escHtml(s.website)}" target="_blank" class="text-sky-700 hover:underline">${escHtml(s.website)}</a>` : '—'}</p>
+        </div>
+        <div class="bg-slate-50 rounded-xl p-3">
+          <p class="text-xs font-semibold text-slate-500 uppercase">MOQ Range</p>
+          <p class="text-sm mt-1">${escHtml(s.moq_range || '—')}</p>
+        </div>
+      </div>
+
+      ${certs.length > 0 ? `<div class="mb-5">
+        <p class="text-xs font-semibold text-slate-500 uppercase mb-2">Certifications</p>
+        <div class="flex flex-wrap gap-1">${certs.map(c => `<span class="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">${escHtml(c)}</span>`).join('')}</div>
+      </div>` : ''}
+
+      ${products.length > 0 ? `<div class="mb-5">
+        <p class="text-xs font-semibold text-slate-500 uppercase mb-2">Products (${products.length})</p>
+        <div class="border border-slate-200 rounded-xl overflow-hidden">
+          <table class="w-full text-sm">
+            <thead><tr class="border-b border-slate-200 bg-slate-50 text-left">
+              <th class="px-3 py-2 text-xs font-semibold text-slate-500">Product</th>
+              <th class="px-3 py-2 text-xs font-semibold text-slate-500">SKU</th>
+              <th class="px-3 py-2 text-xs font-semibold text-slate-500">Price</th>
+              <th class="px-3 py-2 text-xs font-semibold text-slate-500">MOQ</th>
+            </tr></thead>
+            <tbody>${products.map(p => `<tr class="border-b border-slate-100">
+              <td class="px-3 py-2">${escHtml(p.product_name || p.name || '—')}</td>
+              <td class="px-3 py-2 text-slate-500">${escHtml(p.sku || '—')}</td>
+              <td class="px-3 py-2 text-slate-500">${escHtml(p.price || p.unit_price || '—')}</td>
+              <td class="px-3 py-2 text-slate-500">${escHtml(p.moq || '—')}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>
+      </div>` : ''}
+
+      <div class="mb-4">
+        <p class="text-xs font-semibold text-slate-500 uppercase mb-2">Matched Deals (${deals.length})</p>
+        ${deals.length > 0 ? deals.map(dl => {
+          const d = dl.deal;
+          return `<div class="border border-slate-200 rounded-xl p-3 mb-2 flex justify-between items-center">
+            <div>
+              <p class="font-semibold text-sm">${escHtml(d.product_needed || 'Untitled')}</p>
+              <p class="text-xs text-slate-500">${escHtml(d.client_name || '—')}</p>
+            </div>
+            <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">${escHtml(d.status)}</span>
+          </div>`;
+        }).join('') : '<p class="text-sm text-slate-400">No deals matched to this supplier.</p>'}
+      </div>
+
+      ${s.notes ? `<div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
+        <p class="text-xs font-semibold text-amber-700 uppercase mb-1">Notes</p>
+        <p class="text-sm">${escHtml(s.notes)}</p>
+      </div>` : ''}
+
+      <div class="flex justify-end">
+        <button onclick="closeModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold">Close</button>
+      </div>
+    </div>
+  </div>`;
 };
 
 // Auto-login

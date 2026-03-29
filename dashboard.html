@@ -124,6 +124,7 @@
 import { supabase } from './js/supabase.js';
 import { listDeals, getDeal, createDeal, changeDealStatus, sendDealMessage, getDealMessages, getDealNotes, addDealNote, getDealSuppliers, matchSupplier, approveAiDraft, DEAL_STATUSES, STATUS_COLORS, URGENCY_COLORS } from './js/deals.js';
 import { listSuppliers, autoMatchSuppliers } from './js/suppliers.js';
+import { listRFQs, createRFQ, sendRFQ } from './js/rfq.js';
 import { generateRequestSummary, generateDraftResponse, suggestNextActions, saveAiSummary } from './js/ai-helper.js';
 import { getDashboardStats, getDealsByCountry } from './js/analytics.js';
 import { listNotifications, getUnreadCount, markAllRead, markRead } from './js/notifications.js';
@@ -253,6 +254,7 @@ window.selectDeal = async function(id) {
         <button class="py-3 text-slate-500 hover:text-slate-900" onclick="showDealTab('suppliers','${d.id}')">Suppliers (${suppliers.length})</button>
         <button class="py-3 text-slate-500 hover:text-slate-900" onclick="showDealTab('notes','${d.id}')">Notes (${notes.length})</button>
         <button class="py-3 text-slate-500 hover:text-slate-900" onclick="showDealTab('documents','${d.id}')">Documents</button>
+        <button class="py-3 text-slate-500 hover:text-slate-900" onclick="showDealTab('rfqs','${d.id}')">RFQs</button>
       </div>
     </div>
 
@@ -399,6 +401,36 @@ window.showDealTab = async function(tab, dealId) {
           <button onclick="deleteDocUI('${doc.id}','${esc(doc.storage_path)}','${dealId}')" class="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 rounded-lg hover:bg-red-50" title="Delete">Delete</button>
         </div>`;
       }).join('')}</div>` : '<p class="text-slate-400 text-sm">No documents uploaded yet.</p>'}
+    </div>`;
+  } else if (tab === 'rfqs') {
+    const rfqs = await listRFQs(dealId);
+    const suppliers = await getDealSuppliers(dealId);
+    el.innerHTML = `<div>
+      <div class="flex justify-between items-center mb-4">
+        <h4 class="font-bold text-sm">RFQs</h4>
+        <button onclick="openCreateRFQModal('${dealId}')" class="bg-sky-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold">+ New RFQ</button>
+      </div>
+      ${rfqs.length > 0 ? rfqs.map(r => {
+        const statusColors = { draft: 'bg-slate-100 text-slate-600', sent: 'bg-blue-100 text-blue-700', responded: 'bg-green-100 text-green-700' };
+        const pillCls = statusColors[r.status] || 'bg-slate-100 text-slate-600';
+        const sentDate = r.sent_at ? new Date(r.sent_at).toLocaleDateString() : '—';
+        return `<div class="border border-slate-200 rounded-xl p-3 mb-2">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="font-semibold text-sm">${esc(r.supplier?.company_name || '—')}</p>
+              <p class="text-xs text-slate-500 mt-0.5">${esc(r.product || '—')} &middot; Qty: ${esc(r.quantity || '—')}</p>
+              <p class="text-xs text-slate-400 mt-0.5">Sent: ${sentDate}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="status-pill ${pillCls}">${r.status}</span>
+              ${r.status === 'draft' ? `<button onclick="doSendRFQ('${r.id}','${dealId}')" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-semibold">Send</button>` : ''}
+            </div>
+          </div>
+          ${r.destination ? `<p class="text-xs text-slate-400 mt-1">Destination: ${esc(r.destination)}</p>` : ''}
+          ${r.delivery_timeline ? `<p class="text-xs text-slate-400">Timeline: ${esc(r.delivery_timeline)}</p>` : ''}
+          ${r.notes ? `<p class="text-xs text-slate-400">Notes: ${esc(r.notes)}</p>` : ''}
+        </div>`;
+      }).join('') : '<p class="text-slate-400 text-sm">No RFQs created yet.</p>'}
     </div>`;
   } else {
     selectDeal(dealId); // re-render overview
@@ -606,6 +638,63 @@ window.openDocUrl = async function(storagePath) {
   const url = await getDocumentUrl(storagePath);
   if (url) window.open(url, '_blank');
   else toast('Could not generate download link.');
+};
+
+// ── RFQ Handlers ──────────────────────────────────────────────────
+window.openCreateRFQModal = async function(dealId) {
+  const suppliers = await getDealSuppliers(dealId);
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onclick="if(event.target===this)closeModal()">
+    <div class="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <h3 class="text-lg font-bold mb-4">Create RFQ</h3>
+      <div class="space-y-3">
+        <div><label class="block text-sm font-semibold text-slate-600 mb-1">Supplier *</label>
+          <select id="rfq-supplier" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm">
+            <option value="">Select supplier...</option>
+            ${suppliers.map(ds => `<option value="${ds.supplier_id}">${esc(ds.supplier?.company_name || 'Unknown')}</option>`).join('')}
+          </select>
+        </div>
+        <div><label class="block text-sm font-semibold text-slate-600 mb-1">Product *</label><input id="rfq-product" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm" value="${esc(_currentDeal?.product_needed || '')}"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-sm font-semibold text-slate-600 mb-1">Quantity</label><input id="rfq-qty" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm" value="${esc(_currentDeal?.quantity || '')}"></div>
+          <div><label class="block text-sm font-semibold text-slate-600 mb-1">Destination</label><input id="rfq-dest" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm" value="${esc(_currentDeal?.target_country || '')}"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-sm font-semibold text-slate-600 mb-1">Packaging</label><input id="rfq-pkg" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm" value="${esc(_currentDeal?.packaging || '')}"></div>
+          <div><label class="block text-sm font-semibold text-slate-600 mb-1">Delivery Timeline</label><input id="rfq-timeline" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm" placeholder="e.g. 30 days"></div>
+        </div>
+        <div><label class="block text-sm font-semibold text-slate-600 mb-1">Notes</label><textarea id="rfq-notes" rows="2" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm"></textarea></div>
+      </div>
+      <div class="flex gap-2 mt-4 justify-end">
+        <button onclick="closeModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold">Cancel</button>
+        <button onclick="doCreateRFQ('${dealId}')" class="px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-semibold">Create RFQ</button>
+      </div>
+    </div>
+  </div>`;
+};
+
+window.doCreateRFQ = async function(dealId) {
+  const supplierId = document.getElementById('rfq-supplier').value;
+  const product = document.getElementById('rfq-product').value.trim();
+  if (!supplierId) return alert('Please select a supplier.');
+  if (!product) return alert('Product is required.');
+  await createRFQ(dealId, supplierId, {
+    product,
+    quantity: document.getElementById('rfq-qty').value.trim(),
+    destination: document.getElementById('rfq-dest').value.trim(),
+    packaging: document.getElementById('rfq-pkg').value.trim(),
+    deliveryTimeline: document.getElementById('rfq-timeline').value.trim(),
+    notes: document.getElementById('rfq-notes').value.trim()
+  });
+  closeModal();
+  toast('RFQ created.');
+  showDealTab('rfqs', dealId);
+};
+
+window.doSendRFQ = async function(rfqId, dealId) {
+  await sendRFQ(rfqId);
+  toast('RFQ marked as sent.');
+  showDealTab('rfqs', dealId);
 };
 
 // ── Utils ─────────────────────────────────────────────────────────
