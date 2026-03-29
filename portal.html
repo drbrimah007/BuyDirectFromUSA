@@ -161,6 +161,8 @@ window.openRequestDetail = async function(dealId) {
       ${deal.ai_summary ? `<div class="bg-sky-50 border border-sky-200 rounded-xl p-3 text-sm"><p class="text-xs font-semibold text-sky-700 uppercase mb-1">Sourcing Summary</p>${esc(deal.ai_summary)}</div>` : ''}
     </div>
 
+    <div id="portal-timeline" class="mb-4"><p class="text-slate-400 text-xs">Loading timeline...</p></div>
+
     <div class="bg-white rounded-2xl border border-slate-200 p-6">
       <h4 class="font-bold text-lg mb-4">Messages</h4>
       <div id="portal-msgs" class="space-y-3 mb-4 max-h-96 overflow-y-auto">
@@ -181,6 +183,9 @@ window.openRequestDetail = async function(dealId) {
   // Scroll to latest message
   const msgsEl = document.getElementById('portal-msgs');
   if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
+
+  // Load status timeline
+  loadPortalTimeline(dealId);
 };
 
 window.sendPortalMsg = async function(dealId) {
@@ -193,6 +198,52 @@ window.sendPortalMsg = async function(dealId) {
   });
   openRequestDetail(dealId);
 };
+
+// ── Status Timeline ───────────────────────────────────────────────
+async function loadPortalTimeline(dealId) {
+  const { data: history } = await supabase
+    .from('deal_status_history')
+    .select('*')
+    .eq('deal_id', dealId)
+    .order('created_at', { ascending: true });
+  const el = document.getElementById('portal-timeline');
+  if (!el) return;
+  const items = history || [];
+  if (items.length === 0) {
+    el.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 p-6">
+      <p class="text-xs font-semibold text-slate-500 uppercase mb-2">Request Progress</p>
+      <p class="text-sm text-slate-400">No status updates yet. Our team is reviewing your request.</p>
+    </div>`;
+    return;
+  }
+  const statusColors = {
+    new: '#6366f1', ai_reviewed: '#8b5cf6', in_progress: '#3b82f6',
+    awaiting_supplier: '#f59e0b', quote_ready: '#10b981', awaiting_client: '#06b6d4',
+    negotiating: '#f97316', closed_won: '#16a34a', closed_lost: '#ef4444', archived: '#94a3b8'
+  };
+  el.innerHTML = `<div class="bg-white rounded-2xl border border-slate-200 p-6">
+    <p class="text-xs font-semibold text-slate-500 uppercase mb-3">Request Progress</p>
+    <div class="relative pl-6">
+      <div class="absolute left-[9px] top-1 bottom-1 w-0.5 bg-slate-200"></div>
+      ${items.map(h => {
+        const sOld = STATUSES[h.old_status] || { label: h.old_status || 'Start' };
+        const sNew = STATUSES[h.new_status] || { label: h.new_status };
+        const color = statusColors[h.new_status] || '#94a3b8';
+        const dt = new Date(h.created_at);
+        const dateStr = dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `<div class="relative mb-4 last:mb-0">
+          <div class="absolute -left-6 top-0.5 w-[14px] h-[14px] rounded-full border-2 border-white" style="background:${color};box-shadow:0 0 0 2px ${color}33;"></div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs font-bold" style="color:${color};">${esc(sNew.label)}</span>
+              <span class="text-[10px] text-slate-400">${dateStr}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
 
 // Auto-login
 const { data: { session } } = await supabase.auth.getSession();
