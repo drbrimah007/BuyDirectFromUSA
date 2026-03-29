@@ -93,6 +93,7 @@ async function loadSuppliers() {
           <td class="px-4 py-3 text-right">
             <button onclick="toggleVerify('${s.id}',${!s.verified})" class="text-xs ${s.verified ? 'text-slate-500' : 'text-green-600 font-semibold'} mr-2">${s.verified ? 'Unverify' : 'Verify'}</button>
             <button onclick="togglePrefer('${s.id}',${!s.preferred})" class="text-xs ${s.preferred ? 'text-slate-500' : 'text-amber-600 font-semibold'} mr-2">${s.preferred ? 'Unstar' : '⭐ Star'}</button>
+            <button onclick="openEditSupplier('${s.id}')" class="text-xs text-sky-600 font-semibold mr-2">Edit</button>
             <button onclick="confirmDel('${s.id}','${esc(s.company_name)}')" class="text-xs text-red-500">Delete</button>
           </td>
         </tr>`).join('')}
@@ -167,6 +168,58 @@ window.doAddSupplier = async function() {
     privateLabel: document.getElementById('ns-pl').checked,
     exportReady: document.getElementById('ns-export').checked,
     notes: document.getElementById('ns-notes').value.trim()
+  });
+  closeModal();
+  loadSuppliers();
+};
+
+window.openEditSupplier = async function(id) {
+  const s = await getSupplier(id);
+  if (!s) return alert('Supplier not found.');
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onclick="if(event.target===this)closeModal()">
+    <div class="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <h3 class="text-lg font-bold mb-4">Edit Supplier</h3>
+      <div class="space-y-3">
+        <div><label class="block text-sm font-semibold text-slate-600 mb-1">Company Name *</label><input id="es-company" value="${esc(s.company_name)}" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-sm font-semibold text-slate-600 mb-1">Contact Name</label><input id="es-contact" value="${esc(s.contact_name||'')}" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm"></div>
+          <div><label class="block text-sm font-semibold text-slate-600 mb-1">Email</label><input id="es-email" value="${esc(s.email||'')}" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-sm font-semibold text-slate-600 mb-1">Phone</label><input id="es-phone" value="${esc(s.phone||'')}" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm"></div>
+          <div><label class="block text-sm font-semibold text-slate-600 mb-1">U.S. State</label><input id="es-state" value="${esc(s.us_state||'')}" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm"></div>
+        </div>
+        <div><label class="block text-sm font-semibold text-slate-600 mb-1">Website</label><input id="es-web" value="${esc(s.website||'')}" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm"></div>
+        <div><label class="block text-sm font-semibold text-slate-600 mb-1">MOQ Range</label><input id="es-moq" value="${esc(s.moq_range||'')}" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm"></div>
+        <div class="flex gap-4">
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="es-pl" ${s.private_label?'checked':''}> Private Label</label>
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="es-export" ${s.export_ready?'checked':''}> Export Ready</label>
+        </div>
+        <div><label class="block text-sm font-semibold text-slate-600 mb-1">Notes</label><textarea id="es-notes" rows="2" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm">${esc(s.notes||'')}</textarea></div>
+      </div>
+      <div class="flex gap-2 mt-4 justify-end">
+        <button onclick="closeModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold">Cancel</button>
+        <button onclick="doEditSupplier('${s.id}')" class="px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-semibold">Save Changes</button>
+      </div>
+    </div>
+  </div>`;
+};
+
+window.doEditSupplier = async function(id) {
+  const company = document.getElementById('es-company').value.trim();
+  if (!company) return alert('Company name required.');
+  await updateSupplier(id, {
+    company_name: company,
+    contact_name: document.getElementById('es-contact').value.trim(),
+    email: document.getElementById('es-email').value.trim(),
+    phone: document.getElementById('es-phone').value.trim(),
+    us_state: document.getElementById('es-state').value.trim(),
+    website: document.getElementById('es-web').value.trim(),
+    moq_range: document.getElementById('es-moq').value.trim(),
+    private_label: document.getElementById('es-pl').checked,
+    export_ready: document.getElementById('es-export').checked,
+    notes: document.getElementById('es-notes').value.trim()
   });
   closeModal();
   loadSuppliers();

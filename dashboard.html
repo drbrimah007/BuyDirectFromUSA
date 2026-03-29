@@ -53,7 +53,13 @@
 
 <!-- Dashboard (shown after auth) -->
 <div id="dashboard" class="hidden">
-  <div class="flex h-[calc(100vh-52px)]">
+  <!-- Stats bar -->
+  <div id="stats-bar" class="border-b border-slate-200 bg-white px-6 py-3">
+    <div class="flex gap-6 text-center" id="stats-content">
+      <div class="text-xs text-slate-400">Loading stats...</div>
+    </div>
+  </div>
+  <div class="flex" style="height:calc(100vh - 52px - 52px)">
 
     <!-- LEFT: Pipeline -->
     <div class="w-80 border-r border-slate-200 bg-white flex flex-col flex-shrink-0">
@@ -104,6 +110,7 @@ import { supabase } from './js/supabase.js';
 import { listDeals, getDeal, createDeal, changeDealStatus, sendDealMessage, getDealMessages, getDealNotes, addDealNote, getDealSuppliers, matchSupplier, approveAiDraft, DEAL_STATUSES, STATUS_COLORS, URGENCY_COLORS } from './js/deals.js';
 import { listSuppliers, autoMatchSuppliers } from './js/suppliers.js';
 import { generateRequestSummary, generateDraftResponse, suggestNextActions, saveAiSummary } from './js/ai-helper.js';
+import { getDashboardStats, getDealsByCountry } from './js/analytics.js';
 
 let currentUser = null;
 let currentDealId = null;
@@ -135,6 +142,7 @@ async function enterDashboard(user) {
   document.getElementById('dashboard').classList.remove('hidden');
   renderPipelineTabs();
   loadDeals('new');
+  loadAnalytics();
 }
 
 // ── Pipeline Tabs ─────────────────────────────────────────────────
@@ -516,6 +524,20 @@ window.editMsg = async function(messageId, body) {
 
 // ── Utils ─────────────────────────────────────────────────────────
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+async function loadAnalytics() {
+  try {
+    const stats = await getDashboardStats();
+    const el = document.getElementById('stats-content');
+    el.innerHTML = `
+      <div><div class="text-lg font-bold text-slate-900">${stats.totalDeals}</div><div class="text-[10px] font-semibold text-slate-400 uppercase">Total Deals</div></div>
+      <div><div class="text-lg font-bold text-sky-600">${stats.newRequests}</div><div class="text-[10px] font-semibold text-slate-400 uppercase">New</div></div>
+      <div><div class="text-lg font-bold text-emerald-600">${stats.closedWon}</div><div class="text-[10px] font-semibold text-slate-400 uppercase">Won</div></div>
+      <div><div class="text-lg font-bold text-slate-900">${stats.totalSuppliers}</div><div class="text-[10px] font-semibold text-slate-400 uppercase">Suppliers</div></div>
+      <div><div class="text-lg font-bold text-emerald-600">$${(stats.totalRevenue / 100).toLocaleString()}</div><div class="text-[10px] font-semibold text-slate-400 uppercase">Revenue</div></div>
+    `;
+  } catch(e) { console.error('[analytics]', e); }
+}
 function toast(msg) { const el = document.createElement('div'); el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;animation:fadeIn .2s;'; el.textContent = msg; document.body.appendChild(el); setTimeout(() => el.remove(), 3000); }
 
 // ── Auto-login ────────────────────────────────────────────────────
