@@ -127,6 +127,7 @@ import { listSuppliers, autoMatchSuppliers } from './js/suppliers.js';
 import { generateRequestSummary, generateDraftResponse, suggestNextActions, saveAiSummary } from './js/ai-helper.js';
 import { getDashboardStats, getDealsByCountry } from './js/analytics.js';
 import { listNotifications, getUnreadCount, markAllRead, markRead } from './js/notifications.js';
+import { listDocuments, uploadDocument, deleteDocument, getDocumentUrl, DOC_TYPES } from './js/documents.js';
 
 let currentUser = null;
 let currentDealId = null;
@@ -251,6 +252,7 @@ window.selectDeal = async function(id) {
         <button class="py-3 text-slate-500 hover:text-slate-900" onclick="showDealTab('messages','${d.id}')">Messages (${messages.length})</button>
         <button class="py-3 text-slate-500 hover:text-slate-900" onclick="showDealTab('suppliers','${d.id}')">Suppliers (${suppliers.length})</button>
         <button class="py-3 text-slate-500 hover:text-slate-900" onclick="showDealTab('notes','${d.id}')">Notes (${notes.length})</button>
+        <button class="py-3 text-slate-500 hover:text-slate-900" onclick="showDealTab('documents','${d.id}')">Documents</button>
       </div>
     </div>
 
@@ -365,6 +367,38 @@ window.showDealTab = async function(tab, dealId) {
         </select>
         <button onclick="addNote('${dealId}')" class="bg-sky-600 text-white px-4 py-2 rounded-xl text-sm font-semibold">Add</button>
       </div>
+    </div>`;
+  } else if (tab === 'documents') {
+    const docs = await listDocuments(dealId);
+    const typeOptions = Object.entries(DOC_TYPES).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
+    el.innerHTML = `<div>
+      <div class="flex justify-between items-center mb-4">
+        <h4 class="font-bold text-sm">Documents</h4>
+      </div>
+      <div class="border border-slate-200 rounded-xl p-4 mb-4 bg-slate-50">
+        <p class="text-xs font-semibold text-slate-500 uppercase mb-3">Upload Document</p>
+        <div class="flex flex-wrap gap-2 items-end">
+          <div class="flex-1 min-w-[180px]"><label class="block text-xs font-semibold text-slate-600 mb-1">File</label><input type="file" id="doc-file-input" class="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm bg-white"></div>
+          <div><label class="block text-xs font-semibold text-slate-600 mb-1">Type</label><select id="doc-type-select" class="border border-slate-200 rounded-lg px-3 py-1.5 text-sm">${typeOptions}</select></div>
+          <button onclick="uploadDocUI('${dealId}')" class="bg-sky-600 text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-sky-700">Upload</button>
+        </div>
+      </div>
+      ${docs.length > 0 ? `<div class="space-y-2">${docs.map(doc => {
+        const dt = new Date(doc.created_at);
+        const dateStr = dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const typeLabel = DOC_TYPES[doc.doc_type] || doc.doc_type || 'General';
+        const sizeKb = doc.file_size ? (doc.file_size / 1024).toFixed(1) + ' KB' : '';
+        return `<div class="border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-3">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <a href="#" onclick="openDocUrl('${esc(doc.storage_path)}');return false;" class="font-semibold text-sm text-sky-700 hover:underline truncate">${esc(doc.file_name)}</a>
+              <span class="status-pill bg-slate-100 text-slate-600">${esc(typeLabel)}</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">${dateStr}${sizeKb ? ' · ' + sizeKb : ''}</p>
+          </div>
+          <button onclick="deleteDocUI('${doc.id}','${esc(doc.storage_path)}','${dealId}')" class="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 rounded-lg hover:bg-red-50" title="Delete">Delete</button>
+        </div>`;
+      }).join('')}</div>` : '<p class="text-slate-400 text-sm">No documents uploaded yet.</p>'}
     </div>`;
   } else {
     selectDeal(dealId); // re-render overview
@@ -543,6 +577,35 @@ window.editMsg = async function(messageId, body) {
   const { error } = await supabase.from('deal_messages').update({ body: newBody }).eq('id', messageId);
   if (error) { alert('Failed to update message.'); return; }
   if (currentDealId) showDealTab('messages', currentDealId);
+};
+
+// ── Document Handlers ────────────────────────────────────────
+window.uploadDocUI = async function(dealId) {
+  const fileInput = document.getElementById('doc-file-input');
+  const typeSelect = document.getElementById('doc-type-select');
+  const file = fileInput?.files?.[0];
+  if (!file) { toast('Please select a file.'); return; }
+  const docType = typeSelect?.value || 'general';
+  const result = await uploadDocument(dealId, file, currentUser.id, { docType });
+  if (result) {
+    toast('Document uploaded.');
+    showDealTab('documents', dealId);
+  } else {
+    toast('Upload failed. Check console for details.');
+  }
+};
+
+window.deleteDocUI = async function(docId, storagePath, dealId) {
+  if (!confirm('Delete this document?')) return;
+  await deleteDocument(docId, storagePath);
+  toast('Document deleted.');
+  showDealTab('documents', dealId);
+};
+
+window.openDocUrl = async function(storagePath) {
+  const url = await getDocumentUrl(storagePath);
+  if (url) window.open(url, '_blank');
+  else toast('Could not generate download link.');
 };
 
 // ── Utils ─────────────────────────────────────────────────────────
