@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>BuyDirectFromUSA — Track</title>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f172a">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <style>
@@ -141,13 +140,25 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <button style="padding:5px 10px;border:1px solid #475569;border-radius:8px;background:none;color:#f87171;font-size:12px;cursor:pointer" onclick="adminLogout()">Log out</button>
   </div>
 
-  <!-- Location picker -->
+  <!-- Location + Destination -->
   <div class="cd">
-    <label class="fl">Scan Location</label>
-    <div id="loc-chips" class="loc-pick"></div>
-    <div style="display:flex;gap:5px;margin-top:8px">
-      <input class="fi" id="new-loc-name" placeholder="New location name" style="flex:1;font-size:13px;padding:9px">
-      <button style="padding:8px 14px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap" onclick="addLocation()">+ Add</button>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1">
+        <label class="fl">Scan Location</label>
+        <div id="loc-chips" class="loc-pick"></div>
+        <div style="display:flex;gap:5px;margin-top:6px">
+          <input class="fi" id="new-loc-name" placeholder="Add location" style="flex:1;font-size:12px;padding:7px">
+          <button style="padding:7px 10px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer" onclick="addLocation()">+</button>
+        </div>
+      </div>
+      <div style="flex:1">
+        <label class="fl">Destination</label>
+        <div id="dest-chips" class="loc-pick"></div>
+        <div style="display:flex;gap:5px;margin-top:6px">
+          <input class="fi" id="new-dest-name" placeholder="Add destination" style="flex:1;font-size:12px;padding:7px">
+          <button style="padding:7px 10px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer" onclick="addDest()">+</button>
+        </div>
+      </div>
     </div>
     <div id="loc-msg" style="font-size:11px;margin-top:4px"></div>
   </div>
@@ -155,22 +166,24 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
   <!-- Camera -->
   <div class="cd">
     <div id="scanner-camera" style="width:100%;border-radius:10px;overflow:hidden;margin-bottom:10px"></div>
-    <button class="bt bb g8" id="btn-cam-start" onclick="startCam()">Open Camera Scanner</button>
-    <button class="bt bo g8" id="btn-cam-stop" onclick="stopCam()" style="display:none">Stop Camera</button>
-    <div style="text-align:center;padding:4px 0;color:#475569;font-size:11px">or type below</div>
+    <div style="display:flex;gap:6px">
+      <button class="bt bb" id="btn-cam-start" onclick="startCam()" style="flex:1">Open Camera Scanner</button>
+      <button class="bt bo" id="btn-cam-stop" onclick="stopCam()" style="flex:1;display:none">Stop Camera</button>
+      <button class="bt bg" id="btn-save" onclick="doSave()" style="flex:1">Save Entry</button>
+    </div>
   </div>
+  <div class="sb" id="sc-status">Ready to scan</div>
 
   <!-- Entry form -->
   <div class="cd">
     <div class="fg" style="position:relative"><label class="fl">Recipient Name</label><input class="fi" id="sc-name" placeholder="e.g. John Smith" autocapitalize="words" autocomplete="off" oninput="nameAutocomplete(this.value)"><div id="name-suggestions" class="name-ac"></div></div>
     <div class="fg"><label class="fl">Tracking Number</label><input class="fi mono" id="sc-tracking" placeholder="Scanned or type here"></div>
-    <div class="fg"><label class="fl">Notes (optional)</label><input class="fi" id="sc-notes" placeholder="Extra info"></div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">ETA</label><input class="fi" id="sc-eta" type="date" style="font-size:13px"></div>
+      <div class="fg" style="flex:1"><label class="fl">Notes (optional)</label><input class="fi" id="sc-notes" placeholder="Extra info"></div>
+    </div>
+    <button class="bt bo" onclick="clearForm()" style="font-size:12px;padding:8px">Clear Form</button>
   </div>
-  <div style="padding:0 14px">
-    <button class="bt bg g8" id="btn-save" onclick="doSave()">Save Entry</button>
-    <button class="bt bo" onclick="clearForm()">Clear</button>
-  </div>
-  <div class="sb" id="sc-status">Ready to scan</div>
 
   <!-- Manage Users -->
   <div class="cd">
@@ -332,8 +345,11 @@ async function publicTrack(){
       events.forEach((e,i)=>{
         const isLatest=i===0;
         html+='<div style="padding:4px 0;'+(isLatest?'color:#e2e8f0':'color:#64748b')+'">';
-        html+='<div style="font-size:12px;font-weight:'+(isLatest?'700':'400')+'">'+(e.scan_location?esc(e.scan_location):'Scanned')+'</div>';
+        let locStr=e.scan_location?esc(e.scan_location):'Scanned';
+        if(e.destination) locStr+=' → '+esc(e.destination);
+        html+='<div style="font-size:12px;font-weight:'+(isLatest?'700':'400')+'">'+locStr+'</div>';
         html+='<div style="font-size:11px;color:#475569">'+fmt(e.created_at)+(e.scanned_by?' · by '+esc(e.scanned_by):'')+'</div>';
+        if(e.eta) html+='<div style="font-size:11px;color:#f59e0b">ETA: '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
         html+='</div>';
       });
       html+='</div>';
@@ -379,6 +395,7 @@ function enterScanner(){
   else document.getElementById("super-section").style.display="none";
   showTab("scanner");
   loadLocations();
+  loadDests();
   loadViewers();
   if(adm.is_super) loadAdmins();
   loadAllEntries();
@@ -443,6 +460,51 @@ async function addLocation(){
     selectedLoc=n;
     loadLocations();
   } else msg.innerHTML='<span class="er">'+esc(r.error)+'</span>';
+}
+
+// ── Destinations (stored in localStorage, no DB table needed) ──
+let selectedDest="";
+let savedDests=[];
+function loadDests(){
+  try{savedDests=JSON.parse(localStorage.getItem("scan_dests")||"[]")}catch(e){savedDests=[]}
+  renderDests();
+}
+function renderDests(){
+  const div=document.getElementById("dest-chips");
+  if(!savedDests.length){div.innerHTML='<span style="color:#475569;font-size:11px">None yet</span>';return}
+  div.innerHTML=savedDests.map(d=>{
+    const on=selectedDest===d?"on":"";
+    return `<span class="loc-chip ${on}" onclick="pickDest(this,'${esc(d)}')">${esc(d)}<span class="loc-x" onclick="event.stopPropagation();removeDest('${esc(d)}')">&times;</span></span>`;
+  }).join("");
+}
+function pickDest(el,name){
+  document.querySelectorAll("#dest-chips .loc-chip").forEach(c=>c.classList.remove("on"));
+  if(selectedDest===name){selectedDest="";return}
+  selectedDest=name;el.classList.add("on");
+}
+function addDest(){
+  const n=document.getElementById("new-dest-name").value.trim();
+  const msg=document.getElementById("loc-msg");
+  if(!n){msg.innerHTML='<span class="er">Enter a destination name.</span>';return}
+  if(savedDests.some(d=>d.toLowerCase()===n.toLowerCase())){
+    selectedDest=savedDests.find(d=>d.toLowerCase()===n.toLowerCase());
+    renderDests();
+    document.getElementById("new-dest-name").value="";
+    return;
+  }
+  savedDests.push(n);
+  localStorage.setItem("scan_dests",JSON.stringify(savedDests));
+  selectedDest=n;
+  document.getElementById("new-dest-name").value="";
+  renderDests();
+  msg.innerHTML='<span class="ok">Destination added!</span>';
+}
+function removeDest(name){
+  if(!confirm("Remove destination: "+name+"?")) return;
+  savedDests=savedDests.filter(d=>d!==name);
+  localStorage.setItem("scan_dests",JSON.stringify(savedDests));
+  if(selectedDest===name) selectedDest="";
+  renderDests();
 }
 
 // ── Camera (Native BarcodeDetector + html5-qrcode fallback) ──
@@ -749,15 +811,15 @@ async function doSave(){
   const name=document.getElementById("sc-name").value.trim();
   const tracking=document.getElementById("sc-tracking").value.trim();
   const notes=document.getElementById("sc-notes").value.trim();
+  const eta=document.getElementById("sc-eta").value||null;
   const st=document.getElementById("sc-status");
   if(!name||!tracking){st.innerHTML='<span class="er">Name and tracking number are required.</span>';return}
-  if(!selectedLoc){st.innerHTML='<span class="er">Please select a scan location above.</span>';return}
+  if(!selectedLoc){st.innerHTML='<span class="er">Please select a scan location.</span>';return}
   document.getElementById("btn-save").disabled=true;st.textContent="Saving...";
   try{
-    const r=await api({action:"scan",adminName:adm.name,adminPassword:adm.password,name,trackingNumber:tracking,rawText:notes,scanLocation:selectedLoc});
+    const r=await api({action:"scan",adminName:adm.name,adminPassword:adm.password,name,trackingNumber:tracking,rawText:notes,scanLocation:selectedLoc,destination:selectedDest,eta});
     if(r.ok){
       lastSavedName=name;
-      // Add to known people if new
       if(!knownPeople.some(p=>p.name.toLowerCase()===name.toLowerCase())) knownPeople.unshift({name,company:""});
       st.innerHTML='<span class="ok">Saved! '+esc(name)+' — '+esc(tracking)+'</span>';
       clearForm();
@@ -768,10 +830,10 @@ async function doSave(){
   document.getElementById("btn-save").disabled=false;
 }
 function clearForm(){
-  // Keep the last saved name — clears only tracking and notes
   document.getElementById("sc-name").value=lastSavedName;
   document.getElementById("sc-tracking").value="";
   document.getElementById("sc-notes").value="";
+  // Keep ETA and destination as they likely apply to the batch
 }
 
 // ── Viewers ──
@@ -902,11 +964,16 @@ async function loadAllEntries(page){
   const d=document.getElementById("admin-entries");
   if(!r.ok||!r.entries||!r.entries.length){d.innerHTML='<span style="color:#475569;font-size:12px">No entries yet.</span>';document.getElementById("entries-pager").innerHTML="";return}
   entriesTotalCount=r.total||r.entries.length;
-  d.innerHTML=r.entries.map(e=>`<div class="ei" style="margin:0 0 6px">
+  d.innerHTML=r.entries.map(e=>{
+    let route=e.scan_location?esc(e.scan_location):'';
+    if(e.destination) route+=(route?' → ':'')+esc(e.destination);
+    const etaStr=e.eta?'<span style="color:#f59e0b"> · ETA '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric"})+'</span>':'';
+    return `<div class="ei" style="margin:0 0 6px">
     <div class="tk">${esc(e.tracking_number)}</div>
     <div class="nm">${esc(e.name)}</div>
-    <div class="dt">${fmt(e.created_at)}${e.scanned_by?' · by '+esc(e.scanned_by):''}${e.scan_location?' · '+esc(e.scan_location):''}</div>
-  </div>`).join("");
+    <div class="dt">${fmt(e.created_at)}${e.scanned_by?' · by '+esc(e.scanned_by):''}${route?' · '+route:''}${etaStr}</div>
+  </div>`;
+  }).join("");
   // Pagination controls
   const totalPages=Math.ceil(entriesTotalCount/ENTRIES_PER_PAGE);
   if(totalPages<=1){document.getElementById("entries-pager").innerHTML="";return}
@@ -975,11 +1042,17 @@ function renderViewer(){
   document.getElementById("vs-wk").textContent=vEntries.filter(e=>new Date(e.created_at)>=wk).length;
   const d=document.getElementById("v-list");
   if(!f.length){d.innerHTML='<div style="text-align:center;padding:30px;color:#475569">No packages found.</div>';document.getElementById("v-pager").innerHTML="";return}
-  d.innerHTML=f.map(e=>`<div class="ei">
+  d.innerHTML=f.map(e=>{
+    let route=e.scan_location?esc(e.scan_location):'';
+    if(e.destination) route+=(route?' → ':'')+esc(e.destination);
+    const etaStr=e.eta?'<div style="color:#f59e0b;font-size:11px;margin-top:2px">ETA: '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>':'';
+    return `<div class="ei">
     <div class="tk">${esc(e.tracking_number)}</div>
-    <div class="dt">${fmt(e.created_at)}${e.scan_location?' · '+esc(e.scan_location):''}</div>
+    <div class="dt">${fmt(e.created_at)}${route?' · '+route:''}</div>
+    ${etaStr}
     ${e.raw_text?`<span class="rt" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block';this.textContent=this.nextElementSibling.style.display==='block'?'Hide notes':'Show notes'">Show notes</span><div class="rb">${esc(e.raw_text)}</div>`:''}
-  </div>`).join("");
+  </div>`;
+  }).join("");
   // Viewer pagination
   const totalPages=Math.ceil(vTotal/V_PER_PAGE);
   const pg=document.getElementById("v-pager");
@@ -1014,8 +1087,9 @@ function viewerLogout(){
     if(s&&s.name&&s.password){
       const r=await api({action:"admin-login",name:s.name,password:s.password});
       if(r.ok){adm={name:s.name,password:s.password,is_super:r.admin.is_super};enterScanner();return}
+      else{localStorage.removeItem("adm_session")} // Clear bad session
     }
-  }catch(e){}
+  }catch(e){localStorage.removeItem("adm_session")}
 })();
 </script>
 </body>
