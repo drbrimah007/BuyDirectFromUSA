@@ -802,7 +802,7 @@ async function startCam(){
   // METHOD 1: Native BarcodeDetector
   if("BarcodeDetector" in window){
     try{
-      nativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a"]});
+      nativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a","qr_code"]});
       camStream=await navigator.mediaDevices.getUserMedia({
         video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}
       });
@@ -864,13 +864,14 @@ async function startCam(){
       return;
     }
 
-    const formats=[0,2,4,13];
+    const formats=[0,2,4,7,13];
     try{
       const namedFormats=[
         Html5QrcodeSupportedFormats.CODE_128,
         Html5QrcodeSupportedFormats.CODE_39,
         Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.UPC_A
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.QR_CODE
       ].filter(f=>f!==undefined);
       if(namedFormats.length>0) formats.splice(0,formats.length,...namedFormats);
     }catch(e){}
@@ -915,7 +916,7 @@ async function startCam(){
       return;
     }
     st.textContent="Starting scanner (widget mode)...";
-    const formats=[0,2,4,13];
+    const formats=[0,2,4,7,13];
     html5Sc=new Html5Qrcode("scanner-camera",{formatsToSupport:formats,verbose:false});
     const w=Math.min(window.innerWidth-40,380);
     await html5Sc.start(
@@ -1244,9 +1245,10 @@ async function loadAllEntries(page){
     if(e.destination) route+=(route?' &rarr; ':'')+esc(e.destination);
     const etaStr=e.eta?'<span style="color:#f59e0b"> · ETA '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric"})+'</span>':'';
     return `<div class="ei" style="margin:0 0 6px">
-    <div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">${esc(e.tracking_number)}</div><div style="display:flex;align-items:center;gap:6px">${statusBadge(e.status)}<button onclick="confirmDeleteEntry(${e.id},'${esc(e.tracking_number).replace(/'/g,"\\'")}','${esc(e.name).replace(/'/g,"\\'")}')" style="padding:2px 6px;border:1px solid #7f1d1d;border-radius:5px;background:none;color:#f87171;font-size:10px;cursor:pointer" title="Delete">✕</button></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">${esc(e.tracking_number)}</div>${statusBadge(e.status)}</div>
     <div class="nm">${esc(e.name)}</div>
     <div class="dt">${fmt(e.created_at)}${e.scanned_by?' · by '+esc(e.scanned_by):''}${route?' · '+route:''}${etaStr}</div>
+    <button onclick="confirmDeleteEntry(${e.id},'${esc(e.tracking_number).replace(/'/g,"\\'")}','${esc(e.name).replace(/'/g,"\\'")}')" style="margin-top:5px;padding:3px 10px;border:1px solid #7f1d1d;border-radius:5px;background:none;color:#f87171;font-size:10px;cursor:pointer">Delete</button>
   </div>`;
   }).join("");
   const totalPages=Math.ceil(entriesTotalCount/ENTRIES_PER_PAGE);
@@ -1463,7 +1465,7 @@ async function delStartCam(){
 
   if("BarcodeDetector" in window){
     try{
-      delNativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a"]});
+      delNativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a","qr_code"]});
       delCamStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}});
       const video=document.createElement("video");
       video.id="del-cam-video";
