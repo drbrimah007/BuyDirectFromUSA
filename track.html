@@ -343,13 +343,16 @@ let scanDone=false;
 
 function isValidTracking(s){
   if(!s||s.length<4) return false;
-  // Allow alphanumeric, dashes, dots, slashes — typical tracking chars
-  return /^[A-Za-z0-9\-\.\/\s]{4,80}$/.test(s);
+  // Count how many alphanumeric characters vs total
+  const alnum=(s.match(/[A-Za-z0-9]/g)||[]).length;
+  // At least 60% of characters should be alphanumeric (filters out pure garbage)
+  return (alnum/s.length)>=0.6;
 }
 
 function onBarcodeDetected(raw){
   if(scanDone) return;
-  const decoded=raw.trim();
+  const decoded=(raw||"").trim();
+  if(!decoded) return;
   if(!isValidTracking(decoded)){
     document.getElementById("sc-status").innerHTML='<span class="er">Bad read: "'+esc(decoded)+'" — keep scanning</span>';
     return;
@@ -368,67 +371,138 @@ function onBarcodeDetected(raw){
 }
 
 async function startCam(){
+  const st=document.getElementById("sc-status");
   document.getElementById("btn-cam-start").style.display="none";
   document.getElementById("btn-cam-stop").style.display="block";
-  document.getElementById("sc-status").textContent="Starting camera...";
+  st.textContent="Starting camera...";
   scanConfirm={};
   scanDone=false;
 
-  // Try native BarcodeDetector first (Chrome Android — fast & accurate)
-  const hasNative=("BarcodeDetector" in window);
-  if(hasNative){
-    try{
-      const formats=await BarcodeDetector.getSupportedFormats();
-      console.log("Native BarcodeDetector formats:",formats);
-    }catch(e){console.log("BarcodeDetector check failed",e)}
-  }
-
-  if(hasNative){
+  // METHOD 1: Native BarcodeDetector (Chrome Android 83+ — fast & accurate)
+  if("BarcodeDetector" in window){
     try{
       nativeDetector=new BarcodeDetector({formats:["code_128","code_39","qr_code","ean_13","upc_a","itf","data_matrix"]});
       camStream=await navigator.mediaDevices.getUserMedia({
-        video:{facingMode:"environment",width:{ideal:1280},height:{ideal:720}}
+        video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}
       });
       const video=document.createElement("video");
       video.id="native-cam-video";
       video.setAttribute("playsinline","true");
       video.setAttribute("autoplay","true");
-      video.style.cssText="width:100%;border-radius:10px;display:block";
+      video.setAttribute("muted","true");
+      video.style.cssText="width:100%;border-radius:10px;display:block;background:#000";
       video.srcObject=camStream;
       const container=document.getElementById("scanner-camera");
       container.innerHTML="";
       container.appendChild(video);
       await video.play();
-      document.getElementById("sc-status").textContent="Camera ready — point at barcode";
-
-      // Scan every 150ms using native detector
+      st.innerHTML='<span class="ok">Camera ready (native) — point at barcode</span>';
       nativeScanInterval=setInterval(async()=>{
         if(scanDone||!nativeDetector) return;
         try{
           const barcodes=await nativeDetector.detect(video);
-          if(barcodes.length>0){
+          if(barcodes&&barcodes.length>0){
             onBarcodeDetected(barcodes[0].rawValue);
           }
         }catch(e){}
-      },150);
-      return; // native started OK
+      },120);
+      return;
     }catch(e){
-      console.log("Native BarcodeDetector failed, falling back:",e);
+      st.textContent="Native scanner failed, trying backup...";
       nativeDetector=null;
+      if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}
     }
   }
 
-  // Fallback: html5-qrcode library
-  document.getElementById("sc-status").textContent="Starting scanner (library mode)...";
+  // METHOD 2: Direct camera + html5-qrcode decode (no UI widget)
   try{
-    const formats=[
-      Html5QrcodeSupportedFormats.CODE_128,
-      Html5QrcodeSupportedFormats.CODE_39,
-      Html5QrcodeSupportedFormats.QR_CODE,
-      Html5QrcodeSupportedFormats.EAN_13,
-      Html5QrcodeSupportedFormats.UPC_A,
-      Html5QrcodeSupportedFormats.DATA_MATRIX
-    ];
+    camStream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}
+    });
+    const video=document.createElement("video");
+    video.id="native-cam-video";
+    video.setAttribute("playsinline","true");
+    video.setAttribute("autoplay","true");
+    video.setAttribute("muted","true");
+    video.style.cssText="width:100%;border-radius:10px;display:block;background:#000";
+    video.srcObject=camStream;
+    const container=document.getElementById("scanner-camera");
+    container.innerHTML="";
+    container.appendChild(video);
+    await video.play();
+
+    // Create offscreen canvas for frame capture
+    const canvas=document.createElement("canvas");
+    const ctx=canvas.getContext("2d",{willReadFrequently:true});
+
+    st.innerHTML='<span class="ok">Camera ready — point at barcode</span>';
+
+    // Check if html5-qrcode library loaded
+    if(typeof Html5Qrcode==="undefined"){
+      st.innerHTML='<span class="er">Scanner library not loaded. Type tracking # manually.</span>';
+      return;
+    }
+
+    const formats=[0,2,3,4,6,7,8,9,10,12,13,15]; // numeric format IDs as fallback
+    try{
+      // Try named enums first
+      const namedFormats=[
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.DATA_MATRIX
+      ].filter(f=>f!==undefined);
+      if(namedFormats.length>0) formats.splice(0,formats.length,...namedFormats);
+    }catch(e){}
+
+    const decoder=new Html5Qrcode("scanner-camera-decode",{formatsToSupport:formats,verbose:false});
+
+    // Create hidden decode element
+    let decodeDiv=document.getElementById("scanner-camera-decode");
+    if(!decodeDiv){
+      decodeDiv=document.createElement("div");
+      decodeDiv.id="scanner-camera-decode";
+      decodeDiv.style.display="none";
+      document.body.appendChild(decodeDiv);
+    }
+
+    // Scan frames from video every 200ms
+    nativeScanInterval=setInterval(async()=>{
+      if(scanDone||!video.videoWidth) return;
+      canvas.width=video.videoWidth;
+      canvas.height=video.videoHeight;
+      ctx.drawImage(video,0,0);
+      try{
+        const imageData=canvas.toDataURL("image/jpeg",0.8);
+        // Use scanFile with the image
+        const blob=await(await fetch(imageData)).blob();
+        const file=new File([blob],"frame.jpg",{type:"image/jpeg"});
+        const result=await decoder.scanFileV2(file,false);
+        if(result&&result.decodedText){
+          onBarcodeDetected(result.decodedText);
+        }
+      }catch(e){
+        // No barcode found in this frame — normal, keep trying
+      }
+    },250);
+    return;
+  }catch(e){
+    st.textContent="Camera error: "+e;
+    if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}
+  }
+
+  // METHOD 3: html5-qrcode built-in UI (last resort)
+  try{
+    if(typeof Html5Qrcode==="undefined"){
+      st.innerHTML='<span class="er">Scanner not available. Please type the tracking number manually.</span>';
+      document.getElementById("btn-cam-start").style.display="block";
+      document.getElementById("btn-cam-stop").style.display="none";
+      return;
+    }
+    st.textContent="Starting scanner (widget mode)...";
+    const formats=[0,2,3,6,7,13]; // CODE_128, CODE_39, QR, EAN_13, UPC_A, DATA_MATRIX
     html5Sc=new Html5Qrcode("scanner-camera",{formatsToSupport:formats,verbose:false});
     const w=Math.min(window.innerWidth-40,380);
     await html5Sc.start(
@@ -437,9 +511,9 @@ async function startCam(){
       (decoded)=>{ onBarcodeDetected(decoded); },
       ()=>{}
     );
-    document.getElementById("sc-status").textContent="Camera ready — point at barcode";
+    st.innerHTML='<span class="ok">Camera ready (widget) — point at barcode</span>';
   }catch(e){
-    document.getElementById("sc-status").textContent="Camera error: "+e;
+    st.innerHTML='<span class="er">Camera error: '+esc(String(e))+'</span>';
     document.getElementById("btn-cam-start").style.display="block";
     document.getElementById("btn-cam-stop").style.display="none";
   }
@@ -447,14 +521,13 @@ async function startCam(){
 
 function stopCam(){
   scanDone=true;
-  // Stop native detector
   if(nativeScanInterval){clearInterval(nativeScanInterval);nativeScanInterval=null}
   if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}
   nativeDetector=null;
   const nv=document.getElementById("native-cam-video");
   if(nv) nv.remove();
-  // Stop html5-qrcode
   if(html5Sc){try{html5Sc.stop().then(()=>html5Sc.clear()).catch(()=>{})}catch(e){}}
+  html5Sc=null;
   document.getElementById("btn-cam-start").style.display="block";
   document.getElementById("btn-cam-stop").style.display="none";
   scanConfirm={};
@@ -463,11 +536,20 @@ function stopCam(){
 // ── Auto-lookup name from existing entries ──
 async function autoLookupName(tracking){
   try{
-    const r=await api({action:"public-track",trackingNumber:tracking});
-    if(r.ok&&r.entries&&r.entries.length>0){
-      document.getElementById("sc-status").innerHTML='<span class="ok">Scanned: '+esc(tracking)+' (already in system)</span>';
+    if(adm){
+      const r=await api({action:"all-entries",adminName:adm.name,adminPassword:adm.password});
+      if(r.ok&&r.entries){
+        const match=r.entries.find(e=>e.tracking_number&&e.tracking_number.toLowerCase()===tracking.toLowerCase());
+        if(match&&match.name){
+          document.getElementById("sc-name").value=match.name;
+          document.getElementById("sc-status").innerHTML='<span class="ok">Scanned: '+esc(tracking)+' — Name auto-filled: '+esc(match.name)+'</span>';
+          document.getElementById("sc-name").focus();
+          return;
+        }
+      }
     }
   }catch(e){}
+  document.getElementById("sc-status").innerHTML='<span class="ok">Scanned: '+esc(tracking)+' — Enter recipient name</span>';
   document.getElementById("sc-name").focus();
 }
 
