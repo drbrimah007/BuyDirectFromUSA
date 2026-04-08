@@ -84,10 +84,11 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div class="pt-box" style="margin:0 -24px 20px;border-radius:0;background:#0f172a;padding:16px 14px">
         <div class="pt-title">Open Tracking</div>
         <div class="pt-input-row">
-          <input type="text" id="pt-input" placeholder="Enter tracking number" autocomplete="off">
+          <input type="text" id="pt-input" placeholder="Tracking # or last 5 digits" autocomplete="off">
           <button onclick="publicTrack()">Track</button>
         </div>
         <div id="pt-results" class="pt-results"></div>
+        <div style="font-size:10px;color:#475569;margin-top:4px">Case-insensitive — partial numbers work too</div>
       </div>
 
       <button class="bt bb g8" onclick="showTab('viewer')">Track My Package</button>
@@ -333,18 +334,52 @@ async function addLocation(){
 }
 
 // ── Camera ──
+let scanResults={};  // count occurrences for confirmation
+let scanTimer=null;
+const SCAN_CONFIRM_COUNT=2;  // require same value scanned 2x to confirm
+
+function isValidTracking(s){
+  // Must be at least 6 chars, mostly alphanumeric, no weird symbols
+  if(!s||s.length<6) return false;
+  if(/^[A-Za-z0-9\-\.\/\s]{6,60}$/.test(s)) return true;
+  return false;
+}
+
 function startCam(){
   document.getElementById("btn-cam-start").style.display="none";
   document.getElementById("btn-cam-stop").style.display="block";
-  document.getElementById("sc-status").textContent="Starting camera...";
-  html5Sc=new Html5Qrcode("scanner-camera");
-  html5Sc.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:140},aspectRatio:1.5},
+  document.getElementById("sc-status").textContent="Starting camera... Point at barcode";
+  scanResults={};
+  // Only shipping-relevant 1D barcode formats (reduces false positives)
+  const formats=[
+    Html5QrcodeSupportedFormats.CODE_128,
+    Html5QrcodeSupportedFormats.CODE_39,
+    Html5QrcodeSupportedFormats.QR_CODE,
+    Html5QrcodeSupportedFormats.DATA_MATRIX
+  ];
+  html5Sc=new Html5Qrcode("scanner-camera",{formatsToSupport:formats,verbose:false});
+  const w=Math.min(window.innerWidth-40,380);
+  html5Sc.start(
+    {facingMode:"environment"},
+    {fps:20,qrbox:{width:w,height:Math.round(w*0.35)},disableFlip:false},
     (decoded)=>{
-      document.getElementById("sc-tracking").value=decoded;
-      document.getElementById("sc-status").textContent="Barcode found! Enter the name and save.";
-      if(navigator.vibrate) navigator.vibrate(100);
-      stopCam();
-      document.getElementById("sc-name").focus();
+      decoded=decoded.trim();
+      if(!isValidTracking(decoded)){
+        document.getElementById("sc-status").innerHTML='<span class="er">Bad read: "'+esc(decoded)+'" — keep scanning</span>';
+        return;
+      }
+      // Count this result for confirmation
+      scanResults[decoded]=(scanResults[decoded]||0)+1;
+      if(scanResults[decoded]>=SCAN_CONFIRM_COUNT){
+        // Confirmed! Use this value
+        document.getElementById("sc-tracking").value=decoded;
+        document.getElementById("sc-status").innerHTML='<span class="ok">Scanned: '+esc(decoded)+'</span>';
+        if(navigator.vibrate) navigator.vibrate([100,50,100]);
+        stopCam();
+        autoLookupName(decoded);
+      } else {
+        document.getElementById("sc-status").textContent="Read: "+decoded+" — confirming...";
+      }
     },()=>{}
   ).catch(e=>{
     document.getElementById("sc-status").textContent="Camera error: "+e;
@@ -356,6 +391,20 @@ function stopCam(){
   if(html5Sc) html5Sc.stop().then(()=>html5Sc.clear()).catch(()=>{});
   document.getElementById("btn-cam-start").style.display="block";
   document.getElementById("btn-cam-stop").style.display="none";
+  scanResults={};
+}
+
+// ── Auto-lookup name from existing entries ──
+async function autoLookupName(tracking){
+  try{
+    const r=await api({action:"public-track",trackingNumber:tracking});
+    if(r.ok&&r.entries&&r.entries.length>0){
+      // Found existing entry — notify but don't block
+      document.getElementById("sc-status").innerHTML='<span class="ok">Scanned: '+esc(tracking)+' (already in system)</span>';
+    }
+  }catch(e){}
+  // Focus the name field for manual entry
+  document.getElementById("sc-name").focus();
 }
 
 // ── Save entry ──
