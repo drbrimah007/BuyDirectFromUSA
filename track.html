@@ -90,11 +90,31 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .pt-results{margin-top:12px}
 .pt-note{font-size:11px;color:#64748b;margin-top:8px;padding:8px;background:#0f172a;border-radius:6px;border-left:2px solid #3b82f6}
 .pt-empty{text-align:center;padding:16px;color:#475569;font-size:12px}
+/* Status badges */
+.st-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.st-scanned{background:#334155;color:#94a3b8}
+.st-in-transit{background:#1e3a5f;color:#60a5fa}
+.st-delay{background:#7f1d1d;color:#fca5a5}
+.st-return{background:#713f12;color:#fde68a}
+.st-arrived-destination{background:#064e3b;color:#6ee7b7}
+.st-out-for-delivery{background:#4c1d95;color:#c4b5fd}
+.st-held{background:#78350f;color:#fdba74}
+.st-delivered{background:#065f46;color:#34d399}
+/* Bulk status page */
+.bs-date-chip{display:inline-block;padding:8px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#94a3b8;font-size:13px;cursor:pointer;margin:0 5px 6px 0}
+.bs-date-chip.on{border-color:#3b82f6;background:#1e3a5f;color:#60a5fa}
+.bs-entry{background:#0f172a;border-radius:8px;padding:10px 12px;margin-bottom:5px;display:flex;align-items:center;gap:10px}
+.bs-entry label{display:flex;align-items:center;gap:8px;flex:1;cursor:pointer;min-width:0}
+.bs-entry input[type=checkbox]{width:18px;height:18px;accent-color:#3b82f6;flex-shrink:0}
+.bs-entry .bs-info{flex:1;min-width:0}
+.bs-entry .bs-tk{font-size:12px;font-weight:700;color:#f8fafc;font-family:'SF Mono','Fira Code',monospace;word-break:break-all}
+.bs-entry .bs-nm{font-size:11px;color:#94a3b8}
+.bs-entry .bs-route{font-size:10px;color:#64748b}
 </style>
 </head>
 <body>
 
-<!-- ═══════ GATE: which mode? ═══════ -->
+<!-- GATE: which mode? -->
 <div id="gate" class="pg on">
   <div class="cen">
     <div class="lbx" style="text-align:center">
@@ -118,7 +138,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
   </div>
 </div>
 
-<!-- ═══════ ADMIN LOGIN ═══════ -->
+<!-- ADMIN LOGIN -->
 <div id="pg-admin-login" class="pg">
   <div class="cen">
     <div class="lbx">
@@ -133,7 +153,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
   </div>
 </div>
 
-<!-- ═══════ SCANNER (logged-in admin) ═══════ -->
+<!-- SCANNER (logged-in admin) -->
 <div id="pg-scanner" class="pg">
   <div class="hdr" style="display:flex;justify-content:space-between;align-items:center">
     <div><h1 id="sc-title">Scan Packages</h1><p id="sc-sub"></p></div>
@@ -183,6 +203,11 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div class="fg" style="flex:1"><label class="fl">Notes (optional)</label><input class="fi" id="sc-notes" placeholder="Extra info"></div>
     </div>
     <button class="bt bo" onclick="clearForm()" style="font-size:12px;padding:8px">Clear Form</button>
+  </div>
+
+  <!-- Status Update Button -->
+  <div class="cd">
+    <button class="bt" style="background:#7c3aed;color:#fff;font-size:14px;padding:12px" onclick="openStatusPage()">Update Package Statuses</button>
   </div>
 
   <!-- Manage Users -->
@@ -241,7 +266,60 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
   </div>
 </div>
 
-<!-- ═══════ VIEWER (track my package) ═══════ -->
+<!-- BULK STATUS UPDATE PAGE -->
+<div id="pg-status" class="pg">
+  <div class="hdr" style="display:flex;justify-content:space-between;align-items:center">
+    <div><h1>Update Statuses</h1><p>Select date, then update package statuses</p></div>
+    <button style="padding:5px 10px;border:1px solid #475569;border-radius:8px;background:none;color:#94a3b8;font-size:12px;cursor:pointer" onclick="closeStatusPage()">Back</button>
+  </div>
+
+  <!-- Date picker -->
+  <div class="cd">
+    <label class="fl">Select Date</label>
+    <div id="bs-dates" style="max-height:120px;overflow-y:auto;margin-top:4px"></div>
+    <div id="bs-date-msg" style="font-size:11px;margin-top:4px"></div>
+  </div>
+
+  <!-- Entries for selected date -->
+  <div class="cd" id="bs-entries-card" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <label class="fl" style="margin:0"><span id="bs-date-label"></span> — <span id="bs-count"></span> packages</label>
+      <div style="display:flex;gap:5px">
+        <button style="padding:4px 10px;border:1px solid #334155;border-radius:6px;background:none;color:#60a5fa;font-size:11px;cursor:pointer" onclick="bsSelectAll()">Select All</button>
+        <button style="padding:4px 10px;border:1px solid #334155;border-radius:6px;background:none;color:#94a3b8;font-size:11px;cursor:pointer" onclick="bsSelectNone()">None</button>
+      </div>
+    </div>
+
+    <!-- Filter by current status -->
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
+      <span class="bs-date-chip on" style="font-size:11px;padding:5px 10px" onclick="bsFilterStatus('')" id="bs-filter-all">All</span>
+      <span class="bs-date-chip" style="font-size:11px;padding:5px 10px" onclick="bsFilterStatus('Scanned')">Scanned</span>
+      <span class="bs-date-chip" style="font-size:11px;padding:5px 10px" onclick="bsFilterStatus('In Transit')">In Transit</span>
+      <span class="bs-date-chip" style="font-size:11px;padding:5px 10px" onclick="bsFilterStatus('Arrived Destination')">Arrived</span>
+    </div>
+
+    <div id="bs-list" style="max-height:400px;overflow-y:auto"></div>
+    <div id="bs-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px"></div>
+
+    <!-- Bulk action bar -->
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid #334155">
+      <label class="fl">Set Status for Selected</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+        <button class="bs-status-btn" onclick="bsSetStatus('In Transit')" style="padding:7px 12px;border:1px solid #1e3a5f;border-radius:8px;background:#1e3a5f;color:#60a5fa;font-size:12px;font-weight:700;cursor:pointer">In Transit</button>
+        <button class="bs-status-btn" onclick="bsSetStatus('Delay')" style="padding:7px 12px;border:1px solid #7f1d1d;border-radius:8px;background:#7f1d1d;color:#fca5a5;font-size:12px;font-weight:700;cursor:pointer">Delay</button>
+        <button class="bs-status-btn" onclick="bsSetStatus('Return')" style="padding:7px 12px;border:1px solid #713f12;border-radius:8px;background:#713f12;color:#fde68a;font-size:12px;font-weight:700;cursor:pointer">Return</button>
+        <button class="bs-status-btn" onclick="bsSetStatus('Arrived Destination')" style="padding:7px 12px;border:1px solid #064e3b;border-radius:8px;background:#064e3b;color:#6ee7b7;font-size:12px;font-weight:700;cursor:pointer">Arrived Destination</button>
+        <button class="bs-status-btn" onclick="bsSetStatus('Out for Delivery')" style="padding:7px 12px;border:1px solid #4c1d95;border-radius:8px;background:#4c1d95;color:#c4b5fd;font-size:12px;font-weight:700;cursor:pointer">Out for Delivery</button>
+        <button class="bs-status-btn" onclick="bsSetStatus('Held')" style="padding:7px 12px;border:1px solid #78350f;border-radius:8px;background:#78350f;color:#fdba74;font-size:12px;font-weight:700;cursor:pointer">Held</button>
+        <button class="bs-status-btn" onclick="bsSetStatus('Delivered')" style="padding:7px 12px;border:1px solid #065f46;border-radius:8px;background:#065f46;color:#34d399;font-size:12px;font-weight:700;cursor:pointer">Delivered</button>
+        <button class="bs-status-btn" onclick="bsSetStatus('Scanned')" style="padding:7px 12px;border:1px solid #334155;border-radius:8px;background:#334155;color:#94a3b8;font-size:12px;font-weight:700;cursor:pointer">Scanned</button>
+      </div>
+      <div id="bs-action-msg" style="font-size:12px;margin-top:4px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- VIEWER (track my package) -->
 <div id="pg-viewer" class="pg">
   <div id="v-login" class="cen">
     <div class="lbx">
@@ -297,12 +375,21 @@ function esc(s){const d=document.createElement("div");d.textContent=s||"";return
 function fmt(iso){const d=new Date(iso);return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+" at "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}
 async function api(b){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});return r.json()}
 
+// Status badge helper
+const STATUS_CLASSES={"Scanned":"st-scanned","In Transit":"st-in-transit","Delay":"st-delay","Return":"st-return","Arrived Destination":"st-arrived-destination","Out for Delivery":"st-out-for-delivery","Held":"st-held","Delivered":"st-delivered"};
+function statusBadge(s){
+  const st=s||"Scanned";
+  const cls=STATUS_CLASSES[st]||"st-scanned";
+  return '<span class="st-badge '+cls+'">'+esc(st)+'</span>';
+}
+
 // ── Navigation ──
 function showTab(id){
   document.querySelectorAll(".pg").forEach(p=>p.classList.remove("on"));
   if(id==="viewer") document.getElementById("pg-viewer").classList.add("on");
   else if(id==="admin-login") document.getElementById("pg-admin-login").classList.add("on");
   else if(id==="scanner") document.getElementById("pg-scanner").classList.add("on");
+  else if(id==="status") document.getElementById("pg-status").classList.add("on");
   else document.getElementById("gate").classList.add("on");
 }
 
@@ -339,15 +426,16 @@ async function publicTrack(){
     let html="";
     for(const tk in groups){
       const events=groups[tk];
+      const latestStatus=events[0].status||"Scanned";
       html+='<div class="ei" style="margin-bottom:10px">';
-      html+='<div class="tk">'+esc(tk)+'</div>';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">'+esc(tk)+'</div>'+statusBadge(latestStatus)+'</div>';
       html+='<div style="margin-top:6px;padding-left:10px;border-left:2px solid #334155">';
       events.forEach((e,i)=>{
         const isLatest=i===0;
         html+='<div style="padding:4px 0;'+(isLatest?'color:#e2e8f0':'color:#64748b')+'">';
         let locStr=e.scan_location?esc(e.scan_location):'Scanned';
-        if(e.destination) locStr+=' → '+esc(e.destination);
-        html+='<div style="font-size:12px;font-weight:'+(isLatest?'700':'400')+'">'+locStr+'</div>';
+        if(e.destination) locStr+=' &rarr; '+esc(e.destination);
+        html+='<div style="font-size:12px;font-weight:'+(isLatest?'700':'400')+'">'+locStr+' &middot; '+statusBadge(e.status||"Scanned")+'</div>';
         html+='<div style="font-size:11px;color:#475569">'+fmt(e.created_at)+(e.scanned_by?' · by '+esc(e.scanned_by):'')+'</div>';
         if(e.eta) html+='<div style="font-size:11px;color:#f59e0b">ETA: '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
         html+='</div>';
@@ -418,7 +506,6 @@ async function loadLocations(){
     const on=selectedLoc===l.name?"on":"";
     return `<span class="loc-chip ${on}" onclick="pickLoc(this,'${esc(l.name)}')" data-locid="${l.id}">${esc(l.name)}${l.address?' — '+esc(l.address):''}<span class="loc-x" onclick="event.stopPropagation();deleteLoc(${l.id},'${esc(l.name)}')">&times;</span></span>`;
   }).join("");
-  // Auto-select if only one location or if selectedLoc still valid
   if(allLocations.length===1&&!selectedLoc){
     selectedLoc=allLocations[0].name;
     const chip=div.querySelector(".loc-chip");
@@ -445,7 +532,6 @@ async function addLocation(){
   const n=document.getElementById("new-loc-name").value.trim();
   const msg=document.getElementById("loc-msg");
   if(!n){msg.innerHTML='<span class="er">Enter a location name.</span>';return}
-  // Check if already exists
   if(allLocations.some(l=>l.name.toLowerCase()===n.toLowerCase())){
     msg.innerHTML='<span class="er">Location "'+esc(n)+'" already exists. Tap it to select.</span>';
     selectedLoc=allLocations.find(l=>l.name.toLowerCase()===n.toLowerCase()).name;
@@ -462,7 +548,7 @@ async function addLocation(){
   } else msg.innerHTML='<span class="er">'+esc(r.error)+'</span>';
 }
 
-// ── Destinations (stored in localStorage, no DB table needed) ──
+// ── Destinations (stored in localStorage) ──
 let selectedDest="";
 let savedDests=[];
 function loadDests(){
@@ -517,26 +603,15 @@ let scanDone=false;
 
 function isValidTracking(s){
   if(!s||s.length<4) return false;
-  // Count how many alphanumeric characters vs total
   const alnum=(s.match(/[A-Za-z0-9]/g)||[]).length;
-  // At least 60% of characters should be alphanumeric (filters out pure garbage)
   return (alnum/s.length)>=0.6;
 }
 
 function cleanBarcode(raw){
   let s=(raw||"").trim();
-  // Strip AIM symbology identifiers: ]C1 (Code128), ]C0, ]e0 (GS1), ]d1 (DataMatrix), ]Q1 (QR), etc.
   s=s.replace(/^\][A-Za-z][0-9]/,"");
-  // GS1-128: format is often 420ZIPCODE{GS}TRACKING_NUMBER
-  // If there's a GS separator (char 29), take only the part after it (the tracking number)
-  if(s.indexOf("\x1d")!==-1){
-    s=s.split("\x1d").pop();
-  }
-  // Also handle char 30 (record separator)
-  if(s.indexOf("\x1e")!==-1){
-    s=s.split("\x1e").pop();
-  }
-  // Strip leading/trailing whitespace
+  if(s.indexOf("\x1d")!==-1){ s=s.split("\x1d").pop(); }
+  if(s.indexOf("\x1e")!==-1){ s=s.split("\x1e").pop(); }
   return s.trim();
 }
 
@@ -569,7 +644,7 @@ async function startCam(){
   scanConfirm={};
   scanDone=false;
 
-  // METHOD 1: Native BarcodeDetector (Chrome Android 83+ — fast & accurate)
+  // METHOD 1: Native BarcodeDetector
   if("BarcodeDetector" in window){
     try{
       nativeDetector=new BarcodeDetector({formats:["code_128","code_39","qr_code","ean_13","upc_a","itf","data_matrix"]});
@@ -605,7 +680,7 @@ async function startCam(){
     }
   }
 
-  // METHOD 2: Direct camera + html5-qrcode decode (no UI widget)
+  // METHOD 2: Direct camera + html5-qrcode decode
   try{
     camStream=await navigator.mediaDevices.getUserMedia({
       video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}
@@ -622,21 +697,18 @@ async function startCam(){
     container.appendChild(video);
     await video.play();
 
-    // Create offscreen canvas for frame capture
     const canvas=document.createElement("canvas");
     const ctx=canvas.getContext("2d",{willReadFrequently:true});
 
     st.innerHTML='<span class="ok">Camera ready — point at barcode</span>';
 
-    // Check if html5-qrcode library loaded
     if(typeof Html5Qrcode==="undefined"){
       st.innerHTML='<span class="er">Scanner library not loaded. Type tracking # manually.</span>';
       return;
     }
 
-    const formats=[0,2,3,4,6,7,8,9,10,12,13,15]; // numeric format IDs as fallback
+    const formats=[0,2,3,4,6,7,8,9,10,12,13,15];
     try{
-      // Try named enums first
       const namedFormats=[
         Html5QrcodeSupportedFormats.CODE_128,
         Html5QrcodeSupportedFormats.CODE_39,
@@ -650,7 +722,6 @@ async function startCam(){
 
     const decoder=new Html5Qrcode("scanner-camera-decode",{formatsToSupport:formats,verbose:false});
 
-    // Create hidden decode element
     let decodeDiv=document.getElementById("scanner-camera-decode");
     if(!decodeDiv){
       decodeDiv=document.createElement("div");
@@ -659,7 +730,6 @@ async function startCam(){
       document.body.appendChild(decodeDiv);
     }
 
-    // Scan frames from video every 200ms
     nativeScanInterval=setInterval(async()=>{
       if(scanDone||!video.videoWidth) return;
       canvas.width=video.videoWidth;
@@ -667,16 +737,13 @@ async function startCam(){
       ctx.drawImage(video,0,0);
       try{
         const imageData=canvas.toDataURL("image/jpeg",0.8);
-        // Use scanFile with the image
         const blob=await(await fetch(imageData)).blob();
         const file=new File([blob],"frame.jpg",{type:"image/jpeg"});
         const result=await decoder.scanFileV2(file,false);
         if(result&&result.decodedText){
           onBarcodeDetected(result.decodedText);
         }
-      }catch(e){
-        // No barcode found in this frame — normal, keep trying
-      }
+      }catch(e){}
     },250);
     return;
   }catch(e){
@@ -693,7 +760,7 @@ async function startCam(){
       return;
     }
     st.textContent="Starting scanner (widget mode)...";
-    const formats=[0,2,3,6,7,13]; // CODE_128, CODE_39, QR, EAN_13, UPC_A, DATA_MATRIX
+    const formats=[0,2,3,6,7,13];
     html5Sc=new Html5Qrcode("scanner-camera",{formatsToSupport:formats,verbose:false});
     const w=Math.min(window.innerWidth-40,380);
     await html5Sc.start(
@@ -740,7 +807,6 @@ async function autoLookupName(tracking){
       }
     }
   }catch(e){}
-  // No match — keep last saved name if available
   if(lastSavedName&&!document.getElementById("sc-name").value){
     document.getElementById("sc-name").value=lastSavedName;
     document.getElementById("sc-status").innerHTML='<span class="ok">Scanned: '+esc(tracking)+' — Using last name: '+esc(lastSavedName)+'</span>';
@@ -750,14 +816,13 @@ async function autoLookupName(tracking){
   document.getElementById("sc-name").focus();
 }
 
-// ── Name autocomplete (from registered users + past entries) ──
-let knownPeople=[]; // [{name, company}]
+// ── Name autocomplete ──
+let knownPeople=[];
 async function loadKnownNames(){
   if(!adm) return;
   const seen=new Set();
   knownPeople=[];
   try{
-    // Load registered users (have company info)
     const ru=await api({action:"list-registered",adminName:adm.name,adminPassword:adm.password});
     if(ru.ok&&ru.users){
       ru.users.forEach(u=>{
@@ -769,7 +834,6 @@ async function loadKnownNames(){
     }
   }catch(e){}
   try{
-    // Also load names from past entries (for unregistered recipients)
     const r=await api({action:"all-entries",adminName:adm.name,adminPassword:adm.password});
     if(r.ok&&r.entries){
       r.entries.forEach(e=>{
@@ -824,6 +888,7 @@ async function doSave(){
       st.innerHTML='<span class="ok">Saved! '+esc(name)+' — '+esc(tracking)+'</span>';
       clearForm();
       loadAllEntries();
+      loadViewers(); // Refresh merge dropdowns with auto-created users
     }
     else st.innerHTML='<span class="er">'+(r.error||"Failed")+'</span>';
   }catch(e){st.innerHTML='<span class="er">Network error.</span>'}
@@ -833,7 +898,6 @@ function clearForm(){
   document.getElementById("sc-name").value=lastSavedName;
   document.getElementById("sc-tracking").value="";
   document.getElementById("sc-notes").value="";
-  // Keep ETA and destination as they likely apply to the batch
 }
 
 // ── Viewers ──
@@ -954,7 +1018,7 @@ async function addAdmin(){
   else m.innerHTML='<span class="er">'+esc(r.error)+'</span>';
 }
 
-// ── All entries ──
+// ── All entries (with status display) ──
 let entriesPage=1;
 const ENTRIES_PER_PAGE=25;
 let entriesTotalCount=0;
@@ -966,21 +1030,155 @@ async function loadAllEntries(page){
   entriesTotalCount=r.total||r.entries.length;
   d.innerHTML=r.entries.map(e=>{
     let route=e.scan_location?esc(e.scan_location):'';
-    if(e.destination) route+=(route?' → ':'')+esc(e.destination);
+    if(e.destination) route+=(route?' &rarr; ':'')+esc(e.destination);
     const etaStr=e.eta?'<span style="color:#f59e0b"> · ETA '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric"})+'</span>':'';
     return `<div class="ei" style="margin:0 0 6px">
-    <div class="tk">${esc(e.tracking_number)}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">${esc(e.tracking_number)}</div>${statusBadge(e.status)}</div>
     <div class="nm">${esc(e.name)}</div>
     <div class="dt">${fmt(e.created_at)}${e.scanned_by?' · by '+esc(e.scanned_by):''}${route?' · '+route:''}${etaStr}</div>
   </div>`;
   }).join("");
-  // Pagination controls
   const totalPages=Math.ceil(entriesTotalCount/ENTRIES_PER_PAGE);
   if(totalPages<=1){document.getElementById("entries-pager").innerHTML="";return}
   let pagerHtml='<button class="pager-btn" onclick="loadAllEntries('+(entriesPage-1)+')" '+(entriesPage<=1?'disabled':'')+'>Prev</button>';
   pagerHtml+='<span style="color:#64748b;font-size:12px">Page '+entriesPage+' of '+totalPages+' ('+entriesTotalCount+' total)</span>';
   pagerHtml+='<button class="pager-btn" onclick="loadAllEntries('+(entriesPage+1)+')" '+(entriesPage>=totalPages?'disabled':'')+'>Next</button>';
   document.getElementById("entries-pager").innerHTML=pagerHtml;
+}
+
+// ══════════════════════════════
+//  BULK STATUS UPDATE
+// ══════════════════════════════
+let bsDates=[];
+let bsSelectedDate="";
+let bsEntries=[];
+let bsPage=1;
+let bsTotal=0;
+const BS_PER_PAGE=25;
+let bsStatusFilter="";
+
+async function openStatusPage(){
+  showTab("status");
+  document.getElementById("bs-entries-card").style.display="none";
+  document.getElementById("bs-dates").innerHTML='<span style="color:#475569;font-size:12px">Loading dates...</span>';
+  const r=await api({action:"scan-dates",adminName:adm.name,adminPassword:adm.password});
+  if(!r.ok||!r.dates||!r.dates.length){
+    document.getElementById("bs-dates").innerHTML='<span style="color:#475569;font-size:12px">No scan dates found.</span>';
+    return;
+  }
+  bsDates=r.dates;
+  renderDateChips();
+}
+
+function closeStatusPage(){
+  showTab("scanner");
+  loadAllEntries();
+}
+
+function renderDateChips(){
+  const div=document.getElementById("bs-dates");
+  div.innerHTML=bsDates.map(d=>{
+    const on=bsSelectedDate===d?"on":"";
+    const label=new Date(d+"T00:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+    return '<span class="bs-date-chip '+on+'" onclick="bsPickDate(\''+d+'\')">'+label+'</span>';
+  }).join("");
+}
+
+async function bsPickDate(date){
+  bsSelectedDate=date;
+  bsPage=1;
+  bsStatusFilter="";
+  renderDateChips();
+  await loadDateEntries();
+}
+
+async function loadDateEntries(page){
+  if(page) bsPage=page;
+  document.getElementById("bs-entries-card").style.display="block";
+  document.getElementById("bs-list").innerHTML='<div style="text-align:center;padding:10px;color:#475569">Loading...</div>';
+  const dateLabel=new Date(bsSelectedDate+"T00:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
+  document.getElementById("bs-date-label").textContent=dateLabel;
+
+  const r=await api({action:"entries-by-date",adminName:adm.name,adminPassword:adm.password,date:bsSelectedDate,page:bsPage,perPage:BS_PER_PAGE});
+  if(!r.ok){document.getElementById("bs-list").innerHTML='<div class="er" style="padding:10px">'+esc(r.error||"Error")+'</div>';return}
+  bsEntries=r.entries||[];
+  bsTotal=r.total||bsEntries.length;
+  document.getElementById("bs-count").textContent=bsTotal;
+  renderBsEntries();
+}
+
+function renderBsEntries(){
+  const d=document.getElementById("bs-list");
+  let filtered=bsEntries;
+  if(bsStatusFilter){
+    filtered=bsEntries.filter(e=>(e.status||"Scanned")===bsStatusFilter);
+  }
+  // Update filter chip highlights
+  document.querySelectorAll("#bs-entries-card .bs-date-chip").forEach(c=>c.classList.remove("on"));
+  if(!bsStatusFilter) document.getElementById("bs-filter-all").classList.add("on");
+  else {
+    document.querySelectorAll("#bs-entries-card .bs-date-chip").forEach(c=>{
+      if(c.textContent===bsStatusFilter||(bsStatusFilter==="Arrived Destination"&&c.textContent==="Arrived")) c.classList.add("on");
+    });
+  }
+
+  if(!filtered.length){
+    d.innerHTML='<div style="text-align:center;padding:16px;color:#475569;font-size:12px">No packages'+(bsStatusFilter?' with status "'+bsStatusFilter+'"':'')+'</div>';
+    document.getElementById("bs-pager").innerHTML="";
+    return;
+  }
+  d.innerHTML=filtered.map(e=>{
+    let route=e.scan_location?esc(e.scan_location):'';
+    if(e.destination) route+=(route?' &rarr; ':'')+esc(e.destination);
+    return `<div class="bs-entry">
+      <label>
+        <input type="checkbox" value="${e.id}" class="bs-cb" checked>
+        <div class="bs-info">
+          <div class="bs-tk">${esc(e.tracking_number)}</div>
+          <div class="bs-nm">${esc(e.name)} ${statusBadge(e.status)}</div>
+          ${route?'<div class="bs-route">'+route+'</div>':''}
+        </div>
+      </label>
+    </div>`;
+  }).join("");
+
+  // Pager
+  const totalPages=Math.ceil(bsTotal/BS_PER_PAGE);
+  const pg=document.getElementById("bs-pager");
+  if(totalPages<=1){pg.innerHTML="";return}
+  pg.innerHTML='<button class="pager-btn" onclick="loadDateEntries('+(bsPage-1)+')" '+(bsPage<=1?'disabled':'')+'>Prev</button>'+
+    '<span style="color:#64748b;font-size:12px">Page '+bsPage+' of '+totalPages+'</span>'+
+    '<button class="pager-btn" onclick="loadDateEntries('+(bsPage+1)+')" '+(bsPage>=totalPages?'disabled':'')+'>Next</button>';
+}
+
+function bsFilterStatus(s){
+  bsStatusFilter=s;
+  renderBsEntries();
+}
+
+function bsSelectAll(){
+  document.querySelectorAll(".bs-cb").forEach(c=>c.checked=true);
+}
+function bsSelectNone(){
+  document.querySelectorAll(".bs-cb").forEach(c=>c.checked=false);
+}
+
+async function bsSetStatus(newStatus){
+  const checked=Array.from(document.querySelectorAll(".bs-cb:checked")).map(c=>parseInt(c.value));
+  const msgEl=document.getElementById("bs-action-msg");
+  if(!checked.length){
+    msgEl.innerHTML='<span class="er">No packages selected</span>';
+    return;
+  }
+  msgEl.innerHTML='<span style="color:#94a3b8">Updating '+checked.length+' package'+(checked.length>1?'s':'')+'...</span>';
+  const r=await api({action:"bulk-update-status",adminName:adm.name,adminPassword:adm.password,entryIds:checked,status:newStatus});
+  if(r.ok){
+    msgEl.innerHTML='<span class="ok">Updated '+r.updated+' package'+(r.updated>1?'s':'')+' to "'+esc(newStatus)+'"</span>';
+    // Refresh the entries
+    await loadDateEntries();
+  } else {
+    msgEl.innerHTML='<span class="er">'+(r.error||"Update failed")+'</span>';
+  }
 }
 
 // ══════════════════════════════
@@ -1044,16 +1242,15 @@ function renderViewer(){
   if(!f.length){d.innerHTML='<div style="text-align:center;padding:30px;color:#475569">No packages found.</div>';document.getElementById("v-pager").innerHTML="";return}
   d.innerHTML=f.map(e=>{
     let route=e.scan_location?esc(e.scan_location):'';
-    if(e.destination) route+=(route?' → ':'')+esc(e.destination);
+    if(e.destination) route+=(route?' &rarr; ':'')+esc(e.destination);
     const etaStr=e.eta?'<div style="color:#f59e0b;font-size:11px;margin-top:2px">ETA: '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>':'';
     return `<div class="ei">
-    <div class="tk">${esc(e.tracking_number)}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">${esc(e.tracking_number)}</div>${statusBadge(e.status)}</div>
     <div class="dt">${fmt(e.created_at)}${route?' · '+route:''}</div>
     ${etaStr}
     ${e.raw_text?`<span class="rt" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block';this.textContent=this.nextElementSibling.style.display==='block'?'Hide notes':'Show notes'">Show notes</span><div class="rb">${esc(e.raw_text)}</div>`:''}
   </div>`;
   }).join("");
-  // Viewer pagination
   const totalPages=Math.ceil(vTotal/V_PER_PAGE);
   const pg=document.getElementById("v-pager");
   if(totalPages<=1){pg.innerHTML="";return}
@@ -1087,7 +1284,7 @@ function viewerLogout(){
     if(s&&s.name&&s.password){
       const r=await api({action:"admin-login",name:s.name,password:s.password});
       if(r.ok){adm={name:s.name,password:s.password,is_super:r.admin.is_super};enterScanner();return}
-      else{localStorage.removeItem("adm_session")} // Clear bad session
+      else{localStorage.removeItem("adm_session")}
     }
   }catch(e){localStorage.removeItem("adm_session")}
 })();
