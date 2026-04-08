@@ -745,7 +745,7 @@ let camStream=null;
 let nativeDetector=null;
 let nativeScanInterval=null;
 let scanConfirm={};
-const CONFIRM_NEEDED=2;
+const CONFIRM_NEEDED=1;
 let scanDone=false;
 
 function isValidTracking(s){
@@ -1267,9 +1267,10 @@ async function loadAllEntries(page){
     if(e.destination) route+=(route?' &rarr; ':'')+esc(e.destination);
     const etaStr=e.eta?'<span style="color:#f59e0b"> · ETA '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric"})+'</span>':'';
     return `<div class="ei" style="margin:0 0 6px">
-    <div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">${esc(e.tracking_number)}</div><div style="display:flex;align-items:center;gap:6px">${statusBadge(e.status)}<button onclick="confirmDeleteEntry(${e.id},'${esc(e.tracking_number).replace(/'/g,"\\'")}','${esc(e.name).replace(/'/g,"\\'")}')" style="padding:2px 8px;border:1px solid #7f1d1d;border-radius:5px;background:none;color:#f87171;font-size:10px;cursor:pointer">Delete</button></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">${esc(e.tracking_number)}</div>${statusBadge(e.status)}</div>
     <div class="nm">${esc(e.name)}</div>
     <div class="dt">${fmt(e.created_at)}${e.scanned_by?' · by '+esc(e.scanned_by):''}${route?' · '+route:''}${etaStr}</div>
+    <button onclick="confirmDeleteEntry(${e.id},'${esc(e.tracking_number).replace(/'/g,"\\'")}','${esc(e.name).replace(/'/g,"\\'")}')" style="margin-top:4px;padding:3px 10px;border:1px solid #7f1d1d;border-radius:5px;background:none;color:#f87171;font-size:10px;cursor:pointer">Delete</button>
   </div>`;
   }).join("");
   const totalPages=Math.ceil(entriesTotalCount/ENTRIES_PER_PAGE);
@@ -1465,7 +1466,7 @@ function delOnBarcode(raw){
     return;
   }
   delScanConfirm[decoded]=(delScanConfirm[decoded]||0)+1;
-  if(delScanConfirm[decoded]>=2){
+  if(delScanConfirm[decoded]>=1){
     delScanDone=true;
     document.getElementById("del-scan-status").innerHTML='<span class="ok">Scanned: '+esc(decoded)+'</span>';
     if(navigator.vibrate) navigator.vibrate([100,50,100]);
