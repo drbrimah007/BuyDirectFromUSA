@@ -1244,7 +1244,7 @@ async function loadAllEntries(page){
     if(e.destination) route+=(route?' &rarr; ':'')+esc(e.destination);
     const etaStr=e.eta?'<span style="color:#f59e0b"> · ETA '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric"})+'</span>':'';
     return `<div class="ei" style="margin:0 0 6px">
-    <div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">${esc(e.tracking_number)}</div>${statusBadge(e.status)}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">${esc(e.tracking_number)}</div><div style="display:flex;align-items:center;gap:6px">${statusBadge(e.status)}<button onclick="confirmDeleteEntry(${e.id},'${esc(e.tracking_number).replace(/'/g,"\\'")}','${esc(e.name).replace(/'/g,"\\'")}')" style="padding:2px 6px;border:1px solid #7f1d1d;border-radius:5px;background:none;color:#f87171;font-size:10px;cursor:pointer" title="Delete">✕</button></div></div>
     <div class="nm">${esc(e.name)}</div>
     <div class="dt">${fmt(e.created_at)}${e.scanned_by?' · by '+esc(e.scanned_by):''}${route?' · '+route:''}${etaStr}</div>
   </div>`;
@@ -1255,6 +1255,30 @@ async function loadAllEntries(page){
   pagerHtml+='<span style="color:#64748b;font-size:12px">Page '+entriesPage+' of '+totalPages+' ('+entriesTotalCount+' total)</span>';
   pagerHtml+='<button class="pager-btn" onclick="loadAllEntries('+(entriesPage+1)+')" '+(entriesPage>=totalPages?'disabled':'')+'>Next</button>';
   document.getElementById("entries-pager").innerHTML=pagerHtml;
+}
+
+// ── Delete Entry ──
+function confirmDeleteEntry(id,tracking,name){
+  const msg=document.getElementById("admin-status")||document.createElement("div");
+  const existing=document.getElementById("del-confirm-"+id);
+  if(existing){existing.remove();return}
+  // Remove any other open confirms
+  document.querySelectorAll(".del-confirm-bar").forEach(el=>el.remove());
+  const bar=document.createElement("div");
+  bar.id="del-confirm-"+id;
+  bar.className="del-confirm-bar";
+  bar.style.cssText="background:#1c1917;border:1px solid #7f1d1d;border-radius:8px;padding:10px 12px;margin:0 14px 8px;display:flex;align-items:center;justify-content:space-between;gap:8px";
+  bar.innerHTML=`<span style="font-size:12px;color:#fca5a5">Delete <b>${tracking}</b> for <b>${name}</b>?</span><div style="display:flex;gap:6px"><button onclick="doDeleteEntry(${id})" style="padding:5px 12px;border:none;border-radius:6px;background:#dc2626;color:#fff;font-size:12px;font-weight:700;cursor:pointer">Yes, Delete</button><button onclick="document.getElementById('del-confirm-${id}').remove()" style="padding:5px 12px;border:1px solid #334155;border-radius:6px;background:none;color:#94a3b8;font-size:12px;cursor:pointer">Cancel</button></div>`;
+  const entriesDiv=document.getElementById("admin-entries");
+  entriesDiv.parentNode.insertBefore(bar,entriesDiv);
+}
+async function doDeleteEntry(id){
+  const bar=document.getElementById("del-confirm-"+id);
+  if(bar) bar.innerHTML='<span style="font-size:12px;color:#f59e0b">Deleting...</span>';
+  const r=await api({action:"delete-entry",adminName:adm.name,adminPassword:adm.password,entryId:id});
+  if(bar) bar.remove();
+  if(r.ok){loadAllEntries()}
+  else{alert("Delete failed: "+(r.error||"Unknown error"))}
 }
 
 // ══════════════════════════════
