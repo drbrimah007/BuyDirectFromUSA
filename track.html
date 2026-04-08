@@ -767,6 +767,9 @@ function cleanBarcode(raw){
   if(s.indexOf("\x1e")!==-1){ s=s.split("\x1e").pop(); }
   // Strip Amazon Swiship QR suffix like _001_v, _002_v etc.
   s=s.replace(/_\d{3}_v$/,"");
+  // Extract TBA tracking number if embedded in longer string
+  const tbaMatch=s.match(/TBA\d{10,}/i);
+  if(tbaMatch) s=tbaMatch[0];
   return s.trim();
 }
 
@@ -802,7 +805,7 @@ async function startCam(){
   // METHOD 1: Native BarcodeDetector
   if("BarcodeDetector" in window){
     try{
-      nativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a","qr_code"]});
+      nativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a","data_matrix"]});
       camStream=await navigator.mediaDevices.getUserMedia({
         video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}
       });
@@ -864,14 +867,14 @@ async function startCam(){
       return;
     }
 
-    const formats=[0,2,4,7,13];
+    const formats=[0,2,4,6,13];
     try{
       const namedFormats=[
         Html5QrcodeSupportedFormats.CODE_128,
         Html5QrcodeSupportedFormats.CODE_39,
         Html5QrcodeSupportedFormats.EAN_13,
         Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.QR_CODE
+        Html5QrcodeSupportedFormats.DATA_MATRIX
       ].filter(f=>f!==undefined);
       if(namedFormats.length>0) formats.splice(0,formats.length,...namedFormats);
     }catch(e){}
@@ -916,7 +919,7 @@ async function startCam(){
       return;
     }
     st.textContent="Starting scanner (widget mode)...";
-    const formats=[0,2,4,7,13];
+    const formats=[0,2,4,6,13];
     html5Sc=new Html5Qrcode("scanner-camera",{formatsToSupport:formats,verbose:false});
     const w=Math.min(window.innerWidth-40,380);
     await html5Sc.start(
@@ -1465,7 +1468,7 @@ async function delStartCam(){
 
   if("BarcodeDetector" in window){
     try{
-      delNativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a","qr_code"]});
+      delNativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a","data_matrix"]});
       delCamStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}});
       const video=document.createElement("video");
       video.id="del-cam-video";
