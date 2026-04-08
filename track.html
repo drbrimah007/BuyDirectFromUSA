@@ -228,11 +228,6 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <button class="bt bo" onclick="clearForm()" style="font-size:12px;padding:8px">Clear Form</button>
   </div>
 
-  <!-- Status Update Button -->
-  <div class="cd">
-    <button class="bt" style="background:#7c3aed;color:#fff;font-size:14px;padding:12px" onclick="openStatusPage()">Update Package Statuses</button>
-  </div>
-
   <!-- Manage Users -->
   <div class="cd">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -251,6 +246,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <!-- Search users -->
     <input class="si" id="vu-search" placeholder="Search users..." oninput="filterUsers()" style="margin:4px 0 8px;width:100%">
     <div id="vu-list"></div>
+    <div id="vu-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px"></div>
   </div>
 
   <!-- Merge Users (admin) -->
@@ -319,6 +315,11 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       </div>
       <div id="del-name-results" style="margin-top:8px"></div>
       <div id="del-name-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px"></div>
+    </div>
+
+    <!-- Bulk by scan date link -->
+    <div class="cd" style="padding:10px 14px">
+      <button class="bt" style="background:#7c3aed;color:#fff;font-size:13px;padding:10px" onclick="openStatusPage()">Bulk Update by Scan Date</button>
     </div>
 
     <!-- ETA dates list -->
@@ -740,16 +741,29 @@ const CONFIRM_NEEDED=2;
 let scanDone=false;
 
 function isValidTracking(s){
-  if(!s||s.length<4) return false;
+  if(!s||s.length<6) return false;
+  // Reject Amazon Swiship QR codes (SP + chars)
+  if(/^SP[A-Za-z0-9]/i.test(s)) return false;
+  // Reject hex-only strings (must contain a-f letters AND digits, not pure digits)
+  if(/^[0-9a-f]+$/.test(s) && /[a-f]/.test(s)) return false;
+  // Reject dimension-like strings (e.g. 13x8x5.5, 12x10x4)
+  if(/\d+x\d+/i.test(s)) return false;
+  // Reject strings with underscores (QR metadata)
+  if(s.indexOf("_")!==-1) return false;
+  // Must be mostly alphanumeric
   const alnum=(s.match(/[A-Za-z0-9]/g)||[]).length;
   return (alnum/s.length)>=0.6;
 }
 
 function cleanBarcode(raw){
   let s=(raw||"").trim();
+  // Strip AIM symbology identifiers: ]C1, ]e0, etc.
   s=s.replace(/^\][A-Za-z][0-9]/,"");
+  // GS1-128: split on GS separator, take tracking portion
   if(s.indexOf("\x1d")!==-1){ s=s.split("\x1d").pop(); }
   if(s.indexOf("\x1e")!==-1){ s=s.split("\x1e").pop(); }
+  // Strip Amazon Swiship QR suffix like _001_v, _002_v etc.
+  s=s.replace(/_\d{3}_v$/,"");
   return s.trim();
 }
 
@@ -785,7 +799,7 @@ async function startCam(){
   // METHOD 1: Native BarcodeDetector
   if("BarcodeDetector" in window){
     try{
-      nativeDetector=new BarcodeDetector({formats:["code_128","code_39","qr_code","ean_13","upc_a","itf","data_matrix"]});
+      nativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a"]});
       camStream=await navigator.mediaDevices.getUserMedia({
         video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}
       });
@@ -845,15 +859,13 @@ async function startCam(){
       return;
     }
 
-    const formats=[0,2,3,4,6,7,8,9,10,12,13,15];
+    const formats=[0,2,4,13];
     try{
       const namedFormats=[
         Html5QrcodeSupportedFormats.CODE_128,
         Html5QrcodeSupportedFormats.CODE_39,
-        Html5QrcodeSupportedFormats.QR_CODE,
         Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.DATA_MATRIX
+        Html5QrcodeSupportedFormats.UPC_A
       ].filter(f=>f!==undefined);
       if(namedFormats.length>0) formats.splice(0,formats.length,...namedFormats);
     }catch(e){}
@@ -898,7 +910,7 @@ async function startCam(){
       return;
     }
     st.textContent="Starting scanner (widget mode)...";
-    const formats=[0,2,3,6,7,13];
+    const formats=[0,2,4,13];
     html5Sc=new Html5Qrcode("scanner-camera",{formatsToSupport:formats,verbose:false});
     const w=Math.min(window.innerWidth-40,380);
     await html5Sc.start(
@@ -1016,6 +1028,7 @@ async function doSave(){
   const eta=document.getElementById("sc-eta").value||null;
   const st=document.getElementById("sc-status");
   if(!name||!tracking){st.innerHTML='<span class="er">Name and tracking number are required.</span>';return}
+  if(!isValidTracking(tracking)){st.innerHTML='<span class="er">Bad tracking number: "'+esc(tracking)+'" — rescan or type manually.</span>';return}
   if(!selectedLoc){st.innerHTML='<span class="er">Please select a scan location.</span>';return}
   document.getElementById("btn-save").disabled=true;st.textContent="Saving...";
   try{
@@ -1051,9 +1064,13 @@ async function loadViewers(){
   renderUsers();
   populateMergeDropdowns();
 }
+let usersPage=1;
+const USERS_PER_PAGE=4;
 function filterUsers(){
+  usersPage=1;
   renderUsers();
 }
+function usersGoPage(p){usersPage=p;renderUsers()}
 function renderUsers(){
   const q=(document.getElementById("vu-search").value||"").toLowerCase();
   const d=document.getElementById("vu-list");
@@ -1062,10 +1079,14 @@ function renderUsers(){
     (u.company||"").toLowerCase().includes(q)||
     (u.email||"").toLowerCase().includes(q)
   );
-  if(!filtered.length){d.innerHTML='<span style="color:#475569;font-size:11px">'+(allUsers.length?'No matches':'No users yet')+'</span>';return}
-  d.innerHTML=filtered.map(u=>`<div class="usr-card" id="ucard-${u.id}">
+  if(!filtered.length){d.innerHTML='<span style="color:#475569;font-size:11px">'+(allUsers.length?'No matches':'No users yet')+'</span>';document.getElementById("vu-pager").innerHTML="";return}
+  const totalPages=Math.ceil(filtered.length/USERS_PER_PAGE);
+  if(usersPage>totalPages) usersPage=totalPages;
+  const start=(usersPage-1)*USERS_PER_PAGE;
+  const pageItems=filtered.slice(start,start+USERS_PER_PAGE);
+  d.innerHTML=pageItems.map(u=>`<div class="usr-card" id="ucard-${u.id}">
     <div class="usr-top">
-      <div>
+      <div style="cursor:pointer" onclick="toggleUserScans('${esc(u.name).replace(/'/g,"\\'")}',${u.id})">
         <div class="usr-name">${esc(u.name)}</div>
         ${u.company?'<div class="usr-co">'+esc(u.company)+'</div>':''}
         ${u.email?'<div class="usr-email">'+esc(u.email)+'</div>':'<div class="usr-email" style="color:#7f1d1d">No email</div>'}
@@ -1075,6 +1096,10 @@ function renderUsers(){
         <button onclick="toggleEditUser(${u.id})">Edit</button>
         <button class="del" onclick="deleteUser(${u.id},'${esc(u.name).replace(/'/g,"\\'")}')">Delete</button>
       </div>
+    </div>
+    <div id="uscans-${u.id}" style="display:none;margin-top:8px;padding:8px;background:#0f172a;border-radius:6px">
+      <div id="uscans-list-${u.id}"></div>
+      <div id="uscans-pager-${u.id}" style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:6px"></div>
     </div>
     <div class="usr-edit" id="uedit-${u.id}">
       <input id="ue-name-${u.id}" value="${esc(u.name)}" placeholder="Name">
@@ -1088,10 +1113,53 @@ function renderUsers(){
       <div id="ue-msg-${u.id}" style="font-size:11px;margin-top:4px"></div>
     </div>
   </div>`).join("");
+  // Pager
+  const pg=document.getElementById("vu-pager");
+  if(totalPages<=1){pg.innerHTML="";return}
+  pg.innerHTML='<button class="pager-btn" onclick="usersGoPage('+(usersPage-1)+')" '+(usersPage<=1?'disabled':'')+'>Prev</button>'+
+    '<span style="color:#64748b;font-size:12px">'+usersPage+' / '+totalPages+' ('+filtered.length+' users)</span>'+
+    '<button class="pager-btn" onclick="usersGoPage('+(usersPage+1)+')" '+(usersPage>=totalPages?'disabled':'')+'>Next</button>';
 }
 function toggleEditUser(id){
   const el=document.getElementById("uedit-"+id);
   el.style.display=el.style.display==="block"?"none":"block";
+}
+const USER_SCANS_PER_PAGE=4;
+let userScansState={};
+function toggleUserScans(name,uid){
+  const el=document.getElementById("uscans-"+uid);
+  if(el.style.display==="block"){el.style.display="none";return}
+  el.style.display="block";
+  userScansState[uid]={name,page:1};
+  loadUserScans(uid);
+}
+async function loadUserScans(uid,page){
+  const st=userScansState[uid];
+  if(page) st.page=page;
+  const list=document.getElementById("uscans-list-"+uid);
+  list.innerHTML='<div style="color:#475569;font-size:11px;padding:4px">Loading...</div>';
+  const r=await api({action:"search-by-name",adminName:adm.name,adminPassword:adm.password,name:st.name,page:st.page,perPage:USER_SCANS_PER_PAGE});
+  if(!r.ok||!r.entries||!r.entries.length){
+    list.innerHTML='<div style="color:#475569;font-size:11px;padding:4px">No scans found</div>';
+    document.getElementById("uscans-pager-"+uid).innerHTML="";
+    return;
+  }
+  const total=r.total||r.entries.length;
+  list.innerHTML=r.entries.map(e=>{
+    let route=e.scan_location?esc(e.scan_location):'';
+    if(e.destination) route+=(route?' &rarr; ':'')+esc(e.destination);
+    const etaLabel=e.eta?'<span style="color:#f59e0b"> · ETA '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric"})+'</span>':'';
+    return '<div style="padding:5px 0;border-bottom:1px solid #1e293b">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:700;color:#f8fafc;font-family:monospace">'+esc(e.tracking_number)+'</span>'+statusBadge(e.status)+'</div>'+
+      '<div style="font-size:10px;color:#64748b">'+fmt(e.created_at)+(route?' · '+route:'')+etaLabel+'</div>'+
+      '</div>';
+  }).join("");
+  const totalPages=Math.ceil(total/USER_SCANS_PER_PAGE);
+  const pg=document.getElementById("uscans-pager-"+uid);
+  if(totalPages<=1){pg.innerHTML="";return}
+  pg.innerHTML='<button class="pager-btn" style="font-size:10px;padding:3px 8px" onclick="loadUserScans('+uid+','+(st.page-1)+')" '+(st.page<=1?'disabled':'')+'>Prev</button>'+
+    '<span style="color:#64748b;font-size:10px">'+st.page+'/'+totalPages+' ('+total+')</span>'+
+    '<button class="pager-btn" style="font-size:10px;padding:3px 8px" onclick="loadUserScans('+uid+','+(st.page+1)+')" '+(st.page>=totalPages?'disabled':'')+'>Next</button>';
 }
 async function saveEditUser(id){
   const newName=document.getElementById("ue-name-"+id).value.trim();
@@ -1366,7 +1434,7 @@ async function delStartCam(){
 
   if("BarcodeDetector" in window){
     try{
-      delNativeDetector=new BarcodeDetector({formats:["code_128","code_39","qr_code","ean_13","upc_a","itf","data_matrix"]});
+      delNativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a"]});
       delCamStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}});
       const video=document.createElement("video");
       video.id="del-cam-video";
