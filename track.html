@@ -225,7 +225,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <div class="fg" style="position:relative"><label class="fl">Recipient Name</label><input class="fi" id="sc-name" placeholder="e.g. John Smith" autocapitalize="words" autocomplete="off" oninput="nameAutocomplete(this.value)"><div id="name-suggestions" class="name-ac"></div></div>
     <div class="fg"><div style="display:flex;justify-content:space-between;align-items:center"><label class="fl" style="margin:0">Tracking Number</label><span style="font-size:11px;color:#3b82f6;cursor:pointer;font-weight:700" onclick="generateTracking()">Generate</span></div><input class="fi mono" id="sc-tracking" placeholder="Scanned or type here" style="margin-top:5px"></div>
     <div style="display:flex;gap:8px">
-      <div class="fg" style="flex:1"><label class="fl">ETA</label><input class="fi" id="sc-eta" type="date" style="font-size:13px"></div>
+      <div class="fg" style="flex:1"><label class="fl">ETA</label><input class="fi" id="sc-eta" type="date" style="font-size:13px" onchange="saveScanSettings()"></div>
       <div class="fg" style="flex:1"><label class="fl">Notes (optional)</label><input class="fi" id="sc-notes" placeholder="Extra info"></div>
     </div>
     <button class="bt bo" onclick="clearForm()" style="font-size:12px;padding:8px">Clear Form</button>
@@ -594,10 +594,15 @@ async function publicTrack(){
   }
 }
 
-// Handle Enter key in public tracking input
+// Handle Enter key in public tracking input + clear on load
 document.addEventListener("DOMContentLoaded",()=>{
   const ptInput=document.getElementById("pt-input");
-  if(ptInput) ptInput.addEventListener("keypress",(e)=>{if(e.key==="Enter") publicTrack()});
+  if(ptInput){
+    ptInput.value="";
+    ptInput.addEventListener("keypress",(e)=>{if(e.key==="Enter") publicTrack()});
+  }
+  const ptResults=document.getElementById("pt-results");
+  if(ptResults) ptResults.innerHTML="";
 });
 
 // ══════════════════════════════
@@ -619,13 +624,13 @@ async function adminDoLogin(){
   enterScanner();
 }
 
-function enterScanner(){
+async function enterScanner(){
   document.getElementById("sc-sub").textContent="Logged in as "+adm.name;
   if(adm.is_super) document.getElementById("super-section").style.display="block";
   else document.getElementById("super-section").style.display="none";
   showTab("scanner");
-  loadLocations();
-  loadDests();
+  restoreScanSettings();
+  await Promise.all([loadLocations(),loadDests()]);
   loadViewers();
   if(adm.is_super) loadAdmins();
   loadAllEntries();
@@ -656,8 +661,8 @@ async function loadLocations(){
 }
 function pickLoc(el,name){
   document.querySelectorAll(".loc-chip").forEach(c=>c.classList.remove("on"));
-  if(selectedLoc===name){selectedLoc="";return}
-  selectedLoc=name;el.classList.add("on");
+  if(selectedLoc===name){selectedLoc="";saveScanSettings();return}
+  selectedLoc=name;el.classList.add("on");saveScanSettings();
 }
 async function deleteLoc(id,name){
   if(!confirm("Delete location: "+name+"?")) return;
@@ -707,8 +712,8 @@ function renderDests(){
 }
 function pickDest(el,name){
   document.querySelectorAll("#dest-chips .loc-chip").forEach(c=>c.classList.remove("on"));
-  if(selectedDest===name){selectedDest="";return}
-  selectedDest=name;el.classList.add("on");
+  if(selectedDest===name){selectedDest="";saveScanSettings();return}
+  selectedDest=name;el.classList.add("on");saveScanSettings();
 }
 function addDest(){
   const n=document.getElementById("new-dest-name").value.trim();
@@ -805,7 +810,7 @@ async function startCam(){
   // METHOD 1: Native BarcodeDetector
   if("BarcodeDetector" in window){
     try{
-      nativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a","data_matrix"]});
+      nativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a","data_matrix","itf"]});
       camStream=await navigator.mediaDevices.getUserMedia({
         video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}
       });
@@ -867,7 +872,7 @@ async function startCam(){
       return;
     }
 
-    const formats=[0,2,4,6,13];
+    const formats=[0,2,4,6,10,13];
     try{
       const namedFormats=[
         Html5QrcodeSupportedFormats.CODE_128,
@@ -919,7 +924,7 @@ async function startCam(){
       return;
     }
     st.textContent="Starting scanner (widget mode)...";
-    const formats=[0,2,4,6,13];
+    const formats=[0,2,4,6,10,13];
     html5Sc=new Html5Qrcode("scanner-camera",{formatsToSupport:formats,verbose:false});
     const w=Math.min(window.innerWidth-40,380);
     await html5Sc.start(
@@ -1058,6 +1063,20 @@ function clearForm(){
   document.getElementById("sc-name").value=lastSavedName;
   document.getElementById("sc-tracking").value="";
   document.getElementById("sc-notes").value="";
+}
+// ── Persist scan settings ──
+function saveScanSettings(){
+  localStorage.setItem("scan_loc",selectedLoc||"");
+  localStorage.setItem("scan_dest",selectedDest||"");
+  localStorage.setItem("scan_eta",document.getElementById("sc-eta").value||"");
+}
+function restoreScanSettings(){
+  const loc=localStorage.getItem("scan_loc")||"";
+  const dest=localStorage.getItem("scan_dest")||"";
+  const eta=localStorage.getItem("scan_eta")||"";
+  if(loc) selectedLoc=loc;
+  if(dest) selectedDest=dest;
+  if(eta) document.getElementById("sc-eta").value=eta;
 }
 
 // ── Viewers ──
@@ -1248,10 +1267,9 @@ async function loadAllEntries(page){
     if(e.destination) route+=(route?' &rarr; ':'')+esc(e.destination);
     const etaStr=e.eta?'<span style="color:#f59e0b"> · ETA '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric"})+'</span>':'';
     return `<div class="ei" style="margin:0 0 6px">
-    <div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">${esc(e.tracking_number)}</div>${statusBadge(e.status)}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">${esc(e.tracking_number)}</div><div style="display:flex;align-items:center;gap:6px">${statusBadge(e.status)}<button onclick="confirmDeleteEntry(${e.id},'${esc(e.tracking_number).replace(/'/g,"\\'")}','${esc(e.name).replace(/'/g,"\\'")}')" style="padding:2px 8px;border:1px solid #7f1d1d;border-radius:5px;background:none;color:#f87171;font-size:10px;cursor:pointer">Delete</button></div></div>
     <div class="nm">${esc(e.name)}</div>
     <div class="dt">${fmt(e.created_at)}${e.scanned_by?' · by '+esc(e.scanned_by):''}${route?' · '+route:''}${etaStr}</div>
-    <button onclick="confirmDeleteEntry(${e.id},'${esc(e.tracking_number).replace(/'/g,"\\'")}','${esc(e.name).replace(/'/g,"\\'")}')" style="margin-top:5px;padding:3px 10px;border:1px solid #7f1d1d;border-radius:5px;background:none;color:#f87171;font-size:10px;cursor:pointer">Delete</button>
   </div>`;
   }).join("");
   const totalPages=Math.ceil(entriesTotalCount/ENTRIES_PER_PAGE);
@@ -1468,7 +1486,7 @@ async function delStartCam(){
 
   if("BarcodeDetector" in window){
     try{
-      delNativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a","data_matrix"]});
+      delNativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a","data_matrix","itf"]});
       delCamStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}});
       const video=document.createElement("video");
       video.id="del-cam-video";
