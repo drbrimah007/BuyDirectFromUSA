@@ -59,6 +59,28 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .loc-pick{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}
 .loc-chip{padding:6px 12px;border-radius:20px;border:1px solid #334155;background:#0f172a;color:#94a3b8;font-size:12px;cursor:pointer;white-space:nowrap}
 .loc-chip.on{border-color:#3b82f6;background:#1e3a5f;color:#60a5fa}
+.loc-x{margin-left:6px;color:#ef4444;font-weight:700;font-size:14px;opacity:.6;padding:0 2px}.loc-x:hover,.loc-x:active{opacity:1}
+.name-ac{display:none;position:absolute;left:0;right:0;top:100%;background:#1e293b;border:1px solid #334155;border-radius:0 0 8px 8px;max-height:160px;overflow-y:auto;z-index:50}
+.name-ac.show{display:block}
+.name-ac-item{padding:10px 12px;font-size:14px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid #0f172a}
+.name-ac-item:active,.name-ac-item:hover{background:#334155}
+.name-ac-item b{color:#3b82f6}
+.usr-card{background:#0f172a;border-radius:8px;padding:10px 12px;margin-bottom:6px}
+.usr-card .usr-top{display:flex;justify-content:space-between;align-items:center}
+.usr-card .usr-name{font-size:14px;font-weight:700;color:#f8fafc}
+.usr-card .usr-co{font-size:12px;color:#3b82f6}
+.usr-card .usr-email{font-size:11px;color:#94a3b8}
+.usr-card .usr-date{font-size:10px;color:#475569}
+.usr-card .usr-btns{display:flex;gap:5px}
+.usr-card .usr-btns button{padding:4px 8px;border:1px solid #334155;border-radius:6px;background:none;color:#94a3b8;font-size:10px;cursor:pointer}
+.usr-card .usr-btns button:active{background:#334155}
+.usr-card .usr-btns .del{color:#f87171;border-color:#7f1d1d}
+.usr-edit{display:none;margin-top:8px;padding:8px;background:#1e293b;border-radius:6px}
+.usr-edit input{width:100%;padding:7px;border:1px solid #334155;border-radius:6px;background:#0f172a;color:#f8fafc;font-size:12px;outline:none;margin-bottom:5px}
+.usr-edit button{padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer}
+.pager-btn{padding:6px 12px;border:1px solid #334155;border-radius:6px;background:none;color:#94a3b8;font-size:12px;cursor:pointer}
+.pager-btn:disabled{opacity:.3;cursor:default}
+.pager-btn.on{background:#3b82f6;color:#fff;border-color:#3b82f6}
 .pt-box{background:#1e293b;border-radius:12px;padding:14px;margin:10px 14px 20px}
 .pt-title{font-size:13px;font-weight:700;color:#f8fafc;margin-bottom:10px}
 .pt-input-row{display:flex;gap:8px;margin-bottom:12px}
@@ -140,7 +162,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 
   <!-- Entry form -->
   <div class="cd">
-    <div class="fg"><label class="fl">Recipient Name</label><input class="fi" id="sc-name" placeholder="e.g. John Smith" autocapitalize="words"></div>
+    <div class="fg" style="position:relative"><label class="fl">Recipient Name</label><input class="fi" id="sc-name" placeholder="e.g. John Smith" autocapitalize="words" autocomplete="off" oninput="nameAutocomplete(this.value)"><div id="name-suggestions" class="name-ac"></div></div>
     <div class="fg"><label class="fl">Tracking Number</label><input class="fi mono" id="sc-tracking" placeholder="Scanned or type here"></div>
     <div class="fg"><label class="fl">Notes (optional)</label><input class="fi" id="sc-notes" placeholder="Extra info"></div>
   </div>
@@ -150,16 +172,37 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
   </div>
   <div class="sb" id="sc-status">Ready to scan</div>
 
-  <!-- Quick admin tools -->
+  <!-- Manage Users -->
   <div class="cd">
-    <label class="fl" style="margin-bottom:8px">Manage Viewer Accounts</label>
-    <div class="ar">
-      <input id="vu-name" placeholder="Viewer name">
-      <input id="vu-pw" type="password" placeholder="Password">
-      <button onclick="addViewer()">Add</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <label class="fl" style="margin:0">Manage Users</label>
+      <button style="padding:4px 10px;border:1px solid #334155;border-radius:6px;background:none;color:#94a3b8;font-size:11px;cursor:pointer" onclick="toggleAddUser()">+ Add User</button>
+    </div>
+    <!-- Add user form (hidden by default) -->
+    <div id="vu-add-form" style="display:none;margin-bottom:10px;padding:10px;background:#0f172a;border-radius:8px">
+      <div class="fg"><input class="fi" id="vu-name" placeholder="Full name" style="font-size:13px;padding:9px"></div>
+      <div class="fg"><input class="fi" id="vu-email" placeholder="Email (optional)" style="font-size:13px;padding:9px" type="email"></div>
+      <div class="fg"><input class="fi" id="vu-co" placeholder="Company (optional)" style="font-size:13px;padding:9px"></div>
+      <div class="fg"><input class="fi" id="vu-pw" type="password" placeholder="Password" style="font-size:13px;padding:9px"></div>
+      <button class="bt bg" style="font-size:13px;padding:9px" onclick="addViewer()">Create Account</button>
     </div>
     <div id="vu-msg" style="font-size:11px;margin-top:5px"></div>
-    <div id="vu-list" style="margin-top:8px"></div>
+    <!-- Search users -->
+    <input class="si" id="vu-search" placeholder="Search users..." oninput="filterUsers()" style="margin:4px 0 8px;width:100%">
+    <div id="vu-list"></div>
+  </div>
+
+  <!-- Merge Users (admin) -->
+  <div class="cd">
+    <label class="fl" style="margin-bottom:8px">Merge Users</label>
+    <p style="font-size:11px;color:#64748b;margin-bottom:8px">Move all packages from one user to another, then delete the old account</p>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
+      <select class="fi" id="merge-from" style="flex:1;font-size:13px;padding:9px"><option value="">Merge from...</option></select>
+      <span style="color:#64748b;font-size:12px">into</span>
+      <select class="fi" id="merge-to" style="flex:1;font-size:13px;padding:9px"><option value="">Keep this user...</option></select>
+      <button class="bt br" style="padding:9px 14px;font-size:13px;width:auto" onclick="mergeUsers()">Merge</button>
+    </div>
+    <div id="merge-msg" style="font-size:11px;margin-top:5px"></div>
   </div>
 
   <!-- Super-admin: add more admins -->
@@ -174,13 +217,14 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <div id="sa-list" style="margin-top:8px"></div>
   </div>
 
-  <!-- All entries -->
+  <!-- All entries with pagination -->
   <div class="cd">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <label class="fl" style="margin:0">Recent Scans</label>
       <button style="padding:4px 10px;border:1px solid #334155;border-radius:6px;background:none;color:#94a3b8;font-size:11px;cursor:pointer" onclick="loadAllEntries()">Refresh</button>
     </div>
     <div id="admin-entries"></div>
+    <div id="entries-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:10px"></div>
   </div>
 </div>
 
@@ -188,12 +232,30 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 <div id="pg-viewer" class="pg">
   <div id="v-login" class="cen">
     <div class="lbx">
-      <h2>Track My Package</h2>
-      <p>Enter the name and password you were given</p>
-      <div class="fg"><label class="fl">Your Name</label><input class="fi" id="vl-name" placeholder="e.g. John Smith"></div>
-      <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="vl-pw" placeholder="Enter password"></div>
-      <button class="bt bb g8" onclick="viewerLogin()">View My Packages</button>
-      <button class="bt bo" onclick="showTab('gate')">Back</button>
+      <div style="display:flex;gap:0;margin-bottom:14px;border-radius:8px;overflow:hidden;border:1px solid #334155">
+        <button id="tab-login" class="bt" style="flex:1;border-radius:0;font-size:13px;padding:10px;background:#3b82f6;color:#fff" onclick="showViewerTab('login')">Sign In</button>
+        <button id="tab-signup" class="bt" style="flex:1;border-radius:0;font-size:13px;padding:10px;background:#0f172a;color:#94a3b8;border:none" onclick="showViewerTab('signup')">Sign Up</button>
+      </div>
+      <!-- Sign In -->
+      <div id="v-signin-form">
+        <h2>Track My Package</h2>
+        <p>Enter the name and password you registered with</p>
+        <div class="fg"><label class="fl">Your Name</label><input class="fi" id="vl-name" placeholder="e.g. John Smith"></div>
+        <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="vl-pw" placeholder="Enter password"></div>
+        <button class="bt bb g8" onclick="viewerLogin()">View My Packages</button>
+      </div>
+      <!-- Sign Up -->
+      <div id="v-signup-form" style="display:none">
+        <h2>Create Account</h2>
+        <p>Sign up to track your packages</p>
+        <div class="fg"><label class="fl">Your Full Name</label><input class="fi" id="vs-name" placeholder="e.g. John Smith" autocapitalize="words"></div>
+        <div class="fg"><label class="fl">Email (optional)</label><input class="fi" id="vs-email" placeholder="e.g. john@example.com" type="email"></div>
+        <div class="fg"><label class="fl">Company (optional)</label><input class="fi" id="vs-company" placeholder="e.g. ABC Imports"></div>
+        <div class="fg"><label class="fl">Create Password</label><input class="fi" type="password" id="vs-pw" placeholder="Choose a password"></div>
+        <div class="fg"><label class="fl">Confirm Password</label><input class="fi" type="password" id="vs-pw2" placeholder="Re-enter password"></div>
+        <button class="bt bg g8" onclick="viewerSignup()">Create Account</button>
+      </div>
+      <button class="bt bo" style="margin-top:8px" onclick="showTab('gate')">Back</button>
       <div id="vl-err" class="er" style="font-size:12px;margin-top:8px;display:none"></div>
     </div>
   </div>
@@ -212,6 +274,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     </div>
     <input class="si" id="v-search" placeholder="Search tracking numbers..." oninput="renderViewer()">
     <div id="v-list"></div>
+    <div id="v-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin:10px 14px"></div>
   </div>
 </div>
 
@@ -252,12 +315,33 @@ async function publicTrack(){
       return;
     }
 
-    const html=r.entries.map(e=>`<div class="ei">
-      <div class="tk">${esc(e.tracking_number)}</div>
-      <div class="dt">${fmt(e.created_at)}${e.scanned_by?' · by '+esc(e.scanned_by):''}${e.scan_location?' · '+esc(e.scan_location):''}</div>
-    </div>`).join("");
+    // Group by tracking number
+    const groups={};
+    r.entries.forEach(e=>{
+      const tk=e.tracking_number;
+      if(!groups[tk]) groups[tk]=[];
+      groups[tk].push(e);
+    });
 
-    resultsDiv.innerHTML=html+'<div class="pt-note">Sign in to see full details</div>';
+    let html="";
+    for(const tk in groups){
+      const events=groups[tk];
+      html+='<div class="ei" style="margin-bottom:10px">';
+      html+='<div class="tk">'+esc(tk)+'</div>';
+      html+='<div style="margin-top:6px;padding-left:10px;border-left:2px solid #334155">';
+      events.forEach((e,i)=>{
+        const isLatest=i===0;
+        html+='<div style="padding:4px 0;'+(isLatest?'color:#e2e8f0':'color:#64748b')+'">';
+        html+='<div style="font-size:12px;font-weight:'+(isLatest?'700':'400')+'">'+(e.scan_location?esc(e.scan_location):'Scanned')+'</div>';
+        html+='<div style="font-size:11px;color:#475569">'+fmt(e.created_at)+(e.scanned_by?' · by '+esc(e.scanned_by):'')+'</div>';
+        html+='</div>';
+      });
+      html+='</div>';
+      html+='<div style="font-size:11px;color:#64748b;margin-top:4px">'+events.length+' scan event'+(events.length>1?'s':'')+'</div>';
+      html+='</div>';
+    }
+
+    resultsDiv.innerHTML=html+'<div class="pt-note">Tap "Track My Package" below and sign in to see your full package history</div>';
   }catch(e){
     resultsDiv.innerHTML='<div class="pt-empty er">Error loading tracking</div>';
   }
@@ -298,6 +382,7 @@ function enterScanner(){
   loadViewers();
   if(adm.is_super) loadAdmins();
   loadAllEntries();
+  loadKnownNames();
 }
 
 function adminLogout(){
@@ -305,28 +390,55 @@ function adminLogout(){
 }
 
 // ── Locations ──
+let allLocations=[];
 async function loadLocations(){
   const r=await api({action:"get-locations",adminName:adm.name,adminPassword:adm.password});
   if(!r.ok) return;
+  allLocations=r.locations||[];
   const div=document.getElementById("loc-chips");
-  if(!r.locations.length){div.innerHTML='<span style="color:#475569;font-size:12px">No locations yet — add one below.</span>';return}
-  div.innerHTML=r.locations.map(l=>{
+  if(!allLocations.length){div.innerHTML='<span style="color:#475569;font-size:12px">No locations yet — add one below.</span>';return}
+  div.innerHTML=allLocations.map(l=>{
     const on=selectedLoc===l.name?"on":"";
-    return `<span class="loc-chip ${on}" onclick="pickLoc(this,'${esc(l.name)}')">${esc(l.name)}${l.address?' — '+esc(l.address):''}</span>`;
+    return `<span class="loc-chip ${on}" onclick="pickLoc(this,'${esc(l.name)}')" data-locid="${l.id}">${esc(l.name)}${l.address?' — '+esc(l.address):''}<span class="loc-x" onclick="event.stopPropagation();deleteLoc(${l.id},'${esc(l.name)}')">&times;</span></span>`;
   }).join("");
+  // Auto-select if only one location or if selectedLoc still valid
+  if(allLocations.length===1&&!selectedLoc){
+    selectedLoc=allLocations[0].name;
+    const chip=div.querySelector(".loc-chip");
+    if(chip) chip.classList.add("on");
+  }
 }
 function pickLoc(el,name){
   document.querySelectorAll(".loc-chip").forEach(c=>c.classList.remove("on"));
   if(selectedLoc===name){selectedLoc="";return}
   selectedLoc=name;el.classList.add("on");
 }
+async function deleteLoc(id,name){
+  if(!confirm("Delete location: "+name+"?")) return;
+  const r=await api({action:"delete-location",adminName:adm.name,adminPassword:adm.password,locationId:id});
+  if(r.ok){
+    if(selectedLoc===name) selectedLoc="";
+    loadLocations();
+    document.getElementById("loc-msg").innerHTML='<span class="ok">Deleted "'+esc(name)+'"</span>';
+  } else {
+    document.getElementById("loc-msg").innerHTML='<span class="er">'+(r.error||"Delete failed")+'</span>';
+  }
+}
 async function addLocation(){
   const n=document.getElementById("new-loc-name").value.trim();
   const msg=document.getElementById("loc-msg");
   if(!n){msg.innerHTML='<span class="er">Enter a location name.</span>';return}
+  // Check if already exists
+  if(allLocations.some(l=>l.name.toLowerCase()===n.toLowerCase())){
+    msg.innerHTML='<span class="er">Location "'+esc(n)+'" already exists. Tap it to select.</span>';
+    selectedLoc=allLocations.find(l=>l.name.toLowerCase()===n.toLowerCase()).name;
+    loadLocations();
+    document.getElementById("new-loc-name").value="";
+    return;
+  }
   const r=await api({action:"add-location",adminName:adm.name,adminPassword:adm.password,locationName:n});
   if(r.ok){
-    msg.innerHTML='<span class="ok">Added!</span>';
+    msg.innerHTML='<span class="ok">Added & selected!</span>';
     document.getElementById("new-loc-name").value="";
     selectedLoc=n;
     loadLocations();
@@ -349,9 +461,26 @@ function isValidTracking(s){
   return (alnum/s.length)>=0.6;
 }
 
+function cleanBarcode(raw){
+  let s=(raw||"").trim();
+  // Strip AIM symbology identifiers: ]C1 (Code128), ]C0, ]e0 (GS1), ]d1 (DataMatrix), ]Q1 (QR), etc.
+  s=s.replace(/^\][A-Za-z][0-9]/,"");
+  // GS1-128: format is often 420ZIPCODE{GS}TRACKING_NUMBER
+  // If there's a GS separator (char 29), take only the part after it (the tracking number)
+  if(s.indexOf("\x1d")!==-1){
+    s=s.split("\x1d").pop();
+  }
+  // Also handle char 30 (record separator)
+  if(s.indexOf("\x1e")!==-1){
+    s=s.split("\x1e").pop();
+  }
+  // Strip leading/trailing whitespace
+  return s.trim();
+}
+
 function onBarcodeDetected(raw){
   if(scanDone) return;
-  const decoded=(raw||"").trim();
+  const decoded=cleanBarcode(raw);
   if(!decoded) return;
   if(!isValidTracking(decoded)){
     document.getElementById("sc-status").innerHTML='<span class="er">Bad read: "'+esc(decoded)+'" — keep scanning</span>';
@@ -549,11 +678,73 @@ async function autoLookupName(tracking){
       }
     }
   }catch(e){}
-  document.getElementById("sc-status").innerHTML='<span class="ok">Scanned: '+esc(tracking)+' — Enter recipient name</span>';
+  // No match — keep last saved name if available
+  if(lastSavedName&&!document.getElementById("sc-name").value){
+    document.getElementById("sc-name").value=lastSavedName;
+    document.getElementById("sc-status").innerHTML='<span class="ok">Scanned: '+esc(tracking)+' — Using last name: '+esc(lastSavedName)+'</span>';
+  } else {
+    document.getElementById("sc-status").innerHTML='<span class="ok">Scanned: '+esc(tracking)+' — Enter recipient name</span>';
+  }
   document.getElementById("sc-name").focus();
 }
 
+// ── Name autocomplete (from registered users + past entries) ──
+let knownPeople=[]; // [{name, company}]
+async function loadKnownNames(){
+  if(!adm) return;
+  const seen=new Set();
+  knownPeople=[];
+  try{
+    // Load registered users (have company info)
+    const ru=await api({action:"list-registered",adminName:adm.name,adminPassword:adm.password});
+    if(ru.ok&&ru.users){
+      ru.users.forEach(u=>{
+        if(u.name&&!seen.has(u.name.toLowerCase())){
+          seen.add(u.name.toLowerCase());
+          knownPeople.push({name:u.name,company:u.company||""});
+        }
+      });
+    }
+  }catch(e){}
+  try{
+    // Also load names from past entries (for unregistered recipients)
+    const r=await api({action:"all-entries",adminName:adm.name,adminPassword:adm.password});
+    if(r.ok&&r.entries){
+      r.entries.forEach(e=>{
+        if(e.name&&!seen.has(e.name.toLowerCase())){
+          seen.add(e.name.toLowerCase());
+          knownPeople.push({name:e.name,company:""});
+        }
+      });
+    }
+  }catch(e){}
+}
+function nameAutocomplete(val){
+  const box=document.getElementById("name-suggestions");
+  if(!val||val.length<1){box.classList.remove("show");box.innerHTML="";return}
+  const q=val.toLowerCase();
+  const matches=knownPeople.filter(p=>p.name.toLowerCase().startsWith(q)||p.company.toLowerCase().startsWith(q)).slice(0,6);
+  if(!matches.length){box.classList.remove("show");box.innerHTML="";return}
+  box.innerHTML=matches.map(p=>{
+    const nameHtml=esc(p.name);
+    const coHtml=p.company?' <span style="color:#64748b;font-size:12px">— '+esc(p.company)+'</span>':"";
+    return '<div class="name-ac-item" onmousedown="pickName(\''+esc(p.name).replace(/'/g,"\\'")+'\')">'+nameHtml+coHtml+'</div>';
+  }).join("");
+  box.classList.add("show");
+}
+function pickName(name){
+  document.getElementById("sc-name").value=name;
+  document.getElementById("name-suggestions").classList.remove("show");
+  document.getElementById("name-suggestions").innerHTML="";
+  lastSavedName=name;
+}
+document.addEventListener("DOMContentLoaded",()=>{
+  const inp=document.getElementById("sc-name");
+  if(inp) inp.addEventListener("blur",()=>{setTimeout(()=>{document.getElementById("name-suggestions").classList.remove("show")},150)});
+});
+
 // ── Save entry ──
+let lastSavedName="";
 async function doSave(){
   const name=document.getElementById("sc-name").value.trim();
   const tracking=document.getElementById("sc-tracking").value.trim();
@@ -564,31 +755,123 @@ async function doSave(){
   document.getElementById("btn-save").disabled=true;st.textContent="Saving...";
   try{
     const r=await api({action:"scan",adminName:adm.name,adminPassword:adm.password,name,trackingNumber:tracking,rawText:notes,scanLocation:selectedLoc});
-    if(r.ok){st.innerHTML='<span class="ok">Saved! '+esc(name)+' — '+esc(tracking)+'</span>';clearForm();loadAllEntries()}
+    if(r.ok){
+      lastSavedName=name;
+      // Add to known people if new
+      if(!knownPeople.some(p=>p.name.toLowerCase()===name.toLowerCase())) knownPeople.unshift({name,company:""});
+      st.innerHTML='<span class="ok">Saved! '+esc(name)+' — '+esc(tracking)+'</span>';
+      clearForm();
+      loadAllEntries();
+    }
     else st.innerHTML='<span class="er">'+(r.error||"Failed")+'</span>';
   }catch(e){st.innerHTML='<span class="er">Network error.</span>'}
   document.getElementById("btn-save").disabled=false;
 }
 function clearForm(){
-  document.getElementById("sc-name").value="";
+  // Keep the last saved name — clears only tracking and notes
+  document.getElementById("sc-name").value=lastSavedName;
   document.getElementById("sc-tracking").value="";
   document.getElementById("sc-notes").value="";
 }
 
 // ── Viewers ──
+let allUsers=[];
+function toggleAddUser(){
+  const f=document.getElementById("vu-add-form");
+  f.style.display=f.style.display==="none"?"block":"none";
+}
 async function loadViewers(){
   const r=await api({action:"list-users",adminName:adm.name,adminPassword:adm.password});
+  if(!r.ok) return;
+  allUsers=r.users||[];
+  renderUsers();
+  populateMergeDropdowns();
+}
+function filterUsers(){
+  renderUsers();
+}
+function renderUsers(){
+  const q=(document.getElementById("vu-search").value||"").toLowerCase();
   const d=document.getElementById("vu-list");
-  if(!r.ok||!r.users||!r.users.length){d.innerHTML='<span style="color:#475569;font-size:11px">No viewers yet.</span>';return}
-  d.innerHTML=r.users.map(u=>`<span class="uc"><b>${esc(u.name)}</b><span>${new Date(u.created_at).toLocaleDateString()}</span></span>`).join("");
+  const filtered=allUsers.filter(u=>
+    u.name.toLowerCase().includes(q)||
+    (u.company||"").toLowerCase().includes(q)||
+    (u.email||"").toLowerCase().includes(q)
+  );
+  if(!filtered.length){d.innerHTML='<span style="color:#475569;font-size:11px">'+(allUsers.length?'No matches':'No users yet')+'</span>';return}
+  d.innerHTML=filtered.map(u=>`<div class="usr-card" id="ucard-${u.id}">
+    <div class="usr-top">
+      <div>
+        <div class="usr-name">${esc(u.name)}</div>
+        ${u.company?'<div class="usr-co">'+esc(u.company)+'</div>':''}
+        ${u.email?'<div class="usr-email">'+esc(u.email)+'</div>':'<div class="usr-email" style="color:#7f1d1d">No email</div>'}
+        <div class="usr-date">Joined ${new Date(u.created_at).toLocaleDateString()}</div>
+      </div>
+      <div class="usr-btns">
+        <button onclick="toggleEditUser(${u.id})">Edit</button>
+        <button class="del" onclick="deleteUser(${u.id},'${esc(u.name).replace(/'/g,"\\'")}')">Delete</button>
+      </div>
+    </div>
+    <div class="usr-edit" id="uedit-${u.id}">
+      <input id="ue-name-${u.id}" value="${esc(u.name)}" placeholder="Name">
+      <input id="ue-email-${u.id}" value="${esc(u.email||"")}" placeholder="Email" type="email">
+      <input id="ue-co-${u.id}" value="${esc(u.company||"")}" placeholder="Company">
+      <input id="ue-pw-${u.id}" value="" placeholder="New password (leave blank to keep)" type="password">
+      <div style="display:flex;gap:5px">
+        <button style="background:#3b82f6;color:#fff" onclick="saveEditUser(${u.id})">Save</button>
+        <button style="background:#334155;color:#94a3b8" onclick="toggleEditUser(${u.id})">Cancel</button>
+      </div>
+      <div id="ue-msg-${u.id}" style="font-size:11px;margin-top:4px"></div>
+    </div>
+  </div>`).join("");
+}
+function toggleEditUser(id){
+  const el=document.getElementById("uedit-"+id);
+  el.style.display=el.style.display==="block"?"none":"block";
+}
+async function saveEditUser(id){
+  const newName=document.getElementById("ue-name-"+id).value.trim();
+  const newEmail=document.getElementById("ue-email-"+id).value.trim();
+  const newCompany=document.getElementById("ue-co-"+id).value.trim();
+  const newPassword=document.getElementById("ue-pw-"+id).value.trim();
+  const msg=document.getElementById("ue-msg-"+id);
+  const r=await api({action:"edit-user",adminName:adm.name,adminPassword:adm.password,userId:id,newName,newEmail,newCompany,newPassword:newPassword||undefined});
+  if(r.ok){msg.innerHTML='<span class="ok">Saved!</span>';loadViewers();loadKnownNames()}
+  else msg.innerHTML='<span class="er">'+esc(r.error)+'</span>';
+}
+async function deleteUser(id,name){
+  if(!confirm("Delete user "+name+"? Their packages will remain in the system.")) return;
+  const r=await api({action:"delete-user",adminName:adm.name,adminPassword:adm.password,userId:id});
+  if(r.ok){loadViewers();loadKnownNames();document.getElementById("vu-msg").innerHTML='<span class="ok">Deleted "'+esc(name)+'"</span>'}
+  else document.getElementById("vu-msg").innerHTML='<span class="er">'+esc(r.error)+'</span>';
+}
+function populateMergeDropdowns(){
+  const opts=allUsers.map(u=>'<option value="'+u.id+'">'+esc(u.name)+(u.company?' ('+esc(u.company)+')':'')+'</option>').join("");
+  document.getElementById("merge-from").innerHTML='<option value="">Merge from...</option>'+opts;
+  document.getElementById("merge-to").innerHTML='<option value="">Keep this user...</option>'+opts;
+}
+async function mergeUsers(){
+  const fromId=document.getElementById("merge-from").value;
+  const toId=document.getElementById("merge-to").value;
+  const msg=document.getElementById("merge-msg");
+  if(!fromId||!toId){msg.innerHTML='<span class="er">Select both users</span>';return}
+  if(fromId===toId){msg.innerHTML='<span class="er">Cannot merge user with itself</span>';return}
+  const fromName=allUsers.find(u=>u.id==fromId)?.name||"?";
+  const toName=allUsers.find(u=>u.id==toId)?.name||"?";
+  if(!confirm("Merge all packages from "+fromName+" into "+toName+" and delete "+fromName+"?")) return;
+  const r=await api({action:"merge-users",adminName:adm.name,adminPassword:adm.password,keepUserId:parseInt(toId),mergeUserId:parseInt(fromId)});
+  if(r.ok){msg.innerHTML='<span class="ok">Merged! All packages from '+esc(fromName)+' moved to '+esc(toName)+'</span>';loadViewers();loadKnownNames();loadAllEntries()}
+  else msg.innerHTML='<span class="er">'+esc(r.error)+'</span>';
 }
 async function addViewer(){
   const n=document.getElementById("vu-name").value.trim();
+  const em=document.getElementById("vu-email").value.trim();
+  const co=document.getElementById("vu-co").value.trim();
   const p=document.getElementById("vu-pw").value.trim();
   const m=document.getElementById("vu-msg");
-  if(!n||!p){m.innerHTML='<span class="er">Both fields required.</span>';return}
-  const r=await api({action:"add-user",adminName:adm.name,adminPassword:adm.password,userName:n,userPassword:p});
-  if(r.ok){m.innerHTML='<span class="ok">"'+esc(n)+'" added!</span>';document.getElementById("vu-name").value="";document.getElementById("vu-pw").value="";loadViewers()}
+  if(!n||!p){m.innerHTML='<span class="er">Name and password required.</span>';return}
+  const r=await api({action:"add-user",adminName:adm.name,adminPassword:adm.password,userName:n,userPassword:p,userCompany:co,userEmail:em});
+  if(r.ok){m.innerHTML='<span class="ok">"'+esc(n)+'" added!</span>';document.getElementById("vu-name").value="";document.getElementById("vu-email").value="";document.getElementById("vu-co").value="";document.getElementById("vu-pw").value="";document.getElementById("vu-add-form").style.display="none";loadViewers();loadKnownNames()}
   else m.innerHTML='<span class="er">'+esc(r.error)+'</span>';
 }
 
@@ -610,58 +893,112 @@ async function addAdmin(){
 }
 
 // ── All entries ──
-async function loadAllEntries(){
-  const r=await api({action:"all-entries",adminName:adm.name,adminPassword:adm.password});
+let entriesPage=1;
+const ENTRIES_PER_PAGE=25;
+let entriesTotalCount=0;
+async function loadAllEntries(page){
+  if(page) entriesPage=page;
+  const r=await api({action:"all-entries",adminName:adm.name,adminPassword:adm.password,page:entriesPage,perPage:ENTRIES_PER_PAGE});
   const d=document.getElementById("admin-entries");
-  if(!r.ok||!r.entries||!r.entries.length){d.innerHTML='<span style="color:#475569;font-size:12px">No entries yet.</span>';return}
-  d.innerHTML=r.entries.slice(0,50).map(e=>`<div class="ei" style="margin:0 0 6px">
+  if(!r.ok||!r.entries||!r.entries.length){d.innerHTML='<span style="color:#475569;font-size:12px">No entries yet.</span>';document.getElementById("entries-pager").innerHTML="";return}
+  entriesTotalCount=r.total||r.entries.length;
+  d.innerHTML=r.entries.map(e=>`<div class="ei" style="margin:0 0 6px">
     <div class="tk">${esc(e.tracking_number)}</div>
     <div class="nm">${esc(e.name)}</div>
     <div class="dt">${fmt(e.created_at)}${e.scanned_by?' · by '+esc(e.scanned_by):''}${e.scan_location?' · '+esc(e.scan_location):''}</div>
   </div>`).join("");
+  // Pagination controls
+  const totalPages=Math.ceil(entriesTotalCount/ENTRIES_PER_PAGE);
+  if(totalPages<=1){document.getElementById("entries-pager").innerHTML="";return}
+  let pagerHtml='<button class="pager-btn" onclick="loadAllEntries('+(entriesPage-1)+')" '+(entriesPage<=1?'disabled':'')+'>Prev</button>';
+  pagerHtml+='<span style="color:#64748b;font-size:12px">Page '+entriesPage+' of '+totalPages+' ('+entriesTotalCount+' total)</span>';
+  pagerHtml+='<button class="pager-btn" onclick="loadAllEntries('+(entriesPage+1)+')" '+(entriesPage>=totalPages?'disabled':'')+'>Next</button>';
+  document.getElementById("entries-pager").innerHTML=pagerHtml;
 }
 
 // ══════════════════════════════
 //  VIEWER (track my package)
 // ══════════════════════════════
-let vUser=null,vEntries=[];
+let vUser=null,vEntries=[],vPage=1,vTotal=0;
+const V_PER_PAGE=20;
 
-async function viewerLogin(){
+function showViewerTab(tab){
+  document.getElementById("v-signin-form").style.display=tab==="login"?"block":"none";
+  document.getElementById("v-signup-form").style.display=tab==="signup"?"block":"none";
+  document.getElementById("tab-login").style.background=tab==="login"?"#3b82f6":"#0f172a";
+  document.getElementById("tab-login").style.color=tab==="login"?"#fff":"#94a3b8";
+  document.getElementById("tab-signup").style.background=tab==="signup"?"#3b82f6":"#0f172a";
+  document.getElementById("tab-signup").style.color=tab==="signup"?"#fff":"#94a3b8";
+  document.getElementById("vl-err").style.display="none";
+}
+
+async function viewerSignup(){
+  const name=document.getElementById("vs-name").value.trim();
+  const company=document.getElementById("vs-company").value.trim();
+  const pw=document.getElementById("vs-pw").value.trim();
+  const pw2=document.getElementById("vs-pw2").value.trim();
+  const email=document.getElementById("vs-email")?document.getElementById("vs-email").value.trim():"";
+  const err=document.getElementById("vl-err");err.style.display="none";
+  if(!name||!pw){err.textContent="Name and password are required.";err.style.display="block";return}
+  if(pw!==pw2){err.textContent="Passwords don't match.";err.style.display="block";return}
+  if(pw.length<4){err.textContent="Password must be at least 4 characters.";err.style.display="block";return}
+  const r=await api({action:"signup",name,password:pw,company,email});
+  if(!r.ok){err.textContent=r.error||"Signup failed.";err.style.display="block";return}
+  err.style.display="none";
+  document.getElementById("vl-name").value=name;
+  document.getElementById("vl-pw").value=pw;
+  viewerLogin();
+}
+
+async function viewerLogin(page){
+  if(page) vPage=page; else vPage=1;
   const name=document.getElementById("vl-name").value.trim();
   const pw=document.getElementById("vl-pw").value.trim();
   const err=document.getElementById("vl-err");err.style.display="none";
   if(!name||!pw){err.textContent="Enter your name and password.";err.style.display="block";return}
-  const r=await api({action:"login",name,password:pw});
+  const r=await api({action:"login",name,password:pw,page:vPage,perPage:V_PER_PAGE});
   if(!r.ok){err.textContent=r.error||"Login failed.";err.style.display="block";return}
-  vUser={name,password:pw};vEntries=r.entries||[];
+  vUser={name,password:pw};vEntries=r.entries||[];vTotal=r.total||vEntries.length;
   document.getElementById("v-login").style.display="none";
   document.getElementById("v-dash").style.display="block";
   document.getElementById("v-title").textContent=name+"'s Packages";
-  document.getElementById("v-sub").textContent=vEntries.length+" total";
+  document.getElementById("v-sub").textContent=vTotal+" total";
   renderViewer();
 }
 
 function renderViewer(){
   const q=(document.getElementById("v-search").value||"").toLowerCase();
-  const f=vEntries.filter(e=>e.tracking_number.toLowerCase().includes(q)||(e.name||"").toLowerCase().includes(q));
+  const f=q?vEntries.filter(e=>e.tracking_number.toLowerCase().includes(q)):vEntries;
   const now=new Date(),today=now.toISOString().slice(0,10),wk=new Date(now-7*864e5);
-  document.getElementById("vs-tot").textContent=vEntries.length;
+  document.getElementById("vs-tot").textContent=vTotal;
   document.getElementById("vs-tod").textContent=vEntries.filter(e=>e.created_at.slice(0,10)===today).length;
   document.getElementById("vs-wk").textContent=vEntries.filter(e=>new Date(e.created_at)>=wk).length;
   const d=document.getElementById("v-list");
-  if(!f.length){d.innerHTML='<div style="text-align:center;padding:30px;color:#475569">No packages found.</div>';return}
+  if(!f.length){d.innerHTML='<div style="text-align:center;padding:30px;color:#475569">No packages found.</div>';document.getElementById("v-pager").innerHTML="";return}
   d.innerHTML=f.map(e=>`<div class="ei">
     <div class="tk">${esc(e.tracking_number)}</div>
-    <div class="nm">${esc(e.name)}</div>
-    <div class="dt">${fmt(e.created_at)}${e.scanned_by?' · by '+esc(e.scanned_by):''}${e.scan_location?' · '+esc(e.scan_location):''}</div>
+    <div class="dt">${fmt(e.created_at)}${e.scan_location?' · '+esc(e.scan_location):''}</div>
     ${e.raw_text?`<span class="rt" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block';this.textContent=this.nextElementSibling.style.display==='block'?'Hide notes':'Show notes'">Show notes</span><div class="rb">${esc(e.raw_text)}</div>`:''}
   </div>`).join("");
+  // Viewer pagination
+  const totalPages=Math.ceil(vTotal/V_PER_PAGE);
+  const pg=document.getElementById("v-pager");
+  if(totalPages<=1){pg.innerHTML="";return}
+  pg.innerHTML='<button class="pager-btn" onclick="viewerLoadPage('+(vPage-1)+')" '+(vPage<=1?'disabled':'')+'>Prev</button>'+
+    '<span style="color:#64748b;font-size:12px">Page '+vPage+' of '+totalPages+'</span>'+
+    '<button class="pager-btn" onclick="viewerLoadPage('+(vPage+1)+')" '+(vPage>=totalPages?'disabled':'')+'>Next</button>';
+}
+function viewerLoadPage(p){
+  document.getElementById("vl-name").value=vUser.name;
+  document.getElementById("vl-pw").value=vUser.password;
+  viewerLogin(p);
 }
 
 async function refreshViewer(){
   if(!vUser) return;
-  const r=await api({action:"login",name:vUser.name,password:vUser.password});
-  if(r.ok){vEntries=r.entries||[];renderViewer()}
+  document.getElementById("vl-name").value=vUser.name;
+  document.getElementById("vl-pw").value=vUser.password;
+  viewerLogin(vPage);
 }
 function viewerLogout(){
   vUser=null;vEntries=[];
