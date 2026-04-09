@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Codivant: The Code Advantage</title>
+  <title>Codivant: The Coding Advantage</title>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
@@ -631,7 +631,7 @@
   <div class="container">
     <div class="header">
       <h1>Codivant</h1>
-      <div class="tagline">The Code Advantage</div>
+      <div class="tagline">The Coding Advantage</div>
     </div>
 
     <div class="content" id="content">
@@ -998,13 +998,16 @@
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + ANON_KEY
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(payload)
       });
-      if (!response.ok) throw new Error(`API error: ${response.status}`);
-      return response.json();
+      const raw = await response.json();
+      if (!response.ok) {
+        return { success: false, error: raw.error || `API error: ${response.status}` };
+      }
+      // Normalize: wrap raw API response so frontend can use result.success / result.data
+      return { success: true, data: raw, ...raw };
     }
 
     function showToast(message) {
@@ -1051,22 +1054,23 @@
       }
 
       try {
-        const result = await apiCall('admin-login', { username, password });
+        const result = await apiCall('admin-login', { adminName: username, adminPassword: password });
 
-        if (result.success) {
-          sessionStorage.setItem('v2_adminName', username);
-          sessionStorage.setItem('v2_adminPassword', password);
-          sessionStorage.setItem('v2_adminRole', result.data?.role || 'admin');
-          sessionStorage.setItem('v2_adminEmail', result.data?.email || '');
-
-          switchScreen('scanScreen');
-          document.getElementById('bottomNav').style.display = 'flex';
-          loadScanData();
-          initializeScanner();
-          loadSettingsData();
-        } else {
-          showToast('Login failed: ' + (result.message || 'Invalid credentials'));
+        if (!result.success) {
+          showToast('Login failed: ' + (result.error || 'Invalid credentials'));
+          return;
         }
+
+        sessionStorage.setItem('v2_adminName', username);
+        sessionStorage.setItem('v2_adminPassword', password);
+        sessionStorage.setItem('v2_adminRole', result.data?.role || 'admin');
+        sessionStorage.setItem('v2_adminEmail', result.data?.email || '');
+
+        switchScreen('scanScreen');
+        document.getElementById('bottomNav').style.display = 'flex';
+        loadScanData();
+        initializeScanner();
+        loadSettingsData();
       } catch(error) {
         showToast('Error: ' + error.message);
       }
