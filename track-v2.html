@@ -53,18 +53,13 @@
       flex-direction: column;
     }
     .screen {
-      display: none;
+      display: none !important;
       flex: 1;
       padding: 16px;
       overflow-y: auto;
     }
     .screen.active {
-      display: flex;
-      flex-direction: column;
-    }
-    .login-screen {
-      flex: 1;
-      display: flex;
+      display: flex !important;
       flex-direction: column;
     }
     .tabs {
@@ -1258,8 +1253,8 @@
         const result = await apiCall('scan', {
           recipientName: recipientName || 'Unknown',
           trackingNumber,
-          locationId,
-          routeId: routeId || undefined,
+          locationId: parseInt(locationId),
+          routeId: routeId ? parseInt(routeId) : undefined,
           eta: eta || undefined,
           notes: ''
         });
@@ -1284,7 +1279,7 @@
         ]);
 
         if (packages.success) {
-          allPackages = packages.data || [];
+          allPackages = packages.data?.packages || packages.data || [];
           updateStats();
           loadTodayScans();
         }
@@ -1344,7 +1339,7 @@
       const today = todayEastern();
       try {
         const result = await apiCall('packages-by-date', { date: today });
-        const packages = result.success ? (result.data || []) : [];
+        const packages = result.success ? (result.data?.packages || result.data || []) : [];
 
         const list = document.getElementById('scanList');
         list.innerHTML = '';
@@ -1427,7 +1422,7 @@
 
       try {
         const result = await apiCall('packages-by-date', { date });
-        const packages = result.success ? (result.data || []) : [];
+        const packages = result.success ? (result.data?.packages || result.data || []) : [];
 
         const container = document.getElementById('deliveryPackages');
         container.innerHTML = '';
