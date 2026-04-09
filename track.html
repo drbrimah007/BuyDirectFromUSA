@@ -506,7 +506,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 <script>
 const API="https://zffevasaeaogjxuslhtw.supabase.co/functions/v1/scanner-api";
 function esc(s){const d=document.createElement("div");d.textContent=s||"";return d.innerHTML}
-function fmt(iso){const d=new Date(iso);return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+" at "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}
+function fmt(iso){const d=new Date(iso);return d.toLocaleDateString("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",year:"numeric"})+" at "+d.toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"})}
 
 // ── Scan chime ──
 let audioCtx=null;
@@ -703,10 +703,11 @@ async function loadDashStats(){
     const r=await api({action:"all-entries",adminName:adm.name,adminPassword:adm.password,page:1,perPage:1000});
     if(!r.ok) return;
     const entries=r.entries||[];
-    const today=new Date().toISOString().slice(0,10);
+    const today=new Date().toLocaleDateString("en-CA",{timeZone:"America/New_York"});
     let todayCount=0,transitCount=0,deliveredCount=0;
     entries.forEach(e=>{
-      if(e.created_at&&e.created_at.slice(0,10)===today) todayCount++;
+      const entryDate=new Date(e.created_at).toLocaleDateString("en-CA",{timeZone:"America/New_York"});
+      if(entryDate===today) todayCount++;
       if(e.status==="In Transit") transitCount++;
       if(e.status==="Delivered") deliveredCount++;
     });
@@ -1973,9 +1974,9 @@ async function viewerLogin(page){
 function renderViewer(){
   const q=(document.getElementById("v-search").value||"").toLowerCase();
   const f=q?vEntries.filter(e=>e.tracking_number.toLowerCase().includes(q)):vEntries;
-  const now=new Date(),today=now.toISOString().slice(0,10),wk=new Date(now-7*864e5);
+  const now=new Date(),today=now.toLocaleDateString("en-CA",{timeZone:"America/New_York"}),wk=new Date(now-7*864e5);
   document.getElementById("vs-tot").textContent=vTotal;
-  document.getElementById("vs-tod").textContent=vEntries.filter(e=>e.created_at.slice(0,10)===today).length;
+  document.getElementById("vs-tod").textContent=vEntries.filter(e=>new Date(e.created_at).toLocaleDateString("en-CA",{timeZone:"America/New_York"})===today).length;
   document.getElementById("vs-wk").textContent=vEntries.filter(e=>new Date(e.created_at)>=wk).length;
   const d=document.getElementById("v-list");
   if(!f.length){d.innerHTML='<div style="text-align:center;padding:30px;color:#475569">No packages found.</div>';document.getElementById("v-pager").innerHTML="";return}
