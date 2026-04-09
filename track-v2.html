@@ -916,6 +916,7 @@
 
   <script>
     const API_URL = 'https://zffevasaeaogjxuslhtw.supabase.co/functions/v1/scanner-api-v2';
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmZmV2YXNhZWFvZ2p4dXNsaHR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0OTQ1NDEsImV4cCI6MjA5MDA3MDU0MX0.3QZ08cQ0K8tJUHmVfeKmRoSa84s1H5IiFpOcXOTj2_4';
     let scanner = null;
     let allPackages = [];
     let allLocations = [];
@@ -996,7 +997,10 @@
       }
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + ANON_KEY
+        },
         body: JSON.stringify(payload)
       });
       if (!response.ok) throw new Error(`API error: ${response.status}`);
