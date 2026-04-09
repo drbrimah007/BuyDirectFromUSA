@@ -709,9 +709,10 @@ function printTrackingBarcode(){
 // ══════════════════════════════
 //  PUBLIC TRACKING (No login required)
 // ══════════════════════════════
+let lastTracked="";
 async function publicTrack(fromUrl){
-  const input=(fromUrl||document.getElementById("pt-input").value).trim();
-  if(fromUrl) document.getElementById("pt-input").value=input;
+  const ptEl=document.getElementById("pt-input");
+  const input=(fromUrl||ptEl.value).trim();
   const resultsDiv=document.getElementById("pt-results");
 
   if(!input){
@@ -719,8 +720,15 @@ async function publicTrack(fromUrl){
     return;
   }
 
+  // Save for auto-refresh, clear input field
+  lastTracked=input;
+  ptEl.value="";
+
   // Update URL for sharing
-  window.location.hash="track="+encodeURIComponent(input);
+  try{
+    const newUrl=window.location.pathname+"?track="+encodeURIComponent(input);
+    window.history.pushState({track:input},"",newUrl);
+  }catch(e){}
 
   resultsDiv.innerHTML='<div class="pt-empty">Searching...</div>';
 
@@ -805,18 +813,20 @@ document.addEventListener("DOMContentLoaded",()=>{
   const ptResults=document.getElementById("pt-results");
   if(ptResults) ptResults.innerHTML="";
   applyCompanyBranding();
-  // Auto-search if #track= is in URL
-  const h=window.location.hash;
-  if(h.startsWith("#track=")){
-    const urlTrack=decodeURIComponent(h.slice(7));
-    if(urlTrack) publicTrack(urlTrack);
-  }
+  // Auto-search if ?track= is in URL
+  const urlTrack=new URLSearchParams(window.location.search).get("track");
+  if(urlTrack) publicTrack(urlTrack);
+  // Handle browser back/forward
+  window.addEventListener("popstate",(ev)=>{
+    const t=new URLSearchParams(window.location.search).get("track");
+    if(t) publicTrack(t);
+    else{ document.getElementById("pt-results").innerHTML=""; lastTracked=""; }
+  });
 });
 function startPtAutoRefresh(){
   stopPtAutoRefresh();
   ptAutoRefresh=setInterval(()=>{
-    const v=document.getElementById("pt-input").value.trim();
-    if(v) publicTrack();
+    if(lastTracked) publicTrack(lastTracked);
   },60000);
 }
 function stopPtAutoRefresh(){if(ptAutoRefresh){clearInterval(ptAutoRefresh);ptAutoRefresh=null}}
