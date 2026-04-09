@@ -7,6 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f172a">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100dvh;overflow-x:hidden}
@@ -174,17 +175,24 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 <!-- SCANNER (logged-in admin) -->
 <div id="pg-scanner" class="pg">
   <div class="hdr" style="display:flex;justify-content:space-between;align-items:center">
-    <div style="display:flex;align-items:center;gap:8px">
-      <button id="tab-scan" class="adm-tab on" onclick="switchAdmTab('scan')">Scan Packages</button>
-      <button id="tab-deliver" class="adm-tab" onclick="switchAdmTab('deliver')">Deliver</button>
-    </div>
-    <div style="display:flex;align-items:center;gap:6px">
-      <p id="sc-sub" style="font-size:11px;color:#64748b;margin:0"></p>
-      <button style="padding:5px 10px;border:1px solid #475569;border-radius:8px;background:none;color:#f87171;font-size:12px;cursor:pointer" onclick="adminLogout()">Log out</button>
-    </div>
+    <div><h1 style="font-size:17px;color:#f8fafc;margin:0">BuyDirectFromUSA</h1><p id="sc-sub" style="font-size:11px;color:#64748b;margin-top:2px"></p></div>
+    <button style="padding:5px 10px;border:1px solid #475569;border-radius:8px;background:none;color:#f87171;font-size:12px;cursor:pointer" onclick="adminLogout()">Log out</button>
+  </div>
+  <!-- Admin bottom nav -->
+  <div class="bnav" id="adm-bnav" style="display:none">
+    <button id="tab-scan" class="on" onclick="switchAdmTab('scan')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>Scan</button>
+    <button id="tab-deliver" onclick="switchAdmTab('deliver')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8h14l-1.5 9H6.5L5 8z"/><path d="M3 3h2l.4 2"/><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></svg>Deliver</button>
   </div>
   <!-- Scan content -->
   <div id="scan-content">
+
+  <!-- Dashboard stats -->
+  <div class="sr" id="adm-stats">
+    <div class="sx"><div class="n" id="as-today">-</div><div class="l">Today</div></div>
+    <div class="sx"><div class="n" id="as-transit">-</div><div class="l">In Transit</div></div>
+    <div class="sx"><div class="n" id="as-delivered">-</div><div class="l">Delivered</div></div>
+    <div class="sx"><div class="n" id="as-total">-</div><div class="l">Total</div></div>
+  </div>
 
   <!-- Location + Destination -->
   <div class="cd">
@@ -486,6 +494,11 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <input class="si" id="v-search" placeholder="Search tracking numbers..." oninput="renderViewer()">
     <div id="v-list"></div>
     <div id="v-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin:10px 14px"></div>
+    <!-- QR Code for bookmarking -->
+    <div style="text-align:center;padding:16px 14px;margin-top:8px">
+      <div style="font-size:11px;color:#64748b;margin-bottom:8px">Scan this QR code to check your packages anytime</div>
+      <div id="v-qrcode" style="display:inline-block;padding:10px;background:#fff;border-radius:10px"></div>
+    </div>
   </div>
 </div>
 
@@ -493,6 +506,23 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 const API="https://zffevasaeaogjxuslhtw.supabase.co/functions/v1/scanner-api";
 function esc(s){const d=document.createElement("div");d.textContent=s||"";return d.innerHTML}
 function fmt(iso){const d=new Date(iso);return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+" at "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}
+
+// ── Scan chime ──
+let audioCtx=null;
+function playChime(){
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator();
+    const g=audioCtx.createGain();
+    o.connect(g);g.connect(audioCtx.destination);
+    o.type="sine";o.frequency.setValueAtTime(880,audioCtx.currentTime);
+    o.frequency.setValueAtTime(1320,audioCtx.currentTime+0.08);
+    g.gain.setValueAtTime(0.3,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.25);
+    o.start(audioCtx.currentTime);
+    o.stop(audioCtx.currentTime+0.25);
+  }catch(e){}
+}
 async function api(b){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});return r.json()}
 
 // Status badge helper
@@ -515,8 +545,8 @@ function showTab(id){
 
 // ── Admin tab switching (Scan / Deliver) ──
 function switchAdmTab(tab){
-  document.getElementById("tab-scan").classList.toggle("on",tab==="scan");
-  document.getElementById("tab-deliver").classList.toggle("on",tab==="deliver");
+  document.querySelectorAll("#adm-bnav button").forEach(b=>b.classList.remove("on"));
+  document.getElementById("tab-"+tab).classList.add("on");
   document.getElementById("scan-content").style.display=tab==="scan"?"block":"none";
   document.getElementById("deliver-content").style.display=tab==="deliver"?"block":"none";
   if(tab==="deliver"){
@@ -599,13 +629,15 @@ async function publicTrack(){
       html+='</div>';
     }
 
-    resultsDiv.innerHTML=html+'<div class="pt-note">Tap "Track My Package" below and sign in to see your full package history</div>';
+    resultsDiv.innerHTML=html+'<div class="pt-note">Auto-refreshes every 60s · Tap "Track My Package" below to sign in for full history</div>';
+    startPtAutoRefresh();
   }catch(e){
     resultsDiv.innerHTML='<div class="pt-empty er">Error loading tracking</div>';
   }
 }
 
-// Handle Enter key in public tracking input + clear on load
+// Handle Enter key in public tracking input + clear on load + auto-refresh
+let ptAutoRefresh=null;
 document.addEventListener("DOMContentLoaded",()=>{
   const ptInput=document.getElementById("pt-input");
   if(ptInput){
@@ -615,6 +647,14 @@ document.addEventListener("DOMContentLoaded",()=>{
   const ptResults=document.getElementById("pt-results");
   if(ptResults) ptResults.innerHTML="";
 });
+function startPtAutoRefresh(){
+  stopPtAutoRefresh();
+  ptAutoRefresh=setInterval(()=>{
+    const v=document.getElementById("pt-input").value.trim();
+    if(v) publicTrack();
+  },60000);
+}
+function stopPtAutoRefresh(){if(ptAutoRefresh){clearInterval(ptAutoRefresh);ptAutoRefresh=null}}
 
 // ══════════════════════════════
 //  ADMIN / SCANNER
@@ -640,16 +680,40 @@ async function enterScanner(){
   if(adm.is_super) document.getElementById("super-section").style.display="block";
   else document.getElementById("super-section").style.display="none";
   showTab("scanner");
+  document.getElementById("adm-bnav").style.display="flex";
   restoreScanSettings();
   await Promise.all([loadLocations(),loadDests()]);
   loadViewers();
   if(adm.is_super) loadAdmins();
   loadAllEntries();
   loadKnownNames();
+  loadDashStats();
 }
 
 function adminLogout(){
-  adm=null;selectedLoc="";localStorage.removeItem("adm_session");showTab("gate");
+  adm=null;selectedLoc="";localStorage.removeItem("adm_session");
+  document.getElementById("adm-bnav").style.display="none";
+  showTab("gate");
+}
+
+// ── Dashboard Stats ──
+async function loadDashStats(){
+  try{
+    const r=await api({action:"all-entries",adminName:adm.name,adminPassword:adm.password,page:1,perPage:1000});
+    if(!r.ok) return;
+    const entries=r.entries||[];
+    const today=new Date().toISOString().slice(0,10);
+    let todayCount=0,transitCount=0,deliveredCount=0;
+    entries.forEach(e=>{
+      if(e.created_at&&e.created_at.slice(0,10)===today) todayCount++;
+      if(e.status==="In Transit") transitCount++;
+      if(e.status==="Delivered") deliveredCount++;
+    });
+    document.getElementById("as-today").textContent=todayCount;
+    document.getElementById("as-transit").textContent=transitCount;
+    document.getElementById("as-delivered").textContent=deliveredCount;
+    document.getElementById("as-total").textContent=r.total||entries.length;
+  }catch(e){}
 }
 
 // ── Locations ──
@@ -802,6 +866,7 @@ function onBarcodeDetected(raw){
     scanDone=true;
     document.getElementById("sc-tracking").value=decoded;
     document.getElementById("sc-status").innerHTML='<span class="ok">Scanned: '+esc(decoded)+'</span>';
+    playChime();
     if(navigator.vibrate) navigator.vibrate([100,50,100]);
     stopCam();
     autoLookupName(decoded);
@@ -1064,7 +1129,10 @@ async function doSave(){
       st.innerHTML='<span class="ok">Saved! '+esc(name)+' — '+esc(tracking)+'</span>';
       clearForm();
       loadAllEntries();
-      loadViewers(); // Refresh merge dropdowns with auto-created users
+      loadViewers();
+      loadDashStats();
+      // Auto-restart camera for next scan
+      setTimeout(()=>{ startCam(); },600);
     }
     else st.innerHTML='<span class="er">'+(r.error||"Failed")+'</span>';
   }catch(e){st.innerHTML='<span class="er">Network error.</span>'}
@@ -1479,6 +1547,7 @@ function delOnBarcode(raw){
   if(delScanConfirm[decoded]>=1){
     delScanDone=true;
     document.getElementById("del-scan-status").innerHTML='<span class="ok">Scanned: '+esc(decoded)+'</span>';
+    playChime();
     if(navigator.vibrate) navigator.vibrate([100,50,100]);
     delStopCam();
     delLookupTracking(decoded);
@@ -1860,6 +1929,13 @@ async function viewerLogin(page){
   document.getElementById("v-title").textContent=name+"'s Packages";
   document.getElementById("v-sub").textContent=vTotal+" total";
   renderViewer();
+  // Generate QR code for this user's page
+  const qrDiv=document.getElementById("v-qrcode");
+  qrDiv.innerHTML="";
+  try{
+    const pageUrl=window.location.href.split("?")[0]+"?user="+encodeURIComponent(name);
+    new QRCode(qrDiv,{text:pageUrl,width:140,height:140,colorDark:"#0f172a",colorLight:"#ffffff"});
+  }catch(e){}
 }
 
 function renderViewer(){
