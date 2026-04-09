@@ -104,6 +104,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .st-arrived-destination{background:#064e3b;color:#6ee7b7}
 .st-out-for-delivery{background:#4c1d95;color:#c4b5fd}
 .st-held{background:#78350f;color:#fdba74}
+.st-customs{background:#713f12;color:#fbbf24}
 .st-delivered{background:#065f46;color:#34d399}
 .st-archived{background:#1e1b4b;color:#a5b4fc}
 /* Bulk status page */
@@ -165,9 +166,11 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <div class="lbx">
       <h2>Scanner Login</h2>
       <p>Log in to scan and manage packages</p>
-      <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="al-email" placeholder="efficiency@buydirectfromusa.com" autocomplete="email"></div>
-      <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="al-pw" placeholder="Enter password"></div>
-      <button class="bt bb g8" onclick="adminDoLogin()">Log In</button>
+      <form id="admin-login-form" onsubmit="event.preventDefault();adminDoLogin();" method="post">
+      <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="al-email" name="email" placeholder="efficiency@buydirectfromusa.com" autocomplete="username"></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="al-pw" name="password" placeholder="Enter password" autocomplete="current-password"></div>
+      <button type="submit" class="bt bb g8">Log In</button>
+      </form>
       <button class="bt bo" onclick="showTab('gate')">Back</button>
       <div id="al-err" class="er" style="font-size:12px;margin-top:8px;display:none"></div>
     </div>
@@ -335,7 +338,9 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
           <button onclick="delBulkStatus('Delay')" style="padding:7px 12px;border:1px solid #7f1d1d;border-radius:8px;background:#7f1d1d;color:#fca5a5;font-size:12px;font-weight:700;cursor:pointer">Delay</button>
           <button onclick="delBulkStatus('Held')" style="padding:7px 12px;border:1px solid #78350f;border-radius:8px;background:#78350f;color:#fdba74;font-size:12px;font-weight:700;cursor:pointer">Held</button>
           <button onclick="delBulkStatus('Return')" style="padding:7px 12px;border:1px solid #713f12;border-radius:8px;background:#713f12;color:#fde68a;font-size:12px;font-weight:700;cursor:pointer">Return</button>
-          <button onclick="delBulkStatus('Archived')" style="padding:7px 12px;border:1px solid #3730a3;border-radius:8px;background:#1e1b4b;color:#a5b4fc;font-size:12px;font-weight:700;cursor:pointer">Archive</button>
+          <button onclick="delBulkStatus('Customs')" style="padding:7px 12px;border:1px solid #a16207;border-radius:8px;background:#713f12;color:#fbbf24;font-size:12px;font-weight:700;cursor:pointer">Customs</button>
+          <div style="display:flex;gap:4px;margin-top:6px;width:100%"><input id="del-bulk-custom-status" placeholder="Custom status text..." style="flex:1;padding:7px 10px;border:1px solid #475569;border-radius:8px;background:#0f172a;color:#f8fafc;font-size:12px"><button onclick="const v=document.getElementById('del-bulk-custom-status').value.trim();if(v){delBulkStatus(v);document.getElementById('del-bulk-custom-status').value='';}" style="padding:7px 12px;border:1px solid #475569;border-radius:8px;background:#1e293b;color:#e2e8f0;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Set</button></div>
+          <button onclick="delBulkStatus('Archived')" style="padding:7px 12px;border:1px solid #3730a3;border-radius:8px;background:#1e1b4b;color:#a5b4fc;font-size:12px;font-weight:700;cursor:pointer;margin-top:6px">Archive</button>
         </div>
         <div id="del-bulk-msg" style="font-size:12px;margin-top:4px"></div>
       </div>
@@ -500,7 +505,9 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
         <button class="bs-status-btn" onclick="bsSetStatus('Held')" style="padding:7px 12px;border:1px solid #78350f;border-radius:8px;background:#78350f;color:#fdba74;font-size:12px;font-weight:700;cursor:pointer">Held</button>
         <button class="bs-status-btn" onclick="bsSetStatus('Delivered')" style="padding:7px 12px;border:1px solid #065f46;border-radius:8px;background:#065f46;color:#34d399;font-size:12px;font-weight:700;cursor:pointer">Delivered</button>
         <button class="bs-status-btn" onclick="bsSetStatus('Scanned')" style="padding:7px 12px;border:1px solid #334155;border-radius:8px;background:#334155;color:#94a3b8;font-size:12px;font-weight:700;cursor:pointer">Scanned</button>
-        <button class="bs-status-btn" onclick="bsSetStatus('Archived')" style="padding:7px 12px;border:1px solid #3730a3;border-radius:8px;background:#1e1b4b;color:#a5b4fc;font-size:12px;font-weight:700;cursor:pointer">Archive</button>
+        <button class="bs-status-btn" onclick="bsSetStatus('Customs')" style="padding:7px 12px;border:1px solid #a16207;border-radius:8px;background:#713f12;color:#fbbf24;font-size:12px;font-weight:700;cursor:pointer">Customs</button>
+        <div style="display:flex;gap:4px;margin-top:6px;width:100%"><input id="bs-custom-status" placeholder="Custom status text..." style="flex:1;padding:7px 10px;border:1px solid #475569;border-radius:8px;background:#0f172a;color:#f8fafc;font-size:12px"><button onclick="const v=document.getElementById('bs-custom-status').value.trim();if(v){bsSetStatus(v);document.getElementById('bs-custom-status').value='';}" style="padding:7px 12px;border:1px solid #475569;border-radius:8px;background:#1e293b;color:#e2e8f0;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Set</button></div>
+        <button class="bs-status-btn" onclick="bsSetStatus('Archived')" style="padding:7px 12px;border:1px solid #3730a3;border-radius:8px;background:#1e1b4b;color:#a5b4fc;font-size:12px;font-weight:700;cursor:pointer;margin-top:6px">Archive</button>
       </div>
       <div id="bs-action-msg" style="font-size:12px;margin-top:4px"></div>
     </div>
@@ -530,20 +537,24 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div id="v-signin-form">
         <h2>Track My Package</h2>
         <p>Enter the name and password you registered with</p>
-        <div class="fg"><label class="fl">Your Name</label><input class="fi" id="vl-name" placeholder="e.g. John Smith"></div>
-        <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="vl-pw" placeholder="Enter password"></div>
-        <button class="bt bb g8" onclick="viewerLogin()">View My Packages</button>
+        <form id="viewer-login-form" onsubmit="event.preventDefault();viewerLogin();" method="post">
+        <div class="fg"><label class="fl">Your Name</label><input class="fi" id="vl-name" name="username" placeholder="e.g. John Smith" autocomplete="username"></div>
+        <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="vl-pw" name="password" placeholder="Enter password" autocomplete="current-password"></div>
+        <button type="submit" class="bt bb g8">View My Packages</button>
+        </form>
       </div>
       <!-- Sign Up -->
       <div id="v-signup-form" style="display:none">
         <h2>Create Account</h2>
         <p>Sign up to track your packages</p>
-        <div class="fg"><label class="fl">Your Full Name</label><input class="fi" id="vs-name" placeholder="e.g. John Smith" autocapitalize="words"></div>
-        <div class="fg"><label class="fl">Email (optional)</label><input class="fi" id="vs-email" placeholder="e.g. john@example.com" type="email"></div>
-        <div class="fg"><label class="fl">Company (optional)</label><input class="fi" id="vs-company" placeholder="e.g. ABC Imports"></div>
-        <div class="fg"><label class="fl">Create Password</label><input class="fi" type="password" id="vs-pw" placeholder="Choose a password"></div>
-        <div class="fg"><label class="fl">Confirm Password</label><input class="fi" type="password" id="vs-pw2" placeholder="Re-enter password"></div>
-        <button class="bt bg g8" onclick="viewerSignup()">Create Account</button>
+        <form id="viewer-signup-form" onsubmit="event.preventDefault();viewerSignup();" method="post">
+        <div class="fg"><label class="fl">Your Full Name</label><input class="fi" id="vs-name" name="name" placeholder="e.g. John Smith" autocapitalize="words" autocomplete="name"></div>
+        <div class="fg"><label class="fl">Email (optional)</label><input class="fi" id="vs-email" name="email" placeholder="e.g. john@example.com" type="email" autocomplete="email"></div>
+        <div class="fg"><label class="fl">Company (optional)</label><input class="fi" id="vs-company" name="company" placeholder="e.g. ABC Imports" autocomplete="organization"></div>
+        <div class="fg"><label class="fl">Create Password</label><input class="fi" type="password" id="vs-pw" name="new-password" placeholder="Choose a password" autocomplete="new-password"></div>
+        <div class="fg"><label class="fl">Confirm Password</label><input class="fi" type="password" id="vs-pw2" name="confirm-password" placeholder="Re-enter password" autocomplete="new-password"></div>
+        <button type="submit" class="bt bg g8">Create Account</button>
+        </form>
       </div>
       <button class="bt bo" style="margin-top:8px" onclick="showTab('gate')">Back</button>
       <div id="vl-err" class="er" style="font-size:12px;margin-top:8px;display:none"></div>
@@ -598,7 +609,7 @@ function playChime(){
 async function api(b){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});return r.json()}
 
 // Status badge helper
-const STATUS_CLASSES={"Scanned":"st-scanned","In Transit":"st-in-transit","Delay":"st-delay","Return":"st-return","Arrived Destination":"st-arrived-destination","Out for Delivery":"st-out-for-delivery","Held":"st-held","Delivered":"st-delivered","Archived":"st-archived"};
+const STATUS_CLASSES={"Scanned":"st-scanned","In Transit":"st-in-transit","Delay":"st-delay","Return":"st-return","Arrived Destination":"st-arrived-destination","Out for Delivery":"st-out-for-delivery","Held":"st-held","Customs":"st-customs","Delivered":"st-delivered","Archived":"st-archived"};
 const STATUS_COLORS={
   "Scanned":{bg:"#334155",border:"#475569",text:"#94a3b8"},
   "In Transit":{bg:"#1e3a5f",border:"#2563eb",text:"#60a5fa"},
@@ -607,6 +618,7 @@ const STATUS_COLORS={
   "Arrived Destination":{bg:"#064e3b",border:"#065f46",text:"#6ee7b7"},
   "Out for Delivery":{bg:"#4c1d95",border:"#5b21b6",text:"#c4b5fd"},
   "Held":{bg:"#78350f",border:"#92400e",text:"#fdba74"},
+  "Customs":{bg:"#713f12",border:"#a16207",text:"#fbbf24"},
   "Delivered":{bg:"#065f46",border:"#047857",text:"#34d399"},
   "Archived":{bg:"#1e1b4b",border:"#3730a3",text:"#a5b4fc"}
 };
@@ -737,8 +749,8 @@ async function publicTrack(){
           e.status_history.forEach(h=>allHistory.push(h));
         }
       });
-      // Sort by date ascending (oldest first, show bottom-up timeline)
-      allHistory.sort((a,b)=>new Date(a.changed_at)-new Date(b.changed_at));
+      // Sort by date descending (latest first)
+      allHistory.sort((a,b)=>new Date(b.changed_at)-new Date(a.changed_at));
       html+='<div class="ei" style="margin-bottom:10px">';
       html+='<div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">'+esc(tk)+'</div>'+statusBadge(latestStatus)+'</div>';
       let route=latest.scan_location?esc(latest.scan_location):'';
@@ -749,11 +761,11 @@ async function publicTrack(){
       if(allHistory.length){
         html+='<div style="margin-top:8px;padding-left:12px;border-left:2px solid #334155">';
         allHistory.forEach((h,i)=>{
-          const isLast=i===allHistory.length-1;
+          const isFirst=i===0;
           const col=STATUS_COLORS[h.status]||STATUS_COLORS["Scanned"];
           html+='<div style="padding:4px 0;display:flex;align-items:baseline;gap:8px">';
           html+='<span style="font-size:10px;color:#475569;white-space:nowrap;min-width:90px">'+fmtShort(h.changed_at)+'</span>';
-          html+='<span style="font-size:12px;font-weight:'+(isLast?'700':'400')+';color:'+(isLast?col.text:'#64748b')+'">'+esc(h.status)+'</span>';
+          html+='<span style="font-size:12px;font-weight:'+(isFirst?'700':'400')+';color:'+(isFirst?col.text:'#64748b')+'">'+esc(h.status)+'</span>';
           html+='</div>';
         });
         html+='</div>';
@@ -1826,6 +1838,8 @@ async function delLookupTracking(tracking){
         <button style="background:#7f1d1d;color:#fca5a5" onclick="delBulkSingleStatus(${ids},'Delay')">Delay</button>
         <button style="background:#78350f;color:#fdba74" onclick="delBulkSingleStatus(${ids},'Held')">Held</button>
         <button style="background:#713f12;color:#fde68a" onclick="delBulkSingleStatus(${ids},'Return')">Return</button>
+        <button style="background:#713f12;color:#fbbf24" onclick="delBulkSingleStatus(${ids},'Customs')">Customs</button>
+        <div style="display:flex;gap:4px;margin-top:4px;width:100%"><input id="del-cs-${e.id}" placeholder="Custom..." style="flex:1;padding:5px 8px;border:1px solid #475569;border-radius:6px;background:#0f172a;color:#f8fafc;font-size:11px"><button onclick="const v=document.getElementById('del-cs-${e.id}').value.trim();if(v)delBulkSingleStatus(${ids},v)" style="padding:5px 10px;border:1px solid #475569;border-radius:6px;background:#1e293b;color:#e2e8f0;font-size:11px;font-weight:700;cursor:pointer">Set</button></div>
       </div>
     </div>`;
   }).join("");
@@ -1893,7 +1907,9 @@ async function delSearchAny(page){
         <button style="background:#7f1d1d;color:#fca5a5" onclick="delSingleStatusRefreshSearch(${e.id},'Delay')">Delay</button>
         <button style="background:#78350f;color:#fdba74" onclick="delSingleStatusRefreshSearch(${e.id},'Held')">Held</button>
         <button style="background:#713f12;color:#fde68a" onclick="delSingleStatusRefreshSearch(${e.id},'Return')">Return</button>
-        <button style="background:#1e1b4b;color:#a5b4fc" onclick="delSingleStatusRefreshSearch(${e.id},'Archived')">Archive</button>
+        <button style="background:#713f12;color:#fbbf24" onclick="delSingleStatusRefreshSearch(${e.id},'Customs')">Customs</button>
+        <div style="display:flex;gap:4px;margin-top:4px;width:100%"><input id="del-cs2-${e.id}" placeholder="Custom..." style="flex:1;padding:5px 8px;border:1px solid #475569;border-radius:6px;background:#0f172a;color:#f8fafc;font-size:11px"><button onclick="const v=document.getElementById('del-cs2-${e.id}').value.trim();if(v)delSingleStatusRefreshSearch(${e.id},v)" style="padding:5px 10px;border:1px solid #475569;border-radius:6px;background:#1e293b;color:#e2e8f0;font-size:11px;font-weight:700;cursor:pointer">Set</button></div>
+        <button style="background:#1e1b4b;color:#a5b4fc;margin-top:4px" onclick="delSingleStatusRefreshSearch(${e.id},'Archived')">Archive</button>
       </div>
     </div>`;
   }).join("");
@@ -2359,15 +2375,15 @@ function renderViewer(){
     const etaStr=e.eta?'<div style="color:#f59e0b;font-size:11px;margin-top:2px">ETA: '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>':'';
     // Status timeline
     let timelineHtml='';
-    const hist=e.status_history||[];
+    const hist=(e.status_history||[]).slice().sort((a,b)=>new Date(b.changed_at)-new Date(a.changed_at));
     if(hist.length){
       timelineHtml='<div style="margin-top:6px;padding-left:10px;border-left:2px solid #334155;display:none" id="vhist-'+e.id+'">';
       hist.forEach((h,i)=>{
-        const isLast=i===hist.length-1;
+        const isFirst=i===0;
         const col=STATUS_COLORS[h.status]||STATUS_COLORS["Scanned"];
         timelineHtml+='<div style="padding:3px 0;display:flex;align-items:baseline;gap:8px">';
         timelineHtml+='<span style="font-size:10px;color:#475569;white-space:nowrap;min-width:85px">'+fmtShort(h.changed_at)+'</span>';
-        timelineHtml+='<span style="font-size:11px;font-weight:'+(isLast?'700':'400')+';color:'+(isLast?col.text:'#64748b')+'">'+esc(h.status)+'</span>';
+        timelineHtml+='<span style="font-size:11px;font-weight:'+(isFirst?'700':'400')+';color:'+(isFirst?col.text:'#64748b')+'">'+esc(h.status)+'</span>';
         timelineHtml+='</div>';
       });
       timelineHtml+='</div>';
