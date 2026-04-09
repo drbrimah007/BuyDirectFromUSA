@@ -726,7 +726,7 @@ async function publicTrack(fromUrl){
 
   // Update URL for sharing
   try{
-    const newUrl=window.location.pathname+"?track="+encodeURIComponent(input);
+    const newUrl=window.location.pathname+"?t="+encodeURIComponent(input);
     window.history.pushState({track:input},"",newUrl);
   }catch(e){}
 
@@ -814,11 +814,11 @@ document.addEventListener("DOMContentLoaded",()=>{
   if(ptResults) ptResults.innerHTML="";
   applyCompanyBranding();
   // Auto-search if ?track= is in URL
-  const urlTrack=new URLSearchParams(window.location.search).get("track");
+  const urlTrack=new URLSearchParams(window.location.search).get("t");
   if(urlTrack) publicTrack(urlTrack);
   // Handle browser back/forward
   window.addEventListener("popstate",(ev)=>{
-    const t=new URLSearchParams(window.location.search).get("track");
+    const t=new URLSearchParams(window.location.search).get("t");
     if(t) publicTrack(t);
     else{ document.getElementById("pt-results").innerHTML=""; lastTracked=""; }
   });
