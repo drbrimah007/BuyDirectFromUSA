@@ -709,14 +709,20 @@ function printTrackingBarcode(){
 // ══════════════════════════════
 //  PUBLIC TRACKING (No login required)
 // ══════════════════════════════
-async function publicTrack(){
-  const input=document.getElementById("pt-input").value.trim();
+async function publicTrack(fromUrl){
+  const input=(fromUrl||document.getElementById("pt-input").value).trim();
+  if(fromUrl) document.getElementById("pt-input").value=input;
   const resultsDiv=document.getElementById("pt-results");
 
   if(!input){
     resultsDiv.innerHTML='<div class="pt-empty">Enter a tracking number</div>';
     return;
   }
+
+  // Update URL for sharing
+  const url=new URL(window.location);
+  url.searchParams.set("track",input);
+  window.history.replaceState(null,"",url);
 
   resultsDiv.innerHTML='<div class="pt-empty">Searching...</div>';
 
@@ -801,6 +807,12 @@ document.addEventListener("DOMContentLoaded",()=>{
   const ptResults=document.getElementById("pt-results");
   if(ptResults) ptResults.innerHTML="";
   applyCompanyBranding();
+  // Auto-search if ?track= is in URL
+  const urlTrack=new URLSearchParams(window.location.search).get("track");
+  if(urlTrack){
+    showTab("track");
+    publicTrack(urlTrack);
+  }
 });
 function startPtAutoRefresh(){
   stopPtAutoRefresh();
