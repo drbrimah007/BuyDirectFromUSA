@@ -233,58 +233,12 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
   <!-- Entry form -->
   <div class="cd">
     <div class="fg" style="position:relative"><label class="fl">Recipient Name</label><input class="fi" id="sc-name" placeholder="e.g. John Smith" autocapitalize="words" autocomplete="off" oninput="nameAutocomplete(this.value)"><div id="name-suggestions" class="name-ac"></div></div>
-    <div class="fg"><div style="display:flex;justify-content:space-between;align-items:center"><label class="fl" style="margin:0">Tracking Number</label><span style="font-size:11px;color:#3b82f6;cursor:pointer;font-weight:700" onclick="generateTracking()">Generate</span></div><input class="fi mono" id="sc-tracking" placeholder="Scanned or type here" style="margin-top:5px"></div>
+    <div class="fg"><div style="display:flex;justify-content:space-between;align-items:center"><label class="fl" style="margin:0">Tracking Number</label><div style="display:flex;gap:10px"><span style="font-size:11px;color:#f59e0b;cursor:pointer;font-weight:700" onclick="printTrackingBarcode()">Print</span><span style="font-size:11px;color:#3b82f6;cursor:pointer;font-weight:700" onclick="generateTracking()">Generate</span></div></div><input class="fi mono" id="sc-tracking" placeholder="Scanned or type here" style="margin-top:5px"></div>
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label class="fl">ETA</label><input class="fi" id="sc-eta" type="date" style="font-size:13px" onchange="saveScanSettings()"></div>
       <div class="fg" style="flex:1"><label class="fl">Notes (optional)</label><input class="fi" id="sc-notes" placeholder="Extra info"></div>
     </div>
     <button class="bt bo" onclick="clearForm()" style="font-size:12px;padding:8px">Clear Form</button>
-  </div>
-
-  <!-- Manage Users -->
-  <div class="cd">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <label class="fl" style="margin:0">Manage Users</label>
-      <button style="padding:4px 10px;border:1px solid #334155;border-radius:6px;background:none;color:#94a3b8;font-size:11px;cursor:pointer" onclick="toggleAddUser()">+ Add User</button>
-    </div>
-    <!-- Add user form (hidden by default) -->
-    <div id="vu-add-form" style="display:none;margin-bottom:10px;padding:10px;background:#0f172a;border-radius:8px">
-      <div class="fg"><input class="fi" id="vu-name" placeholder="Full name" style="font-size:13px;padding:9px"></div>
-      <div class="fg"><input class="fi" id="vu-email" placeholder="Email (optional)" style="font-size:13px;padding:9px" type="email"></div>
-      <div class="fg"><input class="fi" id="vu-co" placeholder="Company (optional)" style="font-size:13px;padding:9px"></div>
-      <div class="fg"><input class="fi" id="vu-pw" type="password" placeholder="Password" style="font-size:13px;padding:9px"></div>
-      <button class="bt bg" style="font-size:13px;padding:9px" onclick="addViewer()">Create Account</button>
-    </div>
-    <div id="vu-msg" style="font-size:11px;margin-top:5px"></div>
-    <!-- Search users -->
-    <input class="si" id="vu-search" placeholder="Search users..." oninput="filterUsers()" style="margin:4px 0 8px;width:100%">
-    <div id="vu-list"></div>
-    <div id="vu-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px"></div>
-  </div>
-
-  <!-- Merge Users (admin) -->
-  <div class="cd">
-    <label class="fl" style="margin-bottom:8px">Merge Users</label>
-    <p style="font-size:11px;color:#64748b;margin-bottom:8px">Move all packages from one user to another, then delete the old account</p>
-    <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
-      <select class="fi" id="merge-from" style="flex:1;font-size:13px;padding:9px"><option value="">Merge from...</option></select>
-      <span style="color:#64748b;font-size:12px">into</span>
-      <select class="fi" id="merge-to" style="flex:1;font-size:13px;padding:9px"><option value="">Keep this user...</option></select>
-      <button class="bt br" style="padding:9px 14px;font-size:13px;width:auto" onclick="mergeUsers()">Merge</button>
-    </div>
-    <div id="merge-msg" style="font-size:11px;margin-top:5px"></div>
-  </div>
-
-  <!-- Super-admin: add more admins -->
-  <div class="cd" id="super-section" style="display:none">
-    <label class="fl" style="margin-bottom:8px">Add Scanner Accounts (Super Admin)</label>
-    <div class="ar">
-      <input id="sa-name" placeholder="New admin name">
-      <input id="sa-pw" type="password" placeholder="Password">
-      <button onclick="addAdmin()">Add</button>
-    </div>
-    <div id="sa-msg" style="font-size:11px;margin-top:5px"></div>
-    <div id="sa-list" style="margin-top:8px"></div>
   </div>
 
   <!-- All entries with pagination -->
@@ -388,7 +342,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid #334155">
         <label class="fl">Update ETA for Selected</label>
         <div style="display:flex;gap:6px;align-items:center">
-          <input type="date" id="del-eta-date" class="fi" style="flex:1;font-size:13px;padding:9px">
+          <input type="date" id="del-eta-date" class="fi" style="flex:1;font-size:15px;padding:12px;min-height:46px">
           <button onclick="delSetEta()" style="padding:9px 16px;border:none;border-radius:8px;background:#f59e0b;color:#0f172a;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Set ETA</button>
           <button onclick="delClearEta()" style="padding:9px 12px;border:1px solid #334155;border-radius:8px;background:none;color:#94a3b8;font-size:12px;cursor:pointer;white-space:nowrap">Clear ETA</button>
         </div>
@@ -401,6 +355,30 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
   <div id="settings-content" style="display:none">
     <div class="hdr"><h1>Settings</h1><p>Configure system preferences</p></div>
 
+    <!-- Admin profile edit -->
+    <div class="cd" style="padding:14px">
+      <label class="fl" style="margin-bottom:8px;font-size:12px">My Account</label>
+      <div id="settings-admin-info" style="font-size:13px;color:#94a3b8;margin-bottom:10px"></div>
+      <div class="fg"><label class="fl">Name</label><input class="fi" id="set-adm-name" placeholder="Admin name" style="font-size:14px;padding:10px"></div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" id="set-adm-email" type="email" placeholder="Admin email" style="font-size:14px;padding:10px"></div>
+      <div class="fg"><label class="fl">New Password</label><input class="fi" id="set-adm-pw" type="password" placeholder="Leave blank to keep current" style="font-size:14px;padding:10px"></div>
+      <button class="bt bb" style="font-size:13px;padding:10px" onclick="saveAdminProfile()">Update Profile</button>
+      <div id="set-adm-msg" style="font-size:12px;margin-top:6px"></div>
+    </div>
+
+    <!-- Upload Logo -->
+    <div class="cd" style="padding:14px">
+      <label class="fl" style="margin-bottom:8px;font-size:12px">Company Logo</label>
+      <div id="logo-preview" style="text-align:center;margin-bottom:10px"></div>
+      <input type="file" id="logo-file-input" accept="image/*" style="display:none" onchange="handleLogoUpload(this)">
+      <div style="display:flex;gap:8px">
+        <button class="bt bb" style="flex:1;font-size:13px;padding:10px" onclick="document.getElementById('logo-file-input').click()">Choose Image</button>
+        <button class="bt bo" style="font-size:13px;padding:10px" onclick="removeLogo()">Remove</button>
+      </div>
+      <div style="font-size:11px;color:#64748b;margin-top:6px">Logo appears on printed barcodes and reports. Recommended: square, under 200KB.</div>
+      <div id="logo-msg" style="font-size:12px;margin-top:4px"></div>
+    </div>
+
     <!-- Batch code prefix config -->
     <div class="cd" style="padding:14px">
       <label class="fl" style="margin-bottom:8px;font-size:12px">Batch Code Prefix</label>
@@ -411,10 +389,48 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div style="font-size:11px;color:#64748b;margin-top:6px">Prefix + date = 18-char batch barcode. Current: <span id="batch-prefix-display" style="font-family:monospace;color:#60a5fa"></span></div>
     </div>
 
-    <!-- Admin info -->
-    <div class="cd" style="padding:14px">
-      <label class="fl" style="margin-bottom:8px;font-size:12px">Logged In As</label>
-      <div id="settings-admin-info" style="font-size:13px;color:#94a3b8"></div>
+    <!-- Manage Users -->
+    <div class="cd">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <label class="fl" style="margin:0">Manage Users</label>
+        <button style="padding:4px 10px;border:1px solid #334155;border-radius:6px;background:none;color:#94a3b8;font-size:11px;cursor:pointer" onclick="toggleAddUser()">+ Add User</button>
+      </div>
+      <div id="vu-add-form" style="display:none;margin-bottom:10px;padding:10px;background:#0f172a;border-radius:8px">
+        <div class="fg"><input class="fi" id="vu-name" placeholder="Full name" style="font-size:13px;padding:9px"></div>
+        <div class="fg"><input class="fi" id="vu-email" placeholder="Email (optional)" style="font-size:13px;padding:9px" type="email"></div>
+        <div class="fg"><input class="fi" id="vu-co" placeholder="Company (optional)" style="font-size:13px;padding:9px"></div>
+        <div class="fg"><input class="fi" id="vu-pw" type="password" placeholder="Password" style="font-size:13px;padding:9px"></div>
+        <button class="bt bg" style="font-size:13px;padding:9px" onclick="addViewer()">Create Account</button>
+      </div>
+      <div id="vu-msg" style="font-size:11px;margin-top:5px"></div>
+      <input class="si" id="vu-search" placeholder="Search users..." oninput="filterUsers()" style="margin:4px 0 8px;width:100%">
+      <div id="vu-list"></div>
+      <div id="vu-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px"></div>
+    </div>
+
+    <!-- Merge Users -->
+    <div class="cd">
+      <label class="fl" style="margin-bottom:8px">Merge Users</label>
+      <p style="font-size:11px;color:#64748b;margin-bottom:8px">Move all packages from one user to another, then delete the old account</p>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
+        <select class="fi" id="merge-from" style="flex:1;font-size:13px;padding:9px"><option value="">Merge from...</option></select>
+        <span style="color:#64748b;font-size:12px">into</span>
+        <select class="fi" id="merge-to" style="flex:1;font-size:13px;padding:9px"><option value="">Keep this user...</option></select>
+        <button class="bt br" style="padding:9px 14px;font-size:13px;width:auto" onclick="mergeUsers()">Merge</button>
+      </div>
+      <div id="merge-msg" style="font-size:11px;margin-top:5px"></div>
+    </div>
+
+    <!-- Super-admin: add more admins -->
+    <div class="cd" id="super-section" style="display:none">
+      <label class="fl" style="margin-bottom:8px">Add Scanner Accounts (Super Admin)</label>
+      <div class="ar">
+        <input id="sa-name" placeholder="New admin name">
+        <input id="sa-pw" type="password" placeholder="Password">
+        <button onclick="addAdmin()">Add</button>
+      </div>
+      <div id="sa-msg" style="font-size:11px;margin-top:5px"></div>
+      <div id="sa-list" style="margin-top:8px"></div>
     </div>
 
     <!-- Logout -->
@@ -480,7 +496,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <div style="margin-top:12px;padding-top:12px;border-top:1px solid #334155">
       <label class="fl">Update ETA for Selected</label>
       <div style="display:flex;gap:6px;align-items:center">
-        <input type="date" id="bs-eta-date" class="fi" style="flex:1;font-size:13px;padding:9px">
+        <input type="date" id="bs-eta-date" class="fi" style="flex:1;font-size:15px;padding:12px;min-height:46px">
         <button onclick="bsSetEta()" style="padding:9px 16px;border:none;border-radius:8px;background:#f59e0b;color:#0f172a;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Set ETA</button>
         <button onclick="bsClearEta()" style="padding:9px 12px;border:1px solid #334155;border-radius:8px;background:none;color:#94a3b8;font-size:12px;cursor:pointer;white-space:nowrap">Clear ETA</button>
       </div>
@@ -608,8 +624,11 @@ function switchAdmTab(tab){
   }
   if(tab==="settings"){
     initBatchPrefix();
-    const info=document.getElementById("settings-admin-info");
-    if(info&&adm) info.innerHTML=esc(adm.email||adm.name)+(adm.is_super?' <span style="color:#f59e0b;font-size:11px">(Super Admin)</span>':'');
+    initSettingsProfile();
+    initLogoPreview();
+    loadViewers();
+    populateMergeDropdowns();
+    if(adm&&adm.is_super) document.getElementById("super-section").style.display="block";
   }
 }
 
@@ -630,6 +649,32 @@ function generateTracking(){
     localStorage.setItem("gen_tracking_seq",s);
     document.getElementById("sc-tracking").value=s;
   }
+}
+
+// ── Print tracking number barcode ──
+function printTrackingBarcode(){
+  const tracking=document.getElementById("sc-tracking").value.trim();
+  if(!tracking){toast("No tracking number to print","er");return}
+  const code=batchPrefix.toUpperCase()+tracking;
+  const modal=document.createElement("div");
+  modal.id="barcode-modal";
+  modal.style.cssText="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px";
+  modal.onclick=()=>modal.remove();
+  modal.innerHTML=
+    '<style>@media print{body>*:not(#barcode-modal){display:none!important}#barcode-modal{position:static!important;background:none!important;padding:0!important;display:block!important}#barcode-modal .bc-overlay{background:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;max-width:3in!important;width:3in!important;margin:0 auto!important}#barcode-modal .bc-overlay svg{width:100%!important;height:auto!important}#barcode-modal .no-print{display:none!important}}</style>'+
+    '<div class="bc-overlay" style="background:#ffffff;border-radius:12px;padding:28px 24px;text-align:center;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative" onclick="event.stopPropagation()">'+
+      '<button class="no-print" onclick="this.closest(\'#barcode-modal\').remove()" style="position:absolute;top:10px;right:10px;width:32px;height:32px;border:none;border-radius:50%;background:#f1f5f9;color:#475569;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">&times;</button>'+
+      '<div style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:2px">Tracking Barcode</div>'+
+      '<div style="font-size:12px;color:#475569;margin-bottom:14px">'+esc(batchPrefix)+' + '+esc(tracking)+'</div>'+
+      '<div style="display:flex;justify-content:center"><svg id="track-barcode-svg" style="max-width:100%;height:auto"></svg></div>'+
+      '<div style="margin-top:12px;font-family:\'SF Mono\',\'Courier New\',monospace;font-size:14px;font-weight:700;color:#0f172a;letter-spacing:2px;user-select:all;word-break:break-all">'+esc(code)+'</div>'+
+      '<div class="no-print" style="margin-top:16px;display:flex;gap:8px;justify-content:center">'+
+        '<button onclick="window.print()" style="padding:10px 20px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button>'+
+        '<button onclick="this.closest(\'#barcode-modal\').remove()" style="padding:10px 20px;border:1px solid #cbd5e1;border-radius:8px;background:#f1f5f9;color:#334155;font-weight:600;font-size:14px;cursor:pointer">Close</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(modal);
+  try{JsBarcode("#track-barcode-svg",code,{format:"CODE128",width:2,height:70,displayValue:false,margin:10,background:"#ffffff",lineColor:"#000000"})}catch(e){console.error("Barcode error:",e)}
 }
 
 // ══════════════════════════════
@@ -1859,19 +1904,24 @@ function showBatchBarcode(etaDate){
   const code=getBatchCode(etaDate);
   const label=new Date(etaDate+"T00:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
   const modal=document.createElement("div");
+  modal.id="barcode-modal";
   modal.style.cssText="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px";
   modal.onclick=()=>modal.remove();
-  modal.innerHTML='<div style="background:#fff;border-radius:12px;padding:24px;text-align:center;max-width:360px;width:100%" onclick="event.stopPropagation()">'+
-    '<div style="font-size:16px;font-weight:700;color:#0f172a;margin-bottom:4px">Batch Code</div>'+
-    '<div style="font-size:13px;color:#475569;margin-bottom:12px">'+esc(label)+'</div>'+
-    '<svg id="batch-barcode-svg"></svg>'+
-    '<div style="margin-top:10px;font-family:monospace;font-size:18px;font-weight:700;color:#0f172a;letter-spacing:2px;user-select:all">'+esc(code)+'</div>'+
-    '<div style="margin-top:12px;display:flex;gap:8px;justify-content:center">'+
-      '<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="padding:8px 20px;border:1px solid #cbd5e1;border-radius:8px;background:#f1f5f9;color:#334155;font-size:13px;cursor:pointer">Close</button>'+
-    '</div>'+
-  '</div>';
+  modal.innerHTML=
+    '<style>@media print{body>*:not(#barcode-modal){display:none!important}#barcode-modal{position:static!important;background:none!important;padding:0!important;display:block!important}#barcode-modal .bc-overlay{background:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;max-width:3in!important;width:3in!important;margin:0 auto!important}#barcode-modal .bc-overlay svg{width:100%!important;height:auto!important}#barcode-modal .no-print{display:none!important}}</style>'+
+    '<div class="bc-overlay" style="background:#ffffff;border-radius:12px;padding:28px 24px;text-align:center;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative" onclick="event.stopPropagation()">'+
+      '<button class="no-print" onclick="this.closest(\'#barcode-modal\').remove()" style="position:absolute;top:10px;right:10px;width:32px;height:32px;border:none;border-radius:50%;background:#f1f5f9;color:#475569;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">&times;</button>'+
+      '<div style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:2px">Batch Code</div>'+
+      '<div style="font-size:14px;color:#475569;margin-bottom:16px">'+esc(label)+'</div>'+
+      '<div style="display:flex;justify-content:center"><svg id="batch-barcode-svg" style="max-width:100%;height:auto"></svg></div>'+
+      '<div style="margin-top:12px;font-family:\'SF Mono\',\'Courier New\',monospace;font-size:17px;font-weight:700;color:#0f172a;letter-spacing:3px;user-select:all;word-break:break-all">'+esc(code)+'</div>'+
+      '<div class="no-print" style="margin-top:16px;display:flex;gap:8px;justify-content:center">'+
+        '<button onclick="window.print()" style="padding:10px 20px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button>'+
+        '<button onclick="this.closest(\'#barcode-modal\').remove()" style="padding:10px 20px;border:1px solid #cbd5e1;border-radius:8px;background:#f1f5f9;color:#334155;font-weight:600;font-size:14px;cursor:pointer">Close</button>'+
+      '</div>'+
+    '</div>';
   document.body.appendChild(modal);
-  try{JsBarcode("#batch-barcode-svg",code,{format:"CODE128",width:2,height:80,displayValue:false,margin:5})}catch(e){console.error("Barcode error:",e)}
+  try{JsBarcode("#batch-barcode-svg",code,{format:"CODE128",width:2,height:70,displayValue:false,margin:10,background:"#ffffff",lineColor:"#000000"})}catch(e){console.error("Barcode error:",e)}
 }
 
 async function delPickEta(eta){
@@ -2021,6 +2071,70 @@ function saveBatchPrefix(){
   const disp=document.getElementById("batch-prefix-display");
   if(disp) disp.textContent=val+" + YYYYMMDD = 18 chars";
   renderDelEtaChips();
+}
+
+// ── Admin profile edit ──
+function initSettingsProfile(){
+  const info=document.getElementById("settings-admin-info");
+  if(info&&adm) info.innerHTML=esc(adm.email||adm.name)+(adm.is_super?' <span style="color:#f59e0b;font-size:11px">(Super Admin)</span>':'');
+  const nameInp=document.getElementById("set-adm-name");
+  const emailInp=document.getElementById("set-adm-email");
+  if(nameInp&&adm) nameInp.value=adm.name||"";
+  if(emailInp&&adm) emailInp.value=adm.email||"";
+  document.getElementById("set-adm-pw").value="";
+}
+async function saveAdminProfile(){
+  const msg=document.getElementById("set-adm-msg");
+  const newName=document.getElementById("set-adm-name").value.trim();
+  const newEmail=document.getElementById("set-adm-email").value.trim();
+  const newPw=document.getElementById("set-adm-pw").value;
+  if(!newName){msg.innerHTML='<span class="er">Name is required</span>';return}
+  if(!newEmail){msg.innerHTML='<span class="er">Email is required</span>';return}
+  msg.innerHTML='<span style="color:#94a3b8">Saving...</span>';
+  const r=await api({action:"update-admin-profile",adminEmail:adm.email,adminPassword:adm.password,newName,newEmail,newPassword:newPw||undefined});
+  if(r.ok){
+    adm.name=newName;
+    adm.email=newEmail;
+    if(newPw) adm.password=newPw;
+    localStorage.setItem("adm_session",JSON.stringify(adm));
+    msg.innerHTML='<span class="ok">Profile updated</span>';
+    initSettingsProfile();
+    document.getElementById("sc-sub").textContent="Logged in as "+adm.name;
+  } else {
+    msg.innerHTML='<span class="er">'+(r.error||"Update failed")+'</span>';
+  }
+}
+
+// ── Logo upload ──
+function initLogoPreview(){
+  const preview=document.getElementById("logo-preview");
+  const logo=localStorage.getItem("company_logo");
+  if(logo){
+    preview.innerHTML='<img src="'+logo+'" style="max-width:120px;max-height:120px;border-radius:8px;border:1px solid #334155">';
+  } else {
+    preview.innerHTML='<div style="color:#475569;font-size:12px">No logo set</div>';
+  }
+}
+function handleLogoUpload(input){
+  const msg=document.getElementById("logo-msg");
+  const file=input.files&&input.files[0];
+  if(!file) return;
+  if(file.size>200*1024){msg.innerHTML='<span class="er">File too large. Max 200KB.</span>';input.value="";return}
+  if(!file.type.startsWith("image/")){msg.innerHTML='<span class="er">Please select an image file</span>';input.value="";return}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    localStorage.setItem("company_logo",e.target.result);
+    initLogoPreview();
+    msg.innerHTML='<span class="ok">Logo saved</span>';
+  };
+  reader.onerror=function(){msg.innerHTML='<span class="er">Failed to read file</span>'};
+  reader.readAsDataURL(file);
+  input.value="";
+}
+function removeLogo(){
+  localStorage.removeItem("company_logo");
+  initLogoPreview();
+  document.getElementById("logo-msg").innerHTML='<span class="ok">Logo removed</span>';
 }
 
 // ── Batch code lookup ──
