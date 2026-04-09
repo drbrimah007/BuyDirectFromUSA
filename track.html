@@ -577,6 +577,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 const API="https://zffevasaeaogjxuslhtw.supabase.co/functions/v1/scanner-api";
 function esc(s){const d=document.createElement("div");d.textContent=s||"";return d.innerHTML}
 function fmt(iso){const d=new Date(iso);return d.toLocaleDateString("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",year:"numeric"})+" at "+d.toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"})}
+function fmtShort(iso){const d=new Date(iso);return d.toLocaleDateString("en-US",{timeZone:"America/New_York",month:"short",day:"numeric"})+" "+d.toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"})}
 
 // ── Scan chime ──
 let audioCtx=null;
@@ -726,24 +727,47 @@ async function publicTrack(){
     let html="";
     for(const tk in groups){
       const events=groups[tk];
-      const latestStatus=events[0].status||"Scanned";
-      // Find the latest ETA across all events
+      const latest=events[0];
+      const latestStatus=latest.status||"Scanned";
       const latestEta=events.find(e=>e.eta);
+      // Merge all status_history from all scan events for this tracking number
+      const allHistory=[];
+      events.forEach(e=>{
+        if(e.status_history&&e.status_history.length){
+          e.status_history.forEach(h=>allHistory.push(h));
+        }
+      });
+      // Sort by date ascending (oldest first, show bottom-up timeline)
+      allHistory.sort((a,b)=>new Date(a.changed_at)-new Date(b.changed_at));
       html+='<div class="ei" style="margin-bottom:10px">';
       html+='<div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">'+esc(tk)+'</div>'+statusBadge(latestStatus)+'</div>';
-      if(latestEta) html+='<div style="font-size:11px;color:#f59e0b;margin-top:3px">ETA: '+new Date(latestEta.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
-      html+='<div style="margin-top:6px;padding-left:10px;border-left:2px solid #334155">';
-      events.forEach((e,i)=>{
-        const isLatest=i===0;
-        html+='<div style="padding:4px 0;'+(isLatest?'color:#e2e8f0':'color:#64748b')+'">';
-        let locStr=e.scan_location?esc(e.scan_location):'Scanned';
-        if(e.destination) locStr+=' &rarr; '+esc(e.destination);
-        html+='<div style="font-size:12px;font-weight:'+(isLatest?'700':'400')+'">'+locStr+'</div>';
-        html+='<div style="font-size:11px;color:#475569">'+fmt(e.created_at)+(e.scanned_by?' · by '+esc(e.scanned_by):'')+'</div>';
+      let route=latest.scan_location?esc(latest.scan_location):'';
+      if(latest.destination) route+=(route?' &rarr; ':'')+esc(latest.destination);
+      if(route) html+='<div style="font-size:11px;color:#94a3b8;margin-top:2px">'+route+'</div>';
+      if(latestEta) html+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(latestEta.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
+      // Status timeline
+      if(allHistory.length){
+        html+='<div style="margin-top:8px;padding-left:12px;border-left:2px solid #334155">';
+        allHistory.forEach((h,i)=>{
+          const isLast=i===allHistory.length-1;
+          const col=STATUS_COLORS[h.status]||STATUS_COLORS["Scanned"];
+          html+='<div style="padding:4px 0;display:flex;align-items:baseline;gap:8px">';
+          html+='<span style="font-size:10px;color:#475569;white-space:nowrap;min-width:90px">'+fmtShort(h.changed_at)+'</span>';
+          html+='<span style="font-size:12px;font-weight:'+(isLast?'700':'400')+';color:'+(isLast?col.text:'#64748b')+'">'+esc(h.status)+'</span>';
+          html+='</div>';
+        });
         html+='</div>';
-      });
-      html+='</div>';
-      html+='<div style="font-size:11px;color:#64748b;margin-top:4px">'+events.length+' scan event'+(events.length>1?'s':'')+'</div>';
+      } else {
+        // Fallback if no history yet
+        html+='<div style="margin-top:6px;padding-left:12px;border-left:2px solid #334155">';
+        events.forEach((e,i)=>{
+          html+='<div style="padding:4px 0;color:'+(i===0?'#e2e8f0':'#64748b')+'">';
+          html+='<div style="font-size:12px">'+esc(e.status||"Scanned")+'</div>';
+          html+='<div style="font-size:11px;color:#475569">'+fmt(e.created_at)+'</div>';
+          html+='</div>';
+        });
+        html+='</div>';
+      }
       html+='</div>';
     }
 
@@ -2333,10 +2357,27 @@ function renderViewer(){
     let route=e.scan_location?esc(e.scan_location):'';
     if(e.destination) route+=(route?' &rarr; ':'')+esc(e.destination);
     const etaStr=e.eta?'<div style="color:#f59e0b;font-size:11px;margin-top:2px">ETA: '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>':'';
+    // Status timeline
+    let timelineHtml='';
+    const hist=e.status_history||[];
+    if(hist.length){
+      timelineHtml='<div style="margin-top:6px;padding-left:10px;border-left:2px solid #334155;display:none" id="vhist-'+e.id+'">';
+      hist.forEach((h,i)=>{
+        const isLast=i===hist.length-1;
+        const col=STATUS_COLORS[h.status]||STATUS_COLORS["Scanned"];
+        timelineHtml+='<div style="padding:3px 0;display:flex;align-items:baseline;gap:8px">';
+        timelineHtml+='<span style="font-size:10px;color:#475569;white-space:nowrap;min-width:85px">'+fmtShort(h.changed_at)+'</span>';
+        timelineHtml+='<span style="font-size:11px;font-weight:'+(isLast?'700':'400')+';color:'+(isLast?col.text:'#64748b')+'">'+esc(h.status)+'</span>';
+        timelineHtml+='</div>';
+      });
+      timelineHtml+='</div>';
+      timelineHtml='<span class="rt" onclick="const t=document.getElementById(\'vhist-'+e.id+'\');t.style.display=t.style.display===\'block\'?\'none\':\'block\';this.textContent=t.style.display===\'block\'?\'Hide history\':\'Status history\'">Status history</span>'+timelineHtml;
+    }
     return `<div class="ei">
     <div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">${esc(e.tracking_number)}</div>${statusBadge(e.status)}</div>
     <div class="dt">${fmt(e.created_at)}${route?' · '+route:''}</div>
     ${etaStr}
+    ${timelineHtml}
     ${e.raw_text?`<span class="rt" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block';this.textContent=this.nextElementSibling.style.display==='block'?'Hide notes':'Show notes'">Show notes</span><div class="rb">${esc(e.raw_text)}</div>`:''}
   </div>`;
   }).join("");
