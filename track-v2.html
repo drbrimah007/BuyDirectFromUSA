@@ -206,10 +206,11 @@
     }
     .scanner-container {
       width: 100%;
-      height: 300px;
+      min-height: 250px;
       background: #000;
       border-radius: 8px;
       overflow: hidden;
+      position: relative;
       margin-bottom: 16px;
     }
     #qr-reader {
@@ -704,7 +705,9 @@
         </div>
 
         <div class="scanner-container">
+          <video id="scanner-video" playsinline autoplay muted style="width:100%;height:100%;object-fit:cover;display:none;"></video>
           <div id="qr-reader"></div>
+          <div id="scanner-status" style="text-align:center;padding:12px;color:#666;font-size:14px;"></div>
         </div>
 
         <div class="scan-list" id="scanList"></div>
@@ -1050,16 +1053,18 @@
 
       try {
         const result = await apiCall('admin-login', { adminEmail: email, adminPassword: password });
+        console.log('Login result:', JSON.stringify(result));
 
         if (!result.success) {
-          showToast('Login failed: ' + (result.error || 'Invalid credentials'));
+          const errMsg = typeof result.error === 'string' ? result.error : JSON.stringify(result.error || 'Invalid credentials');
+          showToast('Login failed: ' + errMsg);
           return;
         }
 
         sessionStorage.setItem('v2_adminEmail', email);
         sessionStorage.setItem('v2_adminPassword', password);
-        sessionStorage.setItem('v2_adminRole', result.data?.role || 'admin');
-        sessionStorage.setItem('v2_adminName', result.data?.name || '');
+        sessionStorage.setItem('v2_adminRole', result.data?.role || result.role || 'admin');
+        sessionStorage.setItem('v2_adminName', result.data?.name || result.name || '');
 
         switchScreen('scanScreen');
         document.getElementById('bottomNav').style.display = 'flex';
@@ -1068,6 +1073,7 @@
         loadSettingsData();
       } catch(error) {
         showToast('Error: ' + error.message);
+        console.error('Login error:', error);
       }
     }
 
@@ -1197,46 +1203,115 @@
       document.getElementById('bottomNav').style.display = 'none';
     }
 
-    function initializeScanner() {
-      const html5QrcodeScanner = new Html5Qrcode('qr-reader');
+    let nativeDetector = null;
+    let camStream = null;
+    let scannerActive = false;
+    let lastScannedCode = '';
+    let lastScanTime = 0;
 
-      const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1,
-        formatsToSupport: [0, 2, 4, 6, 10, 13],
-        disableFlip: false
-      };
+    async function initializeScanner() {
+      const statusEl = document.getElementById('scanner-status');
+      const videoEl = document.getElementById('scanner-video');
+      const readerEl = document.getElementById('qr-reader');
+      statusEl.textContent = 'Starting camera...';
 
-      html5QrcodeScanner.start(
-        { facingMode: 'environment' },
-        config,
-        onScanSuccess,
-        onScanError
-      );
-
-      scanner = html5QrcodeScanner;
-    }
-
-    function onScanSuccess(decodedText, decodedResult) {
-      const cleaned = cleanBarcode(decodedText);
-
-      if (!isValidTracking(cleaned)) {
-        return;
+      // METHOD 1: Native BarcodeDetector (fastest, works on modern iOS Safari/Chrome)
+      if ('BarcodeDetector' in window) {
+        try {
+          nativeDetector = new BarcodeDetector({
+            formats: ['code_128', 'code_39', 'ean_13', 'upc_a', 'data_matrix', 'itf']
+          });
+          camStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+          });
+          videoEl.srcObject = camStream;
+          videoEl.style.display = 'block';
+          readerEl.style.display = 'none';
+          await videoEl.play();
+          scannerActive = true;
+          statusEl.textContent = '';
+          nativeScanLoop();
+          return;
+        } catch (e) {
+          nativeDetector = null;
+          statusEl.textContent = 'Native scanner failed, trying fallback...';
+        }
       }
 
+      // METHOD 2: html5-qrcode fallback
+      try {
+        if (typeof Html5Qrcode === 'undefined') {
+          statusEl.textContent = 'Scanner library not loaded. Reload page.';
+          return;
+        }
+        readerEl.style.display = 'block';
+        videoEl.style.display = 'none';
+        const formats = [
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.DATA_MATRIX,
+          Html5QrcodeSupportedFormats.ITF
+        ];
+        const html5Sc = new Html5Qrcode('qr-reader', { formatsToSupport: formats, verbose: false });
+        await html5Sc.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: 280, height: 160 }, aspectRatio: 1.7778 },
+          onScanSuccess,
+          () => {}
+        );
+        scanner = html5Sc;
+        scannerActive = true;
+        statusEl.textContent = '';
+      } catch (e) {
+        statusEl.textContent = 'Camera error: ' + e.message;
+      }
+    }
+
+    async function nativeScanLoop() {
+      const videoEl = document.getElementById('scanner-video');
+      while (scannerActive && nativeDetector) {
+        try {
+          const barcodes = await nativeDetector.detect(videoEl);
+          for (const bc of barcodes) {
+            const cleaned = cleanBarcode(bc.rawValue);
+            if (!isValidTracking(cleaned)) continue;
+            const now = Date.now();
+            if (cleaned === lastScannedCode && now - lastScanTime < 2000) continue;
+            lastScannedCode = cleaned;
+            lastScanTime = now;
+            playChime();
+            performScan(cleaned);
+          }
+        } catch (e) {}
+        await new Promise(r => setTimeout(r, 150));
+      }
+    }
+
+    function onScanSuccess(decodedText) {
+      const cleaned = cleanBarcode(decodedText);
+      if (!isValidTracking(cleaned)) return;
+      const now = Date.now();
+      if (cleaned === lastScannedCode && now - lastScanTime < 2000) return;
+      lastScannedCode = cleaned;
+      lastScanTime = now;
       playChime();
       performScan(cleaned);
-
-      if (scanner) {
-        scanner.pause(true);
-        setTimeout(() => {
-          if (scanner) scanner.resume();
-        }, 600);
-      }
     }
 
-    function onScanError(error) {}
+    function stopScanner() {
+      scannerActive = false;
+      if (camStream) {
+        camStream.getTracks().forEach(t => t.stop());
+        camStream = null;
+      }
+      if (scanner) {
+        try { scanner.stop(); } catch(e) {}
+        scanner = null;
+      }
+      nativeDetector = null;
+    }
 
     async function performScan(trackingNumber) {
       const locationId = document.getElementById('scanLocation').value;
@@ -1859,9 +1934,7 @@
     function logout() {
       sessionStorage.clear();
       localStorage.clear();
-      if (scanner) {
-        scanner.stop();
-      }
+      stopScanner();
       if (autoRefreshTimer) clearInterval(autoRefreshTimer);
       switchScreen('loginScreen');
       document.getElementById('bottomNav').style.display = 'none';

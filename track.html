@@ -163,7 +163,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <div class="lbx">
       <h2>Scanner Login</h2>
       <p>Log in to scan and manage packages</p>
-      <div class="fg"><label class="fl">Your Name</label><input class="fi" id="al-name" placeholder="e.g. Perry" autocomplete="off"></div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="al-email" placeholder="efficiency@buydirectfromusa.com" autocomplete="email"></div>
       <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="al-pw" placeholder="Enter password"></div>
       <button class="bt bb g8" onclick="adminDoLogin()">Log In</button>
       <button class="bt bo" onclick="showTab('gate')">Back</button>
@@ -665,19 +665,19 @@ let selectedLoc="";
 let html5Sc=null;
 
 async function adminDoLogin(){
-  const name=document.getElementById("al-name").value.trim();
+  const email=document.getElementById("al-email").value.trim();
   const pw=document.getElementById("al-pw").value.trim();
   const err=document.getElementById("al-err");err.style.display="none";
-  if(!name||!pw){err.textContent="Enter name and password.";err.style.display="block";return}
-  const r=await api({action:"admin-login",name,password:pw});
+  if(!email||!pw){err.textContent="Enter email and password.";err.style.display="block";return}
+  const r=await api({action:"admin-login",email,password:pw});
   if(!r.ok){err.textContent=r.error||"Login failed.";err.style.display="block";return}
-  adm={name,password:pw,is_super:r.admin.is_super};
+  adm={name:r.admin.name,email,password:pw,is_super:r.admin.is_super};
   localStorage.setItem("adm_session",JSON.stringify(adm));
   enterScanner();
 }
 
 async function enterScanner(){
-  document.getElementById("sc-sub").textContent="Logged in as "+adm.name;
+  document.getElementById("sc-sub").textContent="Logged in as "+(adm.email||adm.name);
   if(adm.is_super) document.getElementById("super-section").style.display="block";
   else document.getElementById("super-section").style.display="none";
   showTab("scanner");
@@ -700,7 +700,7 @@ function adminLogout(){
 // ── Dashboard Stats ──
 async function loadDashStats(){
   try{
-    const r=await api({action:"all-entries",adminName:adm.name,adminPassword:adm.password,page:1,perPage:1000});
+    const r=await api({action:"all-entries",adminEmail:adm.email,adminPassword:adm.password,page:1,perPage:1000});
     if(!r.ok) return;
     const entries=r.entries||[];
     const today=new Date().toLocaleDateString("en-CA",{timeZone:"America/New_York"});
@@ -721,7 +721,7 @@ async function loadDashStats(){
 // ── Locations ──
 let allLocations=[];
 async function loadLocations(){
-  const r=await api({action:"get-locations",adminName:adm.name,adminPassword:adm.password});
+  const r=await api({action:"get-locations",adminEmail:adm.email,adminPassword:adm.password});
   if(!r.ok) return;
   allLocations=r.locations||[];
   const div=document.getElementById("loc-chips");
@@ -743,7 +743,7 @@ function pickLoc(el,name){
 }
 async function deleteLoc(id,name){
   if(!confirm("Delete location: "+name+"?")) return;
-  const r=await api({action:"delete-location",adminName:adm.name,adminPassword:adm.password,locationId:id});
+  const r=await api({action:"delete-location",adminEmail:adm.email,adminPassword:adm.password,locationId:id});
   if(r.ok){
     if(selectedLoc===name) selectedLoc="";
     loadLocations();
@@ -763,7 +763,7 @@ async function addLocation(){
     document.getElementById("new-loc-name").value="";
     return;
   }
-  const r=await api({action:"add-location",adminName:adm.name,adminPassword:adm.password,locationName:n});
+  const r=await api({action:"add-location",adminEmail:adm.email,adminPassword:adm.password,locationName:n});
   if(r.ok){
     msg.innerHTML='<span class="ok">Added & selected!</span>';
     document.getElementById("new-loc-name").value="";
@@ -1037,7 +1037,7 @@ function stopCam(){
 async function autoLookupName(tracking){
   try{
     if(adm){
-      const r=await api({action:"all-entries",adminName:adm.name,adminPassword:adm.password});
+      const r=await api({action:"all-entries",adminEmail:adm.email,adminPassword:adm.password});
       if(r.ok&&r.entries){
         const match=r.entries.find(e=>e.tracking_number&&e.tracking_number.toLowerCase()===tracking.toLowerCase());
         if(match&&match.name){
@@ -1065,7 +1065,7 @@ async function loadKnownNames(){
   const seen=new Set();
   knownPeople=[];
   try{
-    const ru=await api({action:"list-registered",adminName:adm.name,adminPassword:adm.password});
+    const ru=await api({action:"list-registered",adminEmail:adm.email,adminPassword:adm.password});
     if(ru.ok&&ru.users){
       ru.users.forEach(u=>{
         if(u.name&&!seen.has(u.name.toLowerCase())){
@@ -1076,7 +1076,7 @@ async function loadKnownNames(){
     }
   }catch(e){}
   try{
-    const r=await api({action:"all-entries",adminName:adm.name,adminPassword:adm.password});
+    const r=await api({action:"all-entries",adminEmail:adm.email,adminPassword:adm.password});
     if(r.ok&&r.entries){
       r.entries.forEach(e=>{
         if(e.name&&!seen.has(e.name.toLowerCase())){
@@ -1124,7 +1124,7 @@ async function doSave(){
   if(!selectedLoc){st.innerHTML='<span class="er">Please select a scan location.</span>';return}
   document.getElementById("btn-save").disabled=true;st.textContent="Saving...";
   try{
-    const r=await api({action:"scan",adminName:adm.name,adminPassword:adm.password,name,trackingNumber:tracking,rawText:notes,scanLocation:selectedLoc,destination:selectedDest,eta});
+    const r=await api({action:"scan",adminEmail:adm.email,adminPassword:adm.password,name,trackingNumber:tracking,rawText:notes,scanLocation:selectedLoc,destination:selectedDest,eta});
     if(r.ok){
       lastSavedName=name;
       if(!knownPeople.some(p=>p.name.toLowerCase()===name.toLowerCase())) knownPeople.unshift({name,company:""});
@@ -1167,7 +1167,7 @@ function toggleAddUser(){
   f.style.display=f.style.display==="none"?"block":"none";
 }
 async function loadViewers(){
-  const r=await api({action:"list-users",adminName:adm.name,adminPassword:adm.password});
+  const r=await api({action:"list-users",adminEmail:adm.email,adminPassword:adm.password});
   if(!r.ok) return;
   allUsers=r.users||[];
   renderUsers();
@@ -1247,7 +1247,7 @@ async function loadUserScans(uid,page){
   if(page) st.page=page;
   const list=document.getElementById("uscans-list-"+uid);
   list.innerHTML='<div style="color:#475569;font-size:11px;padding:4px">Loading...</div>';
-  const r=await api({action:"search-by-name",adminName:adm.name,adminPassword:adm.password,name:st.name,page:st.page,perPage:USER_SCANS_PER_PAGE});
+  const r=await api({action:"search-by-name",adminEmail:adm.email,adminPassword:adm.password,name:st.name,page:st.page,perPage:USER_SCANS_PER_PAGE});
   if(!r.ok||!r.entries||!r.entries.length){
     list.innerHTML='<div style="color:#475569;font-size:11px;padding:4px">No scans found</div>';
     document.getElementById("uscans-pager-"+uid).innerHTML="";
@@ -1276,13 +1276,13 @@ async function saveEditUser(id){
   const newCompany=document.getElementById("ue-co-"+id).value.trim();
   const newPassword=document.getElementById("ue-pw-"+id).value.trim();
   const msg=document.getElementById("ue-msg-"+id);
-  const r=await api({action:"edit-user",adminName:adm.name,adminPassword:adm.password,userId:id,newName,newEmail,newCompany,newPassword:newPassword||undefined});
+  const r=await api({action:"edit-user",adminEmail:adm.email,adminPassword:adm.password,userId:id,newName,newEmail,newCompany,newPassword:newPassword||undefined});
   if(r.ok){msg.innerHTML='<span class="ok">Saved!</span>';loadViewers();loadKnownNames()}
   else msg.innerHTML='<span class="er">'+esc(r.error)+'</span>';
 }
 async function deleteUser(id,name){
   if(!confirm("Delete user "+name+"? Their packages will remain in the system.")) return;
-  const r=await api({action:"delete-user",adminName:adm.name,adminPassword:adm.password,userId:id});
+  const r=await api({action:"delete-user",adminEmail:adm.email,adminPassword:adm.password,userId:id});
   if(r.ok){loadViewers();loadKnownNames();document.getElementById("vu-msg").innerHTML='<span class="ok">Deleted "'+esc(name)+'"</span>'}
   else document.getElementById("vu-msg").innerHTML='<span class="er">'+esc(r.error)+'</span>';
 }
@@ -1300,7 +1300,7 @@ async function mergeUsers(){
   const fromName=allUsers.find(u=>u.id==fromId)?.name||"?";
   const toName=allUsers.find(u=>u.id==toId)?.name||"?";
   if(!confirm("Merge all packages from "+fromName+" into "+toName+" and delete "+fromName+"?")) return;
-  const r=await api({action:"merge-users",adminName:adm.name,adminPassword:adm.password,keepUserId:parseInt(toId),mergeUserId:parseInt(fromId)});
+  const r=await api({action:"merge-users",adminEmail:adm.email,adminPassword:adm.password,keepUserId:parseInt(toId),mergeUserId:parseInt(fromId)});
   if(r.ok){msg.innerHTML='<span class="ok">Merged! All packages from '+esc(fromName)+' moved to '+esc(toName)+'</span>';loadViewers();loadKnownNames();loadAllEntries()}
   else msg.innerHTML='<span class="er">'+esc(r.error)+'</span>';
 }
@@ -1311,14 +1311,14 @@ async function addViewer(){
   const p=document.getElementById("vu-pw").value.trim();
   const m=document.getElementById("vu-msg");
   if(!n||!p){m.innerHTML='<span class="er">Name and password required.</span>';return}
-  const r=await api({action:"add-user",adminName:adm.name,adminPassword:adm.password,userName:n,userPassword:p,userCompany:co,userEmail:em});
+  const r=await api({action:"add-user",adminEmail:adm.email,adminPassword:adm.password,userName:n,userPassword:p,userCompany:co,userEmail:em});
   if(r.ok){m.innerHTML='<span class="ok">"'+esc(n)+'" added!</span>';document.getElementById("vu-name").value="";document.getElementById("vu-email").value="";document.getElementById("vu-co").value="";document.getElementById("vu-pw").value="";document.getElementById("vu-add-form").style.display="none";loadViewers();loadKnownNames()}
   else m.innerHTML='<span class="er">'+esc(r.error)+'</span>';
 }
 
 // ── Super: admins ──
 async function loadAdmins(){
-  const r=await api({action:"list-admins",adminName:adm.name,adminPassword:adm.password});
+  const r=await api({action:"list-admins",adminEmail:adm.email,adminPassword:adm.password});
   const d=document.getElementById("sa-list");
   if(!r.ok||!r.admins||!r.admins.length){d.innerHTML="";return}
   d.innerHTML=r.admins.map(a=>`<span class="uc"><b>${esc(a.name)}</b><span>${a.is_super?'super':'scanner'}</span></span>`).join("");
@@ -1328,7 +1328,7 @@ async function addAdmin(){
   const p=document.getElementById("sa-pw").value.trim();
   const m=document.getElementById("sa-msg");
   if(!n||!p){m.innerHTML='<span class="er">Both fields required.</span>';return}
-  const r=await api({action:"add-admin",adminName:adm.name,adminPassword:adm.password,newName:n,newPassword:p});
+  const r=await api({action:"add-admin",adminEmail:adm.email,adminPassword:adm.password,newName:n,newPassword:p});
   if(r.ok){m.innerHTML='<span class="ok">"'+esc(n)+'" added!</span>';document.getElementById("sa-name").value="";document.getElementById("sa-pw").value="";loadAdmins()}
   else m.innerHTML='<span class="er">'+esc(r.error)+'</span>';
 }
@@ -1339,7 +1339,7 @@ const ENTRIES_PER_PAGE=25;
 let entriesTotalCount=0;
 async function loadAllEntries(page){
   if(page) entriesPage=page;
-  const r=await api({action:"all-entries",adminName:adm.name,adminPassword:adm.password,page:entriesPage,perPage:ENTRIES_PER_PAGE});
+  const r=await api({action:"all-entries",adminEmail:adm.email,adminPassword:adm.password,page:entriesPage,perPage:ENTRIES_PER_PAGE});
   const d=document.getElementById("admin-entries");
   if(!r.ok||!r.entries||!r.entries.length){d.innerHTML='<span style="color:#475569;font-size:12px">No entries yet.</span>';document.getElementById("entries-pager").innerHTML="";return}
   entriesTotalCount=r.total||r.entries.length;
@@ -1379,7 +1379,7 @@ function confirmDeleteEntry(id,tracking,name){
 async function doDeleteEntry(id){
   const bar=document.getElementById("del-confirm-"+id);
   if(bar) bar.innerHTML='<span style="font-size:12px;color:#f59e0b">Deleting...</span>';
-  const r=await api({action:"delete-entry",adminName:adm.name,adminPassword:adm.password,entryId:id});
+  const r=await api({action:"delete-entry",adminEmail:adm.email,adminPassword:adm.password,entryId:id});
   if(bar) bar.remove();
   if(r.ok){loadAllEntries()}
   else{alert("Delete failed: "+(r.error||"Unknown error"))}
@@ -1400,7 +1400,7 @@ async function openStatusPage(){
   showTab("status");
   document.getElementById("bs-entries-card").style.display="none";
   document.getElementById("bs-dates").innerHTML='<span style="color:#475569;font-size:12px">Loading dates...</span>';
-  const r=await api({action:"scan-dates",adminName:adm.name,adminPassword:adm.password});
+  const r=await api({action:"scan-dates",adminEmail:adm.email,adminPassword:adm.password});
   if(!r.ok||!r.dates||!r.dates.length){
     document.getElementById("bs-dates").innerHTML='<span style="color:#475569;font-size:12px">No scan dates found.</span>';
     return;
@@ -1438,7 +1438,7 @@ async function loadDateEntries(page){
   const dateLabel=new Date(bsSelectedDate+"T00:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
   document.getElementById("bs-date-label").textContent=dateLabel;
 
-  const r=await api({action:"entries-by-date",adminName:adm.name,adminPassword:adm.password,date:bsSelectedDate,page:bsPage,perPage:BS_PER_PAGE});
+  const r=await api({action:"entries-by-date",adminEmail:adm.email,adminPassword:adm.password,date:bsSelectedDate,page:bsPage,perPage:BS_PER_PAGE});
   if(!r.ok){document.getElementById("bs-list").innerHTML='<div class="er" style="padding:10px">'+esc(r.error||"Error")+'</div>';return}
   bsEntries=r.entries||[];
   bsTotal=r.total||bsEntries.length;
@@ -1511,7 +1511,7 @@ async function bsSetStatus(newStatus){
     return;
   }
   msgEl.innerHTML='<span style="color:#94a3b8">Updating '+checked.length+' package'+(checked.length>1?'s':'')+'...</span>';
-  const r=await api({action:"bulk-update-status",adminName:adm.name,adminPassword:adm.password,entryIds:checked,status:newStatus});
+  const r=await api({action:"bulk-update-status",adminEmail:adm.email,adminPassword:adm.password,entryIds:checked,status:newStatus});
   if(r.ok){
     msgEl.innerHTML='<span class="ok">Updated '+r.updated+' package'+(r.updated>1?'s':'')+' to "'+esc(newStatus)+'"</span>';
     // Refresh the entries
@@ -1646,7 +1646,7 @@ async function delLookupTracking(tracking){
   const div=document.getElementById("del-scan-entries");
   card.style.display="block";
   div.innerHTML='<div style="text-align:center;padding:8px;color:#475569;font-size:12px">Looking up...</div>';
-  const r=await api({action:"search-by-tracking",adminName:adm.name,adminPassword:adm.password,trackingNumber:tracking});
+  const r=await api({action:"search-by-tracking",adminEmail:adm.email,adminPassword:adm.password,trackingNumber:tracking});
   if(!r.ok||!r.entries||!r.entries.length){
     div.innerHTML='<div style="text-align:center;padding:8px;color:#475569;font-size:12px">No matching entry found for '+esc(tracking)+'</div>';
     return;
@@ -1689,7 +1689,7 @@ async function delLookupTracking(tracking){
 async function delBulkSingleStatus(ids,newStatus){
   const msg=document.getElementById("del-scan-msg");
   msg.innerHTML='<span style="color:#94a3b8">Updating...</span>';
-  const r=await api({action:"bulk-update-status",adminName:adm.name,adminPassword:adm.password,entryIds:ids,status:newStatus});
+  const r=await api({action:"bulk-update-status",adminEmail:adm.email,adminPassword:adm.password,entryIds:ids,status:newStatus});
   if(r.ok){
     msg.innerHTML='<span class="ok">Updated to "'+esc(newStatus)+'"</span>';
     // Re-scan to refresh the result
@@ -1700,7 +1700,7 @@ async function delBulkSingleStatus(ids,newStatus){
 async function delSingleStatus(entryId,newStatus){
   const msg=document.getElementById("del-scan-msg");
   msg.innerHTML='<span style="color:#94a3b8">Updating...</span>';
-  const r=await api({action:"update-status",adminName:adm.name,adminPassword:adm.password,entryId,status:newStatus});
+  const r=await api({action:"update-status",adminEmail:adm.email,adminPassword:adm.password,entryId,status:newStatus});
   if(r.ok){
     msg.innerHTML='<span class="ok">Updated to "'+esc(newStatus)+'"</span>';
     // Re-lookup to refresh badges
@@ -1717,7 +1717,7 @@ async function delSearchName(page){
   const div=document.getElementById("del-name-results");
   if(!name){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">Type a name to search</div>';return}
   div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">Searching...</div>';
-  const r=await api({action:"search-by-name",adminName:adm.name,adminPassword:adm.password,name,page:delNamePage,perPage:DEL_PER_PAGE});
+  const r=await api({action:"search-by-name",adminEmail:adm.email,adminPassword:adm.password,name,page:delNamePage,perPage:DEL_PER_PAGE});
   if(!r.ok||!r.entries||!r.entries.length){
     div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No results for "'+esc(name)+'"</div>';
     document.getElementById("del-name-pager").innerHTML="";
@@ -1753,7 +1753,7 @@ async function delSearchName(page){
 }
 
 async function delSingleStatusRefreshName(entryId,newStatus){
-  await api({action:"update-status",adminName:adm.name,adminPassword:adm.password,entryId,status:newStatus});
+  await api({action:"update-status",adminEmail:adm.email,adminPassword:adm.password,entryId,status:newStatus});
   delSearchName(delNamePage);
 }
 
@@ -1767,7 +1767,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 async function delLoadEtas(){
   const div=document.getElementById("del-eta-chips");
   div.innerHTML='<span style="color:#475569;font-size:12px">Loading ETAs...</span>';
-  const r=await api({action:"eta-dates",adminName:adm.name,adminPassword:adm.password});
+  const r=await api({action:"eta-dates",adminEmail:adm.email,adminPassword:adm.password});
   if(!r.ok||!r.etas||!r.etas.length){
     div.innerHTML='<span style="color:#475569;font-size:12px">No packages with ETAs found.</span>';
     return;
@@ -1801,7 +1801,7 @@ async function loadDelEtaEntries(page){
   const label=new Date(delSelectedEta+"T00:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
   document.getElementById("del-eta-label").textContent=label;
 
-  const r=await api({action:"entries-by-eta",adminName:adm.name,adminPassword:adm.password,eta:delSelectedEta,page:delEtaPage,perPage:DEL_PER_PAGE});
+  const r=await api({action:"entries-by-eta",adminEmail:adm.email,adminPassword:adm.password,eta:delSelectedEta,page:delEtaPage,perPage:DEL_PER_PAGE});
   if(!r.ok){list.innerHTML='<div class="er" style="padding:10px">'+esc(r.error||"Error")+'</div>';return}
   delEtaEntries=r.entries||[];
   delEtaTotal=r.total||delEtaEntries.length;
@@ -1846,7 +1846,7 @@ async function delBulkStatus(newStatus){
   const msgEl=document.getElementById("del-bulk-msg");
   if(!checked.length){msgEl.innerHTML='<span class="er">No packages selected</span>';return}
   msgEl.innerHTML='<span style="color:#94a3b8">Updating '+checked.length+' package'+(checked.length>1?'s':'')+'...</span>';
-  const r=await api({action:"bulk-update-status",adminName:adm.name,adminPassword:adm.password,entryIds:checked,status:newStatus});
+  const r=await api({action:"bulk-update-status",adminEmail:adm.email,adminPassword:adm.password,entryIds:checked,status:newStatus});
   if(r.ok){
     msgEl.innerHTML='<span class="ok">Updated '+r.updated+' to "'+esc(newStatus)+'"</span>';
     await loadDelEtaEntries();
@@ -1861,7 +1861,7 @@ async function delSetEta(){
   const checked=Array.from(document.querySelectorAll(".del-cb:checked")).map(c=>parseInt(c.value));
   if(!checked.length){msgEl.innerHTML='<span class="er">No packages selected</span>';return}
   msgEl.innerHTML='<span style="color:#94a3b8">Updating ETA for '+checked.length+' package'+(checked.length>1?'s':'')+'...</span>';
-  const r=await api({action:"bulk-update-eta",adminName:adm.name,adminPassword:adm.password,entryIds:checked,eta:etaDate});
+  const r=await api({action:"bulk-update-eta",adminEmail:adm.email,adminPassword:adm.password,entryIds:checked,eta:etaDate});
   if(r.ok){
     const label=new Date(etaDate+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
     msgEl.innerHTML='<span class="ok">ETA set to '+label+' for '+r.updated+' package'+(r.updated>1?'s':'')+'</span>';
@@ -1875,7 +1875,7 @@ async function delClearEta(){
   const checked=Array.from(document.querySelectorAll(".del-cb:checked")).map(c=>parseInt(c.value));
   if(!checked.length){msgEl.innerHTML='<span class="er">No packages selected</span>';return}
   msgEl.innerHTML='<span style="color:#94a3b8">Clearing ETA for '+checked.length+' package'+(checked.length>1?'s':'')+'...</span>';
-  const r=await api({action:"bulk-update-eta",adminName:adm.name,adminPassword:adm.password,entryIds:checked,eta:""});
+  const r=await api({action:"bulk-update-eta",adminEmail:adm.email,adminPassword:adm.password,entryIds:checked,eta:""});
   if(r.ok){
     msgEl.innerHTML='<span class="ok">ETA cleared for '+r.updated+' package'+(r.updated>1?'s':'')+'</span>';
     await loadDelEtaEntries();
@@ -1890,7 +1890,7 @@ async function bsSetEta(){
   const checked=Array.from(document.querySelectorAll(".bs-cb:checked")).map(c=>parseInt(c.value));
   if(!checked.length){msgEl.innerHTML='<span class="er">No packages selected</span>';return}
   msgEl.innerHTML='<span style="color:#94a3b8">Updating ETA for '+checked.length+' package'+(checked.length>1?'s':'')+'...</span>';
-  const r=await api({action:"bulk-update-eta",adminName:adm.name,adminPassword:adm.password,entryIds:checked,eta:etaDate});
+  const r=await api({action:"bulk-update-eta",adminEmail:adm.email,adminPassword:adm.password,entryIds:checked,eta:etaDate});
   if(r.ok){
     const label=new Date(etaDate+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
     msgEl.innerHTML='<span class="ok">ETA set to '+label+' for '+r.updated+' package'+(r.updated>1?'s':'')+'</span>';
@@ -1905,7 +1905,7 @@ async function bsClearEta(){
   const checked=Array.from(document.querySelectorAll(".bs-cb:checked")).map(c=>parseInt(c.value));
   if(!checked.length){msgEl.innerHTML='<span class="er">No packages selected</span>';return}
   msgEl.innerHTML='<span style="color:#94a3b8">Clearing ETA for '+checked.length+' package'+(checked.length>1?'s':'')+'...</span>';
-  const r=await api({action:"bulk-update-eta",adminName:adm.name,adminPassword:adm.password,entryIds:checked,eta:""});
+  const r=await api({action:"bulk-update-eta",adminEmail:adm.email,adminPassword:adm.password,entryIds:checked,eta:""});
   if(r.ok){
     msgEl.innerHTML='<span class="ok">ETA cleared for '+r.updated+' package'+(r.updated>1?'s':'')+'</span>';
     await loadDateEntries();
@@ -2021,9 +2021,10 @@ function viewerLogout(){
 (async()=>{
   try{
     const s=JSON.parse(localStorage.getItem("adm_session")||"null");
-    if(s&&s.name&&s.password){
-      const r=await api({action:"admin-login",name:s.name,password:s.password});
-      if(r.ok){adm={name:s.name,password:s.password,is_super:r.admin.is_super};enterScanner();return}
+    if(s&&(s.email||s.name)&&s.password){
+      const loginPayload=s.email?{action:"admin-login",email:s.email,password:s.password}:{action:"admin-login",name:s.name,password:s.password};
+      const r=await api(loginPayload);
+      if(r.ok){adm={name:r.admin.name,email:r.admin.email||s.email||"",password:s.password,is_super:r.admin.is_super};localStorage.setItem("adm_session",JSON.stringify(adm));enterScanner();return}
       else{localStorage.removeItem("adm_session")}
     }
   }catch(e){localStorage.removeItem("adm_session")}
