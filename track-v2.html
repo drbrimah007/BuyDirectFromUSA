@@ -1,0 +1,1891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codivant: The Code Advantage</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      overflow: hidden;
+    }
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      position: relative;
+    }
+    .header {
+      background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+      color: white;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-size: 24px;
+      margin: 0;
+    }
+    .header .tagline {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-bottom: 70px;
+      display: flex;
+      flex-direction: column;
+    }
+    .screen {
+      display: none;
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+    }
+    .login-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 20px;
+      background: #f0f0f0;
+      border-radius: 8px;
+      padding: 4px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 500;
+      border-radius: 6px;
+      transition: all 0.3s;
+    }
+    .tab-btn.active {
+      background: white;
+      color: #1a73e8;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+    }
+    .btn {
+      padding: 12px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-block;
+    }
+    .btn-primary {
+      background: #1a73e8;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #1557b0;
+    }
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+    .btn-danger {
+      background: #d32f2f;
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #b71c1c;
+    }
+    .btn-small {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 6px;
+      text-align: center;
+      border-left: 3px solid #1a73e8;
+    }
+    .stat-card .value {
+      font-size: 20px;
+      font-weight: bold;
+      color: #1a73e8;
+    }
+    .stat-card .label {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
+    }
+    .card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-scanned {
+      background: #e3f2fd;
+      color: #1a73e8;
+    }
+    .badge-in-transit {
+      background: #fff3e0;
+      color: #f57c00;
+    }
+    .badge-out-for-delivery {
+      background: #f3e5f5;
+      color: #7b1fa2;
+    }
+    .badge-delivered {
+      background: #e8f5e9;
+      color: #388e3c;
+    }
+    .badge-delay {
+      background: #ffebee;
+      color: #d32f2f;
+    }
+    .scanner-container {
+      width: 100%;
+      height: 300px;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    #qr-reader {
+      width: 100%;
+      height: 100%;
+    }
+    .scan-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+    .scan-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .scan-item:last-child {
+      border-bottom: none;
+    }
+    .scan-item-info {
+      flex: 1;
+    }
+    .scan-item-name {
+      font-weight: 600;
+      color: #333;
+    }
+    .scan-item-tracking {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+    .scan-item-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: white;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      max-width: 480px;
+      margin: 0 auto;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+    .nav-item {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #666;
+      font-size: 12px;
+    }
+    .nav-item.active {
+      color: #1a73e8;
+      background: rgba(26,115,232,0.05);
+    }
+    .nav-icon {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 16px;
+      right: 16px;
+      max-width: 448px;
+      padding: 12px 16px;
+      background: #323232;
+      color: white;
+      border-radius: 6px;
+      display: none;
+      z-index: 101;
+      animation: slideUp 0.3s ease;
+    }
+    .toast.show {
+      display: block;
+    }
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .confirmation-bar {
+      position: fixed;
+      bottom: 70px;
+      left: 0;
+      right: 0;
+      background: #fff3cd;
+      border-top: 1px solid #ffc107;
+      padding: 12px 16px;
+      display: none;
+      flex-direction: row;
+      gap: 12px;
+      max-width: 480px;
+      margin: 0 auto;
+      z-index: 102;
+    }
+    .confirmation-bar.show {
+      display: flex;
+    }
+    .confirmation-bar-text {
+      flex: 1;
+      color: #856404;
+      font-size: 14px;
+    }
+    .confirmation-bar-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal.show {
+      display: flex;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 400px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      justify-content: flex-end;
+    }
+    .route-visualization {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin: 16px 0;
+      overflow-x: auto;
+      padding: 12px 0;
+    }
+    .route-stop {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: max-content;
+    }
+    .route-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      border: 2px solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: white;
+      font-weight: bold;
+    }
+    .route-dot.completed {
+      background: #4caf50;
+      border-color: #4caf50;
+    }
+    .route-dot.current {
+      background: #ff9800;
+      border-color: #ff9800;
+      box-shadow: 0 0 8px rgba(255,152,0,0.5);
+    }
+    .route-stop-name {
+      font-size: 11px;
+      text-align: center;
+      max-width: 60px;
+      word-break: break-word;
+    }
+    .route-connector {
+      width: 20px;
+      height: 2px;
+      background: #ddd;
+      margin-bottom: 11px;
+    }
+    .route-connector.completed {
+      background: #4caf50;
+    }
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+    .timeline-item {
+      position: relative;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .timeline-item:last-child {
+      border-bottom: none;
+    }
+    .timeline-dot {
+      position: absolute;
+      left: -28px;
+      top: 0;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #1a73e8;
+      border: 2px solid white;
+      box-shadow: 0 0 0 2px #1a73e8;
+    }
+    .timeline-time {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .timeline-location {
+      font-weight: 600;
+      color: #333;
+    }
+    .timeline-status {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 20px 0 12px 0;
+      color: #333;
+    }
+    .settings-item {
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .settings-item:last-child {
+      border-bottom: none;
+    }
+    .settings-item-label {
+      font-weight: 500;
+    }
+    .settings-item-value {
+      color: #666;
+      font-size: 14px;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .list-group {
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .list-item {
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .list-item:last-child {
+      border-bottom: none;
+    }
+    .list-item-text {
+      flex: 1;
+    }
+    .list-item-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .date-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    .date-selector input {
+      flex: 1;
+    }
+    .delivery-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .delivery-item-info {
+      flex: 1;
+    }
+    .delivery-item-name {
+      font-weight: 600;
+    }
+    .delivery-item-tracking {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+    .delivery-buttons {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .status-btn {
+      padding: 6px 10px;
+      font-size: 11px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .status-btn:hover {
+      background: #f0f0f0;
+    }
+    .status-btn.active {
+      background: #1a73e8;
+      color: white;
+      border-color: #1a73e8;
+    }
+    .bulk-actions {
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    .bulk-actions-label {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .bulk-buttons {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .qr-container {
+      text-align: center;
+      padding: 16px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      margin: 16px 0;
+    }
+    #qrCanvas {
+      max-width: 100%;
+      height: auto;
+    }
+    .package-info {
+      background: #f9f9f9;
+      padding: 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    .package-info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .package-info-row:last-child {
+      border-bottom: none;
+    }
+    .package-info-label {
+      color: #666;
+      font-size: 14px;
+    }
+    .package-info-value {
+      font-weight: 600;
+      color: #333;
+    }
+    .back-btn {
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Codivant</h1>
+      <div class="tagline">The Code Advantage</div>
+    </div>
+
+    <div class="content" id="content">
+      <!-- LOGIN SCREEN -->
+      <div class="screen login-screen active" id="loginScreen">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="admin-login">Admin Login</button>
+          <button class="tab-btn" data-tab="track-package">Track Package</button>
+        </div>
+
+        <div id="admin-login" class="tab-content">
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="adminUsername" placeholder="Enter username">
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="adminPassword" placeholder="Enter password">
+          </div>
+          <button class="btn btn-primary" style="width: 100%;" onclick="adminLogin()">Login</button>
+        </div>
+
+        <div id="track-package" class="tab-content" style="display: none;">
+          <div class="form-group">
+            <label>Tracking Number</label>
+            <input type="text" id="trackingNumberInput" placeholder="Enter tracking number">
+          </div>
+          <button class="btn btn-primary" style="width: 100%;" onclick="publicTrack()">Track Package</button>
+        </div>
+      </div>
+
+      <!-- SCAN TAB -->
+      <div class="screen" id="scanScreen">
+        <div class="stats-bar">
+          <div class="stat-card">
+            <div class="value" id="todayScans">0</div>
+            <div class="label">Today's Scans</div>
+          </div>
+          <div class="stat-card">
+            <div class="value" id="inTransitCount">0</div>
+            <div class="label">In Transit</div>
+          </div>
+          <div class="stat-card">
+            <div class="value" id="deliveredCount">0</div>
+            <div class="label">Delivered</div>
+          </div>
+          <div class="stat-card">
+            <div class="value" id="totalCount">0</div>
+            <div class="label">Total</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Location</label>
+          <select id="scanLocation" onchange="saveScanSettings()">
+            <option value="">Select Location</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Route</label>
+          <select id="scanRoute" onchange="saveScanSettings()">
+            <option value="">Select Route</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>ETA Date</label>
+          <input type="date" id="scanEta" onchange="saveScanSettings()">
+        </div>
+
+        <div class="form-group">
+          <label>Recipient Name</label>
+          <input type="text" id="scanRecipient" placeholder="Enter recipient name">
+        </div>
+
+        <div class="scanner-container">
+          <div id="qr-reader"></div>
+        </div>
+
+        <div class="scan-list" id="scanList"></div>
+      </div>
+
+      <!-- DELIVER TAB -->
+      <div class="screen" id="deliverScreen">
+        <div class="date-selector">
+          <label style="display: block; width: 100%; margin-bottom: 8px;">Select Date</label>
+          <input type="date" id="deliverDate" onchange="loadDeliveryDate()">
+        </div>
+
+        <div id="deliveryPackages"></div>
+
+        <div class="bulk-actions">
+          <span class="bulk-actions-label">Bulk ETA Update</span>
+          <input type="date" id="bulkEtaDate" style="width: 100%; margin-bottom: 8px;">
+          <div class="bulk-buttons">
+            <button class="btn btn-small btn-primary" onclick="bulkSetEta()">Set ETA</button>
+            <button class="btn btn-small btn-secondary" onclick="bulkClearEta()">Clear ETA</button>
+          </div>
+        </div>
+
+        <span class="bulk-actions-label">Bulk Status Update</span>
+        <div class="bulk-buttons">
+          <button class="status-btn" onclick="bulkUpdateStatus('Scanned')">Scanned</button>
+          <button class="status-btn" onclick="bulkUpdateStatus('In Transit')">In Transit</button>
+          <button class="status-btn" onclick="bulkUpdateStatus('Out for Delivery')">Out for Delivery</button>
+          <button class="status-btn" onclick="bulkUpdateStatus('Delivered')">Delivered</button>
+          <button class="status-btn" onclick="bulkUpdateStatus('Delay')">Delay</button>
+        </div>
+      </div>
+
+      <!-- SETTINGS TAB -->
+      <div class="screen" id="settingsScreen">
+        <div class="section-title">Admin Profile</div>
+        <div class="card">
+          <div class="settings-item">
+            <div>Name</div>
+            <div class="settings-item-value" id="profileName">-</div>
+          </div>
+          <div class="settings-item">
+            <div>Email</div>
+            <div class="settings-item-value" id="profileEmail">-</div>
+          </div>
+          <div class="settings-item">
+            <div>Role</div>
+            <div class="settings-item-value" id="profileRole">-</div>
+          </div>
+        </div>
+
+        <div class="section-title">Company Settings</div>
+        <div class="form-group">
+          <label>Company Name</label>
+          <input type="text" id="companyName" placeholder="Enter company name">
+        </div>
+        <div class="form-group">
+          <label>Primary Color</label>
+          <input type="color" id="primaryColor">
+        </div>
+        <div class="form-group">
+          <label>Timezone</label>
+          <input type="text" id="timezone" placeholder="America/New_York">
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" onclick="updateConfig()">Save Settings</button>
+
+        <div class="section-title">Manage Locations</div>
+        <div class="list-group" id="locationsList"></div>
+        <div class="form-group">
+          <input type="text" id="newLocationName" placeholder="Location name">
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" onclick="addLocation()">Add Location</button>
+
+        <div class="section-title">Manage Routes</div>
+        <div class="list-group" id="routesList"></div>
+        <div class="form-group">
+          <input type="text" id="newRouteName" placeholder="Route name">
+        </div>
+        <div class="form-group">
+          <input type="text" id="newRouteStops" placeholder="Location IDs (comma-separated)">
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" onclick="addRoute()">Add Route</button>
+
+        <div class="section-title">Manage Admins</div>
+        <div class="list-group" id="adminsList"></div>
+        <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="openAddAdminModal()">Add Admin</button>
+
+        <div class="section-title">Manage Recipients</div>
+        <div class="list-group" id="recipientsList"></div>
+        <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="openAddRecipientModal()">Add Recipient</button>
+
+        <button class="btn btn-secondary" style="width: 100%; margin-top: 20px;" onclick="logout()">Logout</button>
+      </div>
+
+      <!-- PUBLIC TRACK SCREEN -->
+      <div class="screen" id="publicTrackScreen">
+        <button class="btn btn-secondary back-btn" onclick="goBackToLogin()">← Back to Search</button>
+
+        <div class="package-info">
+          <div class="package-info-row">
+            <span class="package-info-label">Tracking Number</span>
+            <span class="package-info-value" id="publicTrackingNumber">-</span>
+          </div>
+          <div class="package-info-row">
+            <span class="package-info-label">Status</span>
+            <span id="publicStatus">-</span>
+          </div>
+          <div class="package-info-row">
+            <span class="package-info-label">ETA</span>
+            <span class="package-info-value" id="publicEta">-</span>
+          </div>
+        </div>
+
+        <div class="section-title">Route</div>
+        <div class="route-visualization" id="routeVisualization"></div>
+
+        <div class="qr-container">
+          <div id="qrCanvas"></div>
+        </div>
+
+        <div class="section-title">Event Timeline</div>
+        <div class="timeline" id="eventTimeline"></div>
+      </div>
+    </div>
+
+    <div class="bottom-nav" id="bottomNav" style="display: none;">
+      <div class="nav-item active" onclick="switchTab('scan')">
+        <div class="nav-icon">📷</div>
+        <div>Scan</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('deliver')">
+        <div class="nav-icon">🚚</div>
+        <div>Deliver</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('settings')">
+        <div class="nav-icon">⚙️</div>
+        <div>Settings</div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <div class="confirmation-bar" id="confirmationBar"></div>
+  </div>
+
+  <!-- MODALS -->
+  <div class="modal" id="addAdminModal">
+    <div class="modal-content">
+      <div class="modal-header">Add Admin</div>
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="newAdminName" placeholder="Admin name">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="newAdminEmail" placeholder="admin@company.com">
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="newAdminUsername" placeholder="Username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="newAdminPassword" placeholder="Password">
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="newAdminRole">
+          <option value="admin">Admin</option>
+          <option value="super_admin">Super Admin</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addAdminModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveAdmin()">Add Admin</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="addRecipientModal">
+    <div class="modal-content">
+      <div class="modal-header">Add Recipient</div>
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="newRecipientName" placeholder="Recipient name">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="newRecipientEmail" placeholder="recipient@example.com">
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="tel" id="newRecipientPhone" placeholder="Phone number">
+      </div>
+      <div class="form-group">
+        <label>Address</label>
+        <textarea id="newRecipientAddress" placeholder="Full address" rows="3"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addRecipientModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveRecipient()">Add Recipient</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://zffevasaeaogjxuslhtw.supabase.co/functions/v1/scanner-api-v2';
+    let scanner = null;
+    let allPackages = [];
+    let allLocations = [];
+    let allRoutes = [];
+    let selectedPackagesForBulk = new Set();
+    let currentPublicTrackingNumber = '';
+    let autoRefreshTimer = null;
+    let primaryColor = '#1a73e8';
+
+    function fmt(d) {
+      return new Date(d).toLocaleDateString("en-US", {
+        timeZone: "America/New_York",
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+      });
+    }
+
+    function todayEastern() {
+      const d = new Date();
+      const f = new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      });
+      const p = f.formatToParts(d);
+      return `${p.find(x=>x.type==="year").value}-${p.find(x=>x.type==="month").value}-${p.find(x=>x.type==="day").value}`;
+    }
+
+    function playChime() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g);
+        g.connect(ctx.destination);
+        o.frequency.value = 880;
+        o.type = "sine";
+        g.gain.setValueAtTime(0.3, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        o.start(ctx.currentTime);
+        o.stop(ctx.currentTime + 0.3);
+      } catch(e) {}
+    }
+
+    function cleanBarcode(barcode) {
+      let clean = barcode;
+      clean = clean.replace(/^\]C1/, '');
+      const tbaMatch = clean.match(/TBA\d{10,}/i);
+      if (tbaMatch) {
+        clean = tbaMatch[0];
+      }
+      return clean;
+    }
+
+    function isValidTracking(num) {
+      if (num.length < 6) return false;
+      if (num.startsWith('SP')) return false;
+      if (/^[a-f0-9]+$/.test(num)) return false;
+      if (/\d{4}x\d{3}/.test(num) || /\d{3}x\d{4}/.test(num)) return false;
+      if (num.includes('_')) return false;
+      const alphanumeric = num.replace(/[^a-z0-9]/i, '').length;
+      if (alphanumeric / num.length < 0.6) return false;
+      return true;
+    }
+
+    async function apiCall(action, body = {}) {
+      const adminName = sessionStorage.getItem('v2_adminName');
+      const adminPassword = sessionStorage.getItem('v2_adminPassword');
+      const payload = { action, ...body };
+      if (adminName && adminPassword) {
+        payload.adminName = adminName;
+        payload.adminPassword = adminPassword;
+      }
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
+      return response.json();
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function switchScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      event.target.closest('.nav-item').classList.add('active');
+
+      if (tab === 'scan') switchScreen('scanScreen');
+      else if (tab === 'deliver') {
+        switchScreen('deliverScreen');
+        loadDeliveryDate();
+      } else if (tab === 'settings') {
+        switchScreen('settingsScreen');
+        loadSettingsData();
+      }
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('show');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('show');
+    }
+
+    async function adminLogin() {
+      const username = document.getElementById('adminUsername').value.trim();
+      const password = document.getElementById('adminPassword').value.trim();
+
+      if (!username || !password) {
+        showToast('Please enter username and password');
+        return;
+      }
+
+      try {
+        const result = await apiCall('admin-login', { username, password });
+
+        if (result.success) {
+          sessionStorage.setItem('v2_adminName', username);
+          sessionStorage.setItem('v2_adminPassword', password);
+          sessionStorage.setItem('v2_adminRole', result.data?.role || 'admin');
+          sessionStorage.setItem('v2_adminEmail', result.data?.email || '');
+
+          switchScreen('scanScreen');
+          document.getElementById('bottomNav').style.display = 'flex';
+          loadScanData();
+          initializeScanner();
+          loadSettingsData();
+        } else {
+          showToast('Login failed: ' + (result.message || 'Invalid credentials'));
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function publicTrack() {
+      const tracking = document.getElementById('trackingNumberInput').value.trim();
+
+      if (!tracking) {
+        showToast('Please enter a tracking number');
+        return;
+      }
+
+      try {
+        const result = await apiCall('public-track', { trackingNumber: tracking });
+
+        if (result.success && result.data) {
+          currentPublicTrackingNumber = tracking;
+          displayPublicTrack(result.data);
+          switchScreen('publicTrackScreen');
+          autoRefresh();
+        } else {
+          showToast('Package not found');
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    function displayPublicTrack(data) {
+      document.getElementById('publicTrackingNumber').textContent = data.trackingNumber || '-';
+
+      const statusBadge = document.createElement('span');
+      statusBadge.className = `badge badge-${(data.status || '').toLowerCase().replace(/ /g, '-')}`;
+      statusBadge.textContent = data.status || '-';
+
+      const statusContainer = document.getElementById('publicStatus');
+      statusContainer.innerHTML = '';
+      statusContainer.appendChild(statusBadge);
+
+      document.getElementById('publicEta').textContent = data.eta ? fmt(data.eta) : '-';
+
+      const routeViz = document.getElementById('routeVisualization');
+      routeViz.innerHTML = '';
+
+      if (data.route && data.route.stops && data.route.stops.length > 0) {
+        data.route.stops.forEach((stop, idx) => {
+          const stopDiv = document.createElement('div');
+          stopDiv.className = 'route-stop';
+
+          const dot = document.createElement('div');
+          dot.className = 'route-dot';
+          if (stop.completed) dot.classList.add('completed');
+          if (stop.current) dot.classList.add('current');
+          dot.textContent = idx + 1;
+
+          const name = document.createElement('div');
+          name.className = 'route-stop-name';
+          name.textContent = stop.name || `Stop ${idx + 1}`;
+
+          stopDiv.appendChild(dot);
+          stopDiv.appendChild(name);
+          routeViz.appendChild(stopDiv);
+
+          if (idx < data.route.stops.length - 1) {
+            const connector = document.createElement('div');
+            connector.className = 'route-connector';
+            if (stop.completed) connector.classList.add('completed');
+            routeViz.appendChild(connector);
+          }
+        });
+      }
+
+      const timeline = document.getElementById('eventTimeline');
+      timeline.innerHTML = '';
+
+      if (data.events && data.events.length > 0) {
+        data.events.forEach(event => {
+          const item = document.createElement('div');
+          item.className = 'timeline-item';
+
+          const time = document.createElement('div');
+          time.className = 'timeline-time';
+          time.textContent = fmt(event.timestamp);
+
+          const location = document.createElement('div');
+          location.className = 'timeline-location';
+          location.textContent = event.location || 'Unknown Location';
+
+          const status = document.createElement('div');
+          status.className = 'timeline-status';
+          status.textContent = event.status || '-';
+
+          item.appendChild(time);
+          item.appendChild(location);
+          item.appendChild(status);
+          timeline.appendChild(item);
+        });
+      }
+
+      const qrContainer = document.getElementById('qrCanvas');
+      qrContainer.innerHTML = '';
+      const qr = new QRCode(qrContainer, {
+        text: `${window.location.origin}?tracking=${data.trackingNumber}`,
+        width: 200,
+        height: 200
+      });
+    }
+
+    function autoRefresh() {
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      autoRefreshTimer = setInterval(async () => {
+        if (currentPublicTrackingNumber) {
+          try {
+            const result = await apiCall('public-track', { trackingNumber: currentPublicTrackingNumber });
+            if (result.success && result.data) {
+              displayPublicTrack(result.data);
+            }
+          } catch(error) {}
+        }
+      }, 60000);
+    }
+
+    function goBackToLogin() {
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      currentPublicTrackingNumber = '';
+      document.getElementById('trackingNumberInput').value = '';
+      switchScreen('loginScreen');
+      document.getElementById('bottomNav').style.display = 'none';
+    }
+
+    function initializeScanner() {
+      const html5QrcodeScanner = new Html5Qrcode('qr-reader');
+
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1,
+        formatsToSupport: [0, 2, 4, 6, 10, 13],
+        disableFlip: false
+      };
+
+      html5QrcodeScanner.start(
+        { facingMode: 'environment' },
+        config,
+        onScanSuccess,
+        onScanError
+      );
+
+      scanner = html5QrcodeScanner;
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      const cleaned = cleanBarcode(decodedText);
+
+      if (!isValidTracking(cleaned)) {
+        return;
+      }
+
+      playChime();
+      performScan(cleaned);
+
+      if (scanner) {
+        scanner.pause(true);
+        setTimeout(() => {
+          if (scanner) scanner.resume();
+        }, 600);
+      }
+    }
+
+    function onScanError(error) {}
+
+    async function performScan(trackingNumber) {
+      const locationId = document.getElementById('scanLocation').value;
+      const routeId = document.getElementById('scanRoute').value;
+      const eta = document.getElementById('scanEta').value;
+      const recipientName = document.getElementById('scanRecipient').value.trim();
+
+      if (!locationId) {
+        showToast('Please select a location');
+        return;
+      }
+
+      try {
+        const result = await apiCall('scan', {
+          recipientName: recipientName || 'Unknown',
+          trackingNumber,
+          locationId,
+          routeId: routeId || undefined,
+          eta: eta || undefined,
+          notes: ''
+        });
+
+        if (result.success) {
+          showToast('Package scanned successfully');
+          loadScanData();
+        } else {
+          showToast('Error: ' + (result.message || 'Scan failed'));
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function loadScanData() {
+      try {
+        const [packages, locations, routes] = await Promise.all([
+          apiCall('all-packages'),
+          apiCall('get-locations'),
+          apiCall('get-routes')
+        ]);
+
+        if (packages.success) {
+          allPackages = packages.data || [];
+          updateStats();
+          loadTodayScans();
+        }
+
+        if (locations.success) {
+          allLocations = locations.data || [];
+          const select = document.getElementById('scanLocation');
+          const saved = localStorage.getItem('v2_scanLocation');
+          select.innerHTML = '<option value="">Select Location</option>';
+          allLocations.forEach(loc => {
+            const opt = document.createElement('option');
+            opt.value = loc.id;
+            opt.textContent = loc.name;
+            select.appendChild(opt);
+          });
+          if (saved) select.value = saved;
+        }
+
+        if (routes.success) {
+          allRoutes = routes.data || [];
+          const select = document.getElementById('scanRoute');
+          const saved = localStorage.getItem('v2_scanRoute');
+          select.innerHTML = '<option value="">Select Route</option>';
+          allRoutes.forEach(route => {
+            const opt = document.createElement('option');
+            opt.value = route.id;
+            opt.textContent = route.name;
+            select.appendChild(opt);
+          });
+          if (saved) select.value = saved;
+        }
+      } catch(error) {
+        showToast('Error loading scan data: ' + error.message);
+      }
+    }
+
+    function saveScanSettings() {
+      localStorage.setItem('v2_scanLocation', document.getElementById('scanLocation').value);
+      localStorage.setItem('v2_scanRoute', document.getElementById('scanRoute').value);
+      localStorage.setItem('v2_scanEta', document.getElementById('scanEta').value);
+    }
+
+    function updateStats() {
+      const today = todayEastern();
+      const todayPackages = allPackages.filter(p => {
+        const pDate = p.scannedDate ? p.scannedDate.split('T')[0] : '';
+        return pDate === today;
+      });
+
+      document.getElementById('todayScans').textContent = todayPackages.length;
+      document.getElementById('inTransitCount').textContent = allPackages.filter(p => p.status === 'In Transit').length;
+      document.getElementById('deliveredCount').textContent = allPackages.filter(p => p.status === 'Delivered').length;
+      document.getElementById('totalCount').textContent = allPackages.length;
+    }
+
+    async function loadTodayScans() {
+      const today = todayEastern();
+      try {
+        const result = await apiCall('packages-by-date', { date: today });
+        const packages = result.success ? (result.data || []) : [];
+
+        const list = document.getElementById('scanList');
+        list.innerHTML = '';
+
+        packages.forEach(pkg => {
+          const item = document.createElement('div');
+          item.className = 'scan-item';
+
+          const info = document.createElement('div');
+          info.className = 'scan-item-info';
+
+          const name = document.createElement('div');
+          name.className = 'scan-item-name';
+          name.textContent = pkg.recipientName || 'Unknown';
+
+          const tracking = document.createElement('div');
+          tracking.className = 'scan-item-tracking';
+          tracking.textContent = pkg.trackingNumber;
+
+          info.appendChild(name);
+          info.appendChild(tracking);
+
+          const badge = document.createElement('span');
+          badge.className = `badge badge-${(pkg.status || '').toLowerCase().replace(/ /g, '-')}`;
+          badge.textContent = pkg.status || 'Unknown';
+          info.appendChild(badge);
+
+          const actions = document.createElement('div');
+          actions.className = 'scan-item-actions';
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'btn btn-small btn-danger';
+          deleteBtn.textContent = 'Delete';
+          deleteBtn.onclick = () => confirmDeleteScan(pkg.id, pkg.trackingNumber);
+
+          actions.appendChild(deleteBtn);
+
+          item.appendChild(info);
+          item.appendChild(actions);
+          list.appendChild(item);
+        });
+      } catch(error) {
+        showToast('Error loading scans: ' + error.message);
+      }
+    }
+
+    function confirmDeleteScan(pkgId, trackingNumber) {
+      const bar = document.getElementById('confirmationBar');
+      bar.innerHTML = `
+        <div class="confirmation-bar-text">Delete scan for ${trackingNumber}?</div>
+        <div class="confirmation-bar-buttons">
+          <button class="btn btn-small btn-danger" onclick="deleteScan('${pkgId}')">Delete</button>
+          <button class="btn btn-small btn-secondary" onclick="closeConfirmation()">Cancel</button>
+        </div>
+      `;
+      bar.classList.add('show');
+    }
+
+    async function deleteScan(pkgId) {
+      try {
+        const result = await apiCall('delete-package', { packageId: pkgId });
+        if (result.success) {
+          showToast('Scan deleted');
+          loadTodayScans();
+          updateStats();
+          closeConfirmation();
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    function closeConfirmation() {
+      document.getElementById('confirmationBar').classList.remove('show');
+    }
+
+    async function loadDeliveryDate() {
+      const date = document.getElementById('deliverDate').value || todayEastern();
+      document.getElementById('deliverDate').value = date;
+
+      try {
+        const result = await apiCall('packages-by-date', { date });
+        const packages = result.success ? (result.data || []) : [];
+
+        const container = document.getElementById('deliveryPackages');
+        container.innerHTML = '';
+
+        selectedPackagesForBulk.clear();
+
+        packages.forEach(pkg => {
+          const item = document.createElement('div');
+          item.className = 'delivery-item';
+          item.id = `pkg-${pkg.id}`;
+
+          const info = document.createElement('div');
+          info.className = 'delivery-item-info';
+
+          const name = document.createElement('div');
+          name.className = 'delivery-item-name';
+          name.textContent = pkg.recipientName || 'Unknown';
+
+          const tracking = document.createElement('div');
+          tracking.className = 'delivery-item-tracking';
+          tracking.textContent = pkg.trackingNumber;
+
+          info.appendChild(name);
+          info.appendChild(tracking);
+
+          const statusDiv = document.createElement('div');
+          statusDiv.className = 'delivery-buttons';
+
+          const statuses = ['Scanned', 'In Transit', 'Out for Delivery', 'Delivered', 'Delay'];
+          statuses.forEach(status => {
+            const btn = document.createElement('button');
+            btn.className = 'status-btn';
+            if (pkg.status === status) btn.classList.add('active');
+            btn.textContent = status;
+            btn.onclick = () => updatePackageStatus(pkg.id, status);
+            statusDiv.appendChild(btn);
+          });
+
+          info.appendChild(statusDiv);
+          item.appendChild(info);
+          container.appendChild(item);
+        });
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function updatePackageStatus(pkgId, status) {
+      try {
+        const result = await apiCall('update-status', { packageId: pkgId, status });
+        if (result.success) {
+          loadDeliveryDate();
+          showToast('Status updated');
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function bulkSetEta() {
+      const eta = document.getElementById('bulkEtaDate').value;
+      if (!eta) {
+        showToast('Please select an ETA date');
+        return;
+      }
+
+      const date = document.getElementById('deliverDate').value;
+      try {
+        const result = await apiCall('bulk-update-eta', { date, eta });
+        if (result.success) {
+          loadDeliveryDate();
+          showToast('ETA updated for all packages');
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function bulkClearEta() {
+      const date = document.getElementById('deliverDate').value;
+      try {
+        const result = await apiCall('bulk-update-eta', { date, eta: null });
+        if (result.success) {
+          loadDeliveryDate();
+          showToast('ETA cleared for all packages');
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function bulkUpdateStatus(status) {
+      const date = document.getElementById('deliverDate').value;
+      try {
+        const result = await apiCall('bulk-update-status', { date, status });
+        if (result.success) {
+          loadDeliveryDate();
+          showToast(`All packages marked as ${status}`);
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function loadSettingsData() {
+      const profileName = sessionStorage.getItem('v2_adminName');
+      const profileEmail = sessionStorage.getItem('v2_adminEmail');
+      const profileRole = sessionStorage.getItem('v2_adminRole');
+
+      document.getElementById('profileName').textContent = profileName || '-';
+      document.getElementById('profileEmail').textContent = profileEmail || '-';
+      document.getElementById('profileRole').textContent = profileRole || '-';
+
+      try {
+        const config = await apiCall('get-config');
+        if (config.success && config.data) {
+          document.getElementById('companyName').value = config.data.company_name || '';
+          document.getElementById('primaryColor').value = config.data.primary_color || '#1a73e8';
+          document.getElementById('timezone').value = config.data.timezone || 'America/New_York';
+        }
+      } catch(error) {}
+
+      await loadLocations();
+      await loadRoutes();
+
+      if (profileRole === 'super_admin') {
+        await loadAdmins();
+      }
+
+      await loadRecipients();
+    }
+
+    async function updateConfig() {
+      try {
+        const result = await apiCall('update-config', {
+          company_name: document.getElementById('companyName').value,
+          primary_color: document.getElementById('primaryColor').value,
+          timezone: document.getElementById('timezone').value
+        });
+        if (result.success) {
+          showToast('Settings updated');
+          primaryColor = document.getElementById('primaryColor').value;
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function loadLocations() {
+      try {
+        const result = await apiCall('get-locations');
+        if (result.success) {
+          const list = document.getElementById('locationsList');
+          list.innerHTML = '';
+          (result.data || []).forEach(loc => {
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.innerHTML = `
+              <div class="list-item-text">${loc.name}</div>
+              <div class="list-item-actions">
+                <button class="btn btn-small btn-danger" onclick="deleteLocation('${loc.id}')">Delete</button>
+              </div>
+            `;
+            list.appendChild(item);
+          });
+        }
+      } catch(error) {}
+    }
+
+    async function addLocation() {
+      const name = document.getElementById('newLocationName').value.trim();
+      if (!name) {
+        showToast('Please enter location name');
+        return;
+      }
+
+      try {
+        const result = await apiCall('add-location', { name });
+        if (result.success) {
+          document.getElementById('newLocationName').value = '';
+          loadLocations();
+          loadScanData();
+          showToast('Location added');
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function deleteLocation(id) {
+      try {
+        const result = await apiCall('delete-location', { locationId: id });
+        if (result.success) {
+          loadLocations();
+          loadScanData();
+          showToast('Location deleted');
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function loadRoutes() {
+      try {
+        const result = await apiCall('get-routes');
+        if (result.success) {
+          const list = document.getElementById('routesList');
+          list.innerHTML = '';
+          (result.data || []).forEach(route => {
+            const stopNames = route.stops ? route.stops.map(s => s.name).join(' → ') : 'No stops';
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.innerHTML = `
+              <div class="list-item-text">
+                <strong>${route.name}</strong><br>
+                <small style="color: #666;">${stopNames}</small>
+              </div>
+              <div class="list-item-actions">
+                <button class="btn btn-small btn-danger" onclick="deleteRoute('${route.id}')">Delete</button>
+              </div>
+            `;
+            list.appendChild(item);
+          });
+        }
+      } catch(error) {}
+    }
+
+    async function addRoute() {
+      const name = document.getElementById('newRouteName').value.trim();
+      const stops = document.getElementById('newRouteStops').value.trim();
+
+      if (!name || !stops) {
+        showToast('Please enter route name and location IDs');
+        return;
+      }
+
+      try {
+        const result = await apiCall('add-route', {
+          name,
+          stopLocationIds: stops.split(',').map(s => s.trim())
+        });
+        if (result.success) {
+          document.getElementById('newRouteName').value = '';
+          document.getElementById('newRouteStops').value = '';
+          loadRoutes();
+          loadScanData();
+          showToast('Route added');
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function deleteRoute(id) {
+      try {
+        const result = await apiCall('delete-route', { routeId: id });
+        if (result.success) {
+          loadRoutes();
+          loadScanData();
+          showToast('Route deleted');
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function loadAdmins() {
+      try {
+        const result = await apiCall('list-admins');
+        if (result.success) {
+          const list = document.getElementById('adminsList');
+          list.innerHTML = '';
+          (result.data || []).forEach(admin => {
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.innerHTML = `
+              <div class="list-item-text">
+                <strong>${admin.name}</strong><br>
+                <small style="color: #666;">${admin.email} (${admin.role})</small>
+              </div>
+              <div class="list-item-actions">
+                <button class="btn btn-small btn-secondary" onclick="openEditAdminModal('${admin.id}', '${admin.name}', '${admin.email}', '${admin.role}')">Edit</button>
+                <button class="btn btn-small btn-danger" onclick="deleteAdmin('${admin.id}')">Delete</button>
+              </div>
+            `;
+            list.appendChild(item);
+          });
+        }
+      } catch(error) {}
+    }
+
+    function openAddAdminModal() {
+      document.getElementById('newAdminName').value = '';
+      document.getElementById('newAdminEmail').value = '';
+      document.getElementById('newAdminUsername').value = '';
+      document.getElementById('newAdminPassword').value = '';
+      document.getElementById('newAdminRole').value = 'admin';
+      openModal('addAdminModal');
+    }
+
+    function openEditAdminModal(id, name, email, role) {
+      document.getElementById('newAdminName').value = name;
+      document.getElementById('newAdminEmail').value = email;
+      document.getElementById('newAdminRole').value = role;
+      document.getElementById('newAdminName').dataset.adminId = id;
+      openModal('addAdminModal');
+    }
+
+    async function saveAdmin() {
+      const name = document.getElementById('newAdminName').value.trim();
+      const email = document.getElementById('newAdminEmail').value.trim();
+      const username = document.getElementById('newAdminUsername').value.trim();
+      const password = document.getElementById('newAdminPassword').value.trim();
+      const role = document.getElementById('newAdminRole').value;
+
+      if (!name || !email) {
+        showToast('Please fill in all fields');
+        return;
+      }
+
+      try {
+        const result = await apiCall('add-admin', {
+          name,
+          email,
+          username: username || email,
+          password: password || 'changeme',
+          role
+        });
+        if (result.success) {
+          closeModal('addAdminModal');
+          loadAdmins();
+          showToast('Admin added');
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function deleteAdmin(id) {
+      try {
+        const result = await apiCall('delete-admin', { adminId: id });
+        if (result.success) {
+          loadAdmins();
+          showToast('Admin deleted');
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function loadRecipients() {
+      try {
+        const result = await apiCall('list-recipients');
+        if (result.success) {
+          const list = document.getElementById('recipientsList');
+          list.innerHTML = '';
+          (result.data || []).forEach(recipient => {
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.innerHTML = `
+              <div class="list-item-text">
+                <strong>${recipient.name}</strong><br>
+                <small style="color: #666;">${recipient.email || recipient.phone || 'No contact'}</small>
+              </div>
+              <div class="list-item-actions">
+                <button class="btn btn-small btn-secondary" onclick="openEditRecipientModal('${recipient.id}', '${recipient.name}', '${recipient.email || ''}', '${recipient.phone || ''}')">Edit</button>
+                <button class="btn btn-small btn-danger" onclick="deleteRecipient('${recipient.id}')">Delete</button>
+              </div>
+            `;
+            list.appendChild(item);
+          });
+        }
+      } catch(error) {}
+    }
+
+    function openAddRecipientModal() {
+      document.getElementById('newRecipientName').value = '';
+      document.getElementById('newRecipientEmail').value = '';
+      document.getElementById('newRecipientPhone').value = '';
+      document.getElementById('newRecipientAddress').value = '';
+      document.getElementById('newRecipientName').dataset.recipientId = '';
+      openModal('addRecipientModal');
+    }
+
+    function openEditRecipientModal(id, name, email, phone) {
+      document.getElementById('newRecipientName').value = name;
+      document.getElementById('newRecipientEmail').value = email;
+      document.getElementById('newRecipientPhone').value = phone;
+      document.getElementById('newRecipientName').dataset.recipientId = id;
+      openModal('addRecipientModal');
+    }
+
+    async function saveRecipient() {
+      const name = document.getElementById('newRecipientName').value.trim();
+      const email = document.getElementById('newRecipientEmail').value.trim();
+      const phone = document.getElementById('newRecipientPhone').value.trim();
+      const address = document.getElementById('newRecipientAddress').value.trim();
+      const id = document.getElementById('newRecipientName').dataset.recipientId;
+
+      if (!name) {
+        showToast('Please enter recipient name');
+        return;
+      }
+
+      try {
+        const result = await apiCall('add-recipient', {
+          name,
+          email: email || undefined,
+          phone: phone || undefined,
+          address: address || undefined
+        });
+        if (result.success) {
+          closeModal('addRecipientModal');
+          loadRecipients();
+          showToast('Recipient added');
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    async function deleteRecipient(id) {
+      try {
+        const result = await apiCall('delete-recipient', { recipientId: id });
+        if (result.success) {
+          loadRecipients();
+          showToast('Recipient deleted');
+        }
+      } catch(error) {
+        showToast('Error: ' + error.message);
+      }
+    }
+
+    function logout() {
+      sessionStorage.clear();
+      localStorage.clear();
+      if (scanner) {
+        scanner.stop();
+      }
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      switchScreen('loginScreen');
+      document.getElementById('bottomNav').style.display = 'none';
+      document.getElementById('adminUsername').value = '';
+      document.getElementById('adminPassword').value = '';
+    }
+
+    // Tab switching in login screen
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const tab = this.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        this.classList.add('active');
+        document.getElementById(tab).style.display = 'block';
+      });
+    });
+
+    // Initialize
+    window.addEventListener('load', () => {
+      document.getElementById('deliverDate').valueAsDate = new Date();
+      const tracking = new URLSearchParams(window.location.search).get('tracking');
+      if (tracking) {
+        document.getElementById('trackingNumberInput').value = tracking;
+        publicTrack();
+      }
+    });
+  </script>
+</body>
+</html>
