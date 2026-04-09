@@ -242,6 +242,10 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div class="fg" style="flex:1"><label class="fl">ETA</label><input class="fi" id="sc-eta" type="date" style="font-size:13px" onchange="saveScanSettings()"></div>
       <div class="fg" style="flex:1"><label class="fl">Notes (optional)</label><input class="fi" id="sc-notes" placeholder="Extra info"></div>
     </div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">MAWB Series</label><select class="fi" id="sc-mawb-series" style="font-size:13px;padding:9px" onchange="updateMawbPreview()"><option value="">None</option></select><div id="sc-mawb-preview" style="font-size:11px;color:#60a5fa;margin-top:3px;font-family:monospace"></div></div>
+      <div class="fg" style="flex:1"><label class="fl">BOL (optional)</label><input class="fi" id="sc-bol" placeholder="Auto or manual" style="font-size:13px"></div>
+    </div>
     <button class="bt bo" onclick="clearForm()" style="font-size:12px;padding:8px">Clear Form</button>
   </div>
 
@@ -277,12 +281,18 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div id="del-scan-msg" style="font-size:11px;margin-top:4px"></div>
     </div>
 
-    <!-- Search by name or tracking -->
+    <!-- Search by name, tracking, MAWB, HAWB -->
     <div class="cd">
       <label class="fl">Search by Name or Tracking</label>
-      <div style="display:flex;gap:6px">
+      <div style="display:flex;gap:6px;margin-bottom:6px">
         <input class="fi" id="del-name-search" placeholder="Name, tracking # or last 6 digits..." style="flex:1;font-size:13px;padding:9px" autocomplete="off">
         <button onclick="delSearchAny()" style="padding:9px 14px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:13px;cursor:pointer">Search</button>
+      </div>
+      <div style="display:flex;gap:6px">
+        <input class="fi" id="del-mawb-search" placeholder="MAWB #..." style="flex:1;font-size:12px;padding:8px;font-family:monospace" autocomplete="off">
+        <button onclick="delSearchMawb()" style="padding:8px 12px;border:1px solid #1e3a5f;border-radius:8px;background:#1e3a5f;color:#60a5fa;font-weight:700;font-size:12px;cursor:pointer">MAWB</button>
+        <input class="fi" id="del-hawb-search" placeholder="HAWB #..." style="flex:1;font-size:12px;padding:8px;font-family:monospace" autocomplete="off">
+        <button onclick="delSearchHawb()" style="padding:8px 12px;border:1px solid #4c1d95;border-radius:8px;background:#4c1d95;color:#c4b5fd;font-weight:700;font-size:12px;cursor:pointer">HAWB</button>
       </div>
       <div id="del-name-results" style="margin-top:8px"></div>
       <div id="del-name-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px"></div>
@@ -404,6 +414,30 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
         <button onclick="saveBatchPrefix()" style="padding:10px 16px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Save</button>
       </div>
       <div style="font-size:11px;color:#64748b;margin-top:6px">Prefix + date = 18-char batch barcode. Current: <span id="batch-prefix-display" style="font-family:monospace;color:#60a5fa"></span></div>
+    </div>
+
+    <!-- Numbering Settings (MAWB / HAWB / BOL) -->
+    <div class="cd" style="padding:14px">
+      <label class="fl" style="margin-bottom:8px;font-size:12px">Numbering Series (MAWB / HAWB / BOL)</label>
+      <div id="ns-list" style="margin-bottom:10px"></div>
+      <div style="background:#0f172a;border-radius:8px;padding:10px;margin-top:6px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+          <select id="ns-type" style="padding:8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#f8fafc;font-size:12px">
+            <option value="MAWB">MAWB</option>
+            <option value="HAWB">HAWB</option>
+            <option value="BOL">BOL</option>
+          </select>
+          <input id="ns-prefix" placeholder="Prefix e.g. JFK" style="width:80px;padding:8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#f8fafc;font-size:12px;text-transform:uppercase">
+          <input id="ns-label" placeholder="Label (optional)" style="flex:1;min-width:80px;padding:8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#f8fafc;font-size:12px">
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+          <input id="ns-start" type="number" value="1" min="1" placeholder="Start #" style="width:70px;padding:8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#f8fafc;font-size:12px">
+          <input id="ns-digits" type="number" value="4" min="1" max="10" placeholder="Digits" style="width:70px;padding:8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#f8fafc;font-size:12px">
+          <button onclick="addNumberSeries()" style="padding:8px 14px;border:none;border-radius:6px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Add Series</button>
+        </div>
+        <div style="font-size:11px;color:#64748b">Preview: <span id="ns-preview" style="font-family:monospace;color:#60a5fa">JFK0001</span></div>
+      </div>
+      <div id="ns-msg" style="font-size:12px;margin-top:6px"></div>
     </div>
 
     <!-- Manage Users -->
@@ -653,6 +687,7 @@ function switchAdmTab(tab){
     initBatchPrefix();
     initSettingsProfile();
     initLogoPreview();
+    loadNumberSeries();
     const cnInp=document.getElementById("set-company-name");
     if(cnInp) cnInp.value=localStorage.getItem("company_name")||"BuyDirectFromUSA";
     loadViewers();
@@ -769,6 +804,8 @@ async function publicTrack(fromUrl){
       if(latest.destination) route+=(route?' &rarr; ':'')+esc(latest.destination);
       if(route) html+='<div style="font-size:11px;color:#94a3b8;margin-top:2px">'+route+'</div>';
       if(latestEta) html+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(latestEta.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
+      if(latest.mawb) html+='<div style="font-size:10px;color:#60a5fa;margin-top:2px;font-family:monospace">MAWB: '+esc(latest.mawb)+'</div>';
+      if(latest.hawb) html+='<div style="font-size:10px;color:#a78bfa;font-family:monospace">HAWB: '+esc(latest.hawb)+'</div>';
       // Status timeline
       if(allHistory.length){
         html+='<div style="margin-top:8px;padding-left:12px;border-left:2px solid #334155">';
@@ -865,6 +902,7 @@ async function enterScanner(){
   loadKnownNames();
   loadDashStats();
   initBatchPrefix();
+  loadNumberSeries();
   autoArchiveOldPackages();
 }
 
@@ -1301,11 +1339,21 @@ async function doSave(){
   if(!selectedLoc){st.innerHTML='<span class="er">Please select a scan location.</span>';return}
   document.getElementById("btn-save").disabled=true;st.textContent="Saving...";
   try{
-    const r=await api({action:"scan",adminEmail:adm.email,adminPassword:adm.password,name,trackingNumber:tracking,rawText:notes,scanLocation:selectedLoc,destination:selectedDest,eta});
+    // Generate MAWB if series selected
+    let mawb=null;
+    const mawbSel=document.getElementById("sc-mawb-series");
+    if(mawbSel&&mawbSel.value){
+      mawb=await generateMawb();
+      if(!mawb){st.innerHTML='<span class="er">Failed to generate MAWB</span>';document.getElementById("btn-save").disabled=false;return}
+    }
+    const bol=document.getElementById("sc-bol")?document.getElementById("sc-bol").value.trim()||null:null;
+    const r=await api({action:"scan",adminEmail:adm.email,adminPassword:adm.password,name,trackingNumber:tracking,rawText:notes,scanLocation:selectedLoc,destination:selectedDest,eta,mawb,bol});
     if(r.ok){
       lastSavedName=name;
       if(!knownPeople.some(p=>p.name.toLowerCase()===name.toLowerCase())) knownPeople.unshift({name,company:""});
-      st.innerHTML='<span class="ok">Saved! '+esc(name)+' — '+esc(tracking)+'</span>';
+      const mawbNote=mawb?' · MAWB: '+mawb:'';
+      st.innerHTML='<span class="ok">Saved! '+esc(name)+' — '+esc(tracking)+mawbNote+'</span>';
+      populateMawbSelector();
       clearForm();
       loadAllEntries();
       loadViewers();
@@ -1848,7 +1896,10 @@ async function delLookupTracking(tracking){
     const ids=JSON.stringify(idsByTk[e.tracking_number]);
     return `<div style="background:#0f172a;border-radius:8px;padding:10px 12px;margin-bottom:5px">
       <div style="display:flex;justify-content:space-between;align-items:center"><div class="del-tk" style="font-size:12px;font-weight:700;color:#f8fafc;font-family:monospace;word-break:break-all">${esc(e.tracking_number)}</div>${statusBadge(e.status)}</div>
-      <div style="font-size:11px;color:#94a3b8;margin-top:2px">${esc(e.name)}${route?' · '+route:''}${etaLabel}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
+        <div style="font-size:11px;color:#94a3b8">${esc(e.name)}${route?' · '+route:''}${etaLabel}</div>
+        <div style="text-align:right;font-size:10px;font-family:monospace">${e.mawb?'<div style="color:#60a5fa;cursor:pointer" onclick="printMawb(\''+esc(e.mawb)+'\')">'+esc(e.mawb)+' <span style="font-size:9px">🖨</span></div>':''}${e.hawb?'<div style="color:#a78bfa;cursor:pointer" onclick="printHawb(\''+esc(e.hawb)+'\')">'+esc(e.hawb)+' <span style="font-size:9px">🖨</span></div>':''}</div>
+      </div>
       <div class="del-single-status" id="del-ss-${e.id}">
         <button style="background:#334155;color:#94a3b8" onclick="delBulkSingleStatus(${ids},'Scanned')">Scanned</button>
         <button style="background:#1e3a5f;color:#60a5fa" onclick="delBulkSingleStatus(${ids},'In Transit')">In Transit</button>
@@ -1911,13 +1962,27 @@ async function delSearchAny(page){
     return;
   }
   const total=r.total||r.entries.length;
-  div.innerHTML=r.entries.map(e=>{
+  // Add select-all + consolidate/split bar
+  let actionBar='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center">'+
+    '<label style="font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:4px"><input type="checkbox" id="del-select-all" onchange="delToggleSelectAll(this.checked)"> Select All</label>'+
+    '<button onclick="delConsolidateSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>'+
+    '<button onclick="delSplitSelected()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer">Split</button>'+
+    '<button onclick="delMarkDeliveredSelected()" style="padding:5px 10px;border:1px solid #065f46;border-radius:6px;background:#065f46;color:#34d399;font-size:11px;font-weight:700;cursor:pointer">Mark Delivered</button>'+
+    '<button onclick="delClearResults()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:none;color:#64748b;font-size:11px;cursor:pointer">Clear</button>'+
+    '</div>';
+  div.innerHTML=actionBar+r.entries.map(e=>{
     let route=e.scan_location?esc(e.scan_location):'';
     if(e.destination) route+=(route?' &rarr; ':'')+esc(e.destination);
     const etaLabel=e.eta?'<span style="color:#f59e0b;font-size:10px"> · ETA '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric"})+'</span>':'';
     return `<div style="background:#0f172a;border-radius:8px;padding:10px 12px;margin-bottom:5px">
-      <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:12px;font-weight:700;color:#f8fafc;font-family:monospace;word-break:break-all">${esc(e.tracking_number)}</div>${statusBadge(e.status)}</div>
-      <div style="font-size:11px;color:#94a3b8;margin-top:2px">${esc(e.name)}${route?' · '+route:''}${etaLabel}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:6px"><input type="checkbox" class="del-entry-cb" value="${e.id}" data-mawb="${e.mawb||''}"><div style="font-size:12px;font-weight:700;color:#f8fafc;font-family:monospace;word-break:break-all">${esc(e.tracking_number)}</div></div>
+        ${statusBadge(e.status)}
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
+        <div style="font-size:11px;color:#94a3b8">${esc(e.name)}${route?' · '+route:''}${etaLabel}</div>
+        <div style="text-align:right;font-size:10px;font-family:monospace">${e.mawb?'<div style="color:#60a5fa;cursor:pointer" onclick="printMawb(\''+esc(e.mawb)+'\')">'+esc(e.mawb)+' <span style="font-size:9px">🖨</span></div>':''}${e.hawb?'<div style="color:#a78bfa;cursor:pointer" onclick="printHawb(\''+esc(e.hawb)+'\')">'+esc(e.hawb)+' <span style="font-size:9px">🖨</span></div>':''}</div>
+      </div>
       <div class="del-single-status">
         <button style="background:#334155;color:#94a3b8" onclick="delSingleStatusRefreshSearch(${e.id},'Scanned')">Scanned</button>
         <button style="background:#1e3a5f;color:#60a5fa" onclick="delSingleStatusRefreshSearch(${e.id},'In Transit')">In Transit</button>
@@ -1945,6 +2010,90 @@ async function delSearchAny(page){
 async function delSingleStatusRefreshSearch(entryId,newStatus){
   await api({action:"update-status",adminEmail:adm.email,adminPassword:adm.password,entryId,status:newStatus});
   delSearchAny(delNamePage);
+}
+
+// ── Select All / Consolidate / Split / Clear for delivery search results ──
+function delToggleSelectAll(checked){
+  document.querySelectorAll(".del-entry-cb").forEach(cb=>cb.checked=checked);
+}
+function getSelectedEntryIds(){
+  return Array.from(document.querySelectorAll(".del-entry-cb:checked")).map(cb=>parseInt(cb.value));
+}
+async function delConsolidateSelected(){
+  const ids=getSelectedEntryIds();
+  if(!ids.length){alert("Select items first");return}
+  const hawb=await consolidateEntries(ids);
+  if(hawb) delSearchAny(delNamePage);
+}
+async function delSplitSelected(){
+  const ids=getSelectedEntryIds();
+  if(!ids.length){alert("Select items first");return}
+  await splitEntries(ids);
+  delSearchAny(delNamePage);
+}
+async function delMarkDeliveredSelected(){
+  const ids=getSelectedEntryIds();
+  if(!ids.length){alert("Select items first");return}
+  const r=await api({action:"bulk-update-status",adminEmail:adm.email,adminPassword:adm.password,entryIds:ids,status:"Delivered"});
+  if(r.ok){alert("Marked "+r.updated+" as Delivered");delSearchAny(delNamePage)}
+  else alert(r.error||"Failed");
+}
+function delClearResults(){
+  const div=document.getElementById("del-name-results");
+  if(div) div.innerHTML="";
+  document.getElementById("del-name-pager").innerHTML="";
+}
+
+// ── Search by MAWB / HAWB ──
+async function delSearchMawb(){
+  const q=(document.getElementById("del-mawb-search")||{}).value;
+  if(!q||!q.trim()) return;
+  const div=document.getElementById("del-name-results");
+  div.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:4px">Searching MAWB...</div>';
+  const r=await api({action:"search-by-mawb",adminEmail:adm.email,adminPassword:adm.password,mawb:q.trim()});
+  if(!r.ok||!r.entries||!r.entries.length){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No results for MAWB "'+esc(q)+'"</div>';return}
+  renderDelSearchResults(r.entries,r.entries.length,false);
+}
+async function delSearchHawb(){
+  const q=(document.getElementById("del-hawb-search")||{}).value;
+  if(!q||!q.trim()) return;
+  const div=document.getElementById("del-name-results");
+  div.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:4px">Searching HAWB...</div>';
+  const r=await api({action:"search-by-hawb",adminEmail:adm.email,adminPassword:adm.password,hawb:q.trim()});
+  if(!r.ok||!r.entries||!r.entries.length){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No results for HAWB "'+esc(q)+'"</div>';return}
+  renderDelSearchResults(r.entries,r.entries.length,false);
+}
+function renderDelSearchResults(entries,total,showPager){
+  const div=document.getElementById("del-name-results");
+  let actionBar='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center">'+
+    '<label style="font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:4px"><input type="checkbox" id="del-select-all" onchange="delToggleSelectAll(this.checked)"> Select All</label>'+
+    '<button onclick="delConsolidateSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>'+
+    '<button onclick="delSplitSelected()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer">Split</button>'+
+    '<button onclick="delMarkDeliveredSelected()" style="padding:5px 10px;border:1px solid #065f46;border-radius:6px;background:#065f46;color:#34d399;font-size:11px;font-weight:700;cursor:pointer">Mark Delivered</button>'+
+    '<button onclick="delClearResults()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:none;color:#64748b;font-size:11px;cursor:pointer">Clear</button>'+
+    '</div>';
+  div.innerHTML=actionBar+entries.map(e=>{
+    let route=e.scan_location?esc(e.scan_location):'';
+    if(e.destination) route+=(route?' &rarr; ':'')+esc(e.destination);
+    const etaLabel=e.eta?'<span style="color:#f59e0b;font-size:10px"> · ETA '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric"})+'</span>':'';
+    return `<div style="background:#0f172a;border-radius:8px;padding:10px 12px;margin-bottom:5px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:6px"><input type="checkbox" class="del-entry-cb" value="${e.id}" data-mawb="${e.mawb||''}"><div style="font-size:12px;font-weight:700;color:#f8fafc;font-family:monospace;word-break:break-all">${esc(e.tracking_number)}</div></div>
+        ${statusBadge(e.status)}
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
+        <div style="font-size:11px;color:#94a3b8">${esc(e.name)}${route?' · '+route:''}${etaLabel}</div>
+        <div style="text-align:right;font-size:10px;font-family:monospace">${e.mawb?'<div style="color:#60a5fa;cursor:pointer" onclick="printMawb(\''+esc(e.mawb)+'\')">'+esc(e.mawb)+' <span style="font-size:9px">🖨</span></div>':''}${e.hawb?'<div style="color:#a78bfa;cursor:pointer" onclick="printHawb(\''+esc(e.hawb)+'\')">'+esc(e.hawb)+' <span style="font-size:9px">🖨</span></div>':''}</div>
+      </div>
+      <div class="del-single-status">
+        <button style="background:#334155;color:#94a3b8" onclick="delSingleStatusRefreshSearch(${e.id},'Scanned')">Scanned</button>
+        <button style="background:#1e3a5f;color:#60a5fa" onclick="delSingleStatusRefreshSearch(${e.id},'In Transit')">In Transit</button>
+        <button style="background:#065f46;color:#34d399" onclick="delSingleStatusRefreshSearch(${e.id},'Delivered')">Delivered</button>
+        <button style="background:#713f12;color:#fbbf24" onclick="delSingleStatusRefreshSearch(${e.id},'Customs')">Customs</button>
+        <button style="background:#1e1b4b;color:#a5b4fc" onclick="delSingleStatusRefreshSearch(${e.id},'Archived')">Archive</button>
+      </div>
+    </div>`;
+  }).join("");
 }
 
 // Enter key for search
@@ -2017,6 +2166,40 @@ async function delPickEta(eta){
   delEtaPage=1;
   renderDelEtaChips();
   await loadDelEtaEntries();
+}
+
+// ── Print MAWB / HAWB sheets ──
+async function printMawb(mawbNumber){
+  const r=await api({action:"search-by-mawb",adminEmail:adm.email,adminPassword:adm.password,mawb:mawbNumber});
+  const entries=(r.ok&&r.entries)||[];
+  const eta=entries.length&&entries[0].eta?new Date(entries[0].eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):'N/A';
+  const win=window.open('','_blank','width=800,height=600');
+  win.document.write('<html><head><title>MAWB '+esc(mawbNumber)+'</title><style>body{font-family:Arial,sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ccc;padding:6px 10px;text-align:left;font-size:12px}th{background:#f0f0f0}h1{font-size:20px}h2{font-size:14px;color:#666}</style></head><body>');
+  win.document.write('<h1>MAWB: '+esc(mawbNumber)+'</h1>');
+  win.document.write('<h2>ETA: '+eta+' &middot; Items: '+entries.length+'</h2>');
+  win.document.write('<table><tr><th>#</th><th>Tracking</th><th>Name</th><th>HAWB</th><th>Status</th><th>Location</th></tr>');
+  entries.forEach((e,i)=>{
+    win.document.write('<tr><td>'+(i+1)+'</td><td>'+esc(e.tracking_number)+'</td><td>'+esc(e.name)+'</td><td>'+(e.hawb||'-')+'</td><td>'+esc(e.status)+'</td><td>'+(e.scan_location||'-')+'</td></tr>');
+  });
+  win.document.write('</table><scr'+'ipt>setTimeout(()=>window.print(),300)</scr'+'ipt></body></html>');
+  win.document.close();
+}
+async function printHawb(hawbNumber){
+  const r=await api({action:"search-by-hawb",adminEmail:adm.email,adminPassword:adm.password,hawb:hawbNumber});
+  const entries=(r.ok&&r.entries)||[];
+  const mawb=entries.length&&entries[0].mawb?entries[0].mawb:'N/A';
+  const names=[...new Set(entries.map(e=>e.name))].join(', ');
+  const win=window.open('','_blank','width=800,height=600');
+  win.document.write('<html><head><title>HAWB '+esc(hawbNumber)+'</title><style>body{font-family:Arial,sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ccc;padding:6px 10px;text-align:left;font-size:12px}th{background:#f0f0f0}h1{font-size:20px}h2{font-size:14px;color:#666}</style></head><body>');
+  win.document.write('<h1>HAWB: '+esc(hawbNumber)+'</h1>');
+  win.document.write('<h2>MAWB: '+esc(mawb)+' &middot; Items: '+entries.length+'</h2>');
+  win.document.write('<h2>Name(s): '+esc(names)+'</h2>');
+  win.document.write('<table><tr><th>#</th><th>Tracking</th><th>Name</th><th>Status</th><th>ETA</th></tr>');
+  entries.forEach((e,i)=>{
+    win.document.write('<tr><td>'+(i+1)+'</td><td>'+esc(e.tracking_number)+'</td><td>'+esc(e.name)+'</td><td>'+esc(e.status)+'</td><td>'+(e.eta||'-')+'</td></tr>');
+  });
+  win.document.write('</table><scr'+'ipt>setTimeout(()=>window.print(),300)</scr'+'ipt></body></html>');
+  win.document.close();
 }
 
 async function loadDelEtaEntries(page){
@@ -2249,6 +2432,123 @@ function applyCompanyBranding(){
   if(title) title.textContent=name+" — Track";
 }
 
+// ── Number Series (MAWB / HAWB / BOL) ──
+let allSeries=[];
+async function loadNumberSeries(){
+  if(!adm) return;
+  const r=await api({action:"list-number-series",adminEmail:adm.email,adminPassword:adm.password});
+  if(r.ok) allSeries=r.series||[];
+  renderNumberSeries();
+  populateMawbSelector();
+}
+function renderNumberSeries(){
+  const div=document.getElementById("ns-list");
+  if(!div) return;
+  if(!allSeries.length){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No series configured yet</div>';return}
+  div.innerHTML=allSeries.map(s=>{
+    const next=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:#0f172a;border-radius:6px;margin-bottom:4px">'+
+      '<div><span style="font-size:11px;font-weight:700;color:'+(s.active?'#60a5fa':'#475569')+'">'+esc(s.type)+'</span>'+
+      '<span style="font-size:11px;color:#94a3b8;margin-left:6px">'+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+'</span>'+
+      '<div style="font-size:10px;color:#64748b;font-family:monospace">Next: '+next+'</div></div>'+
+      '<div style="display:flex;gap:4px">'+
+      '<button onclick="toggleSeries('+s.id+','+!s.active+')" style="padding:3px 8px;border:1px solid #334155;border-radius:4px;background:none;color:'+(s.active?'#f59e0b':'#22c55e')+';font-size:10px;cursor:pointer">'+(s.active?'Disable':'Enable')+'</button>'+
+      '<button onclick="deleteSeries('+s.id+')" style="padding:3px 8px;border:1px solid #334155;border-radius:4px;background:none;color:#f87171;font-size:10px;cursor:pointer">Del</button>'+
+      '</div></div>';
+  }).join("");
+}
+async function addNumberSeries(){
+  const msg=document.getElementById("ns-msg");
+  const type=document.getElementById("ns-type").value;
+  const prefix=document.getElementById("ns-prefix").value.trim().toUpperCase();
+  const label=document.getElementById("ns-label").value.trim();
+  const startNumber=parseInt(document.getElementById("ns-start").value)||1;
+  const digitLength=parseInt(document.getElementById("ns-digits").value)||4;
+  if(!prefix){msg.innerHTML='<span class="er">Prefix is required</span>';return}
+  msg.innerHTML='<span style="color:#94a3b8">Adding...</span>';
+  const r=await api({action:"add-number-series",adminEmail:adm.email,adminPassword:adm.password,type,prefix,label,startNumber,digitLength});
+  if(r.ok){msg.innerHTML='<span class="ok">Series added</span>';document.getElementById("ns-prefix").value="";document.getElementById("ns-label").value="";loadNumberSeries();}
+  else msg.innerHTML='<span class="er">'+(r.error||"Failed")+'</span>';
+}
+async function toggleSeries(id,active){
+  await api({action:"update-number-series",adminEmail:adm.email,adminPassword:adm.password,seriesId:id,active});
+  loadNumberSeries();
+}
+async function deleteSeries(id){
+  if(!confirm("Delete this series?")) return;
+  await api({action:"delete-number-series",adminEmail:adm.email,adminPassword:adm.password,seriesId:id});
+  loadNumberSeries();
+}
+// Preview in settings
+document.addEventListener("DOMContentLoaded",()=>{
+  ["ns-prefix","ns-start","ns-digits"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener("input",updateNsPreview);
+  });
+});
+function updateNsPreview(){
+  const p=(document.getElementById("ns-prefix").value||"").toUpperCase();
+  const s=parseInt(document.getElementById("ns-start").value)||1;
+  const d=parseInt(document.getElementById("ns-digits").value)||4;
+  const el=document.getElementById("ns-preview");
+  if(el) el.textContent=p+String(s).padStart(d,"0");
+}
+
+// Populate MAWB dropdown on scan page
+function populateMawbSelector(){
+  const sel=document.getElementById("sc-mawb-series");
+  if(!sel) return;
+  const active=allSeries.filter(s=>s.type==="MAWB"&&s.active);
+  sel.innerHTML='<option value="">None</option>'+active.map(s=>{
+    const next=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
+    return '<option value="'+s.id+'">'+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+' (next: '+next+')</option>';
+  }).join("");
+}
+function updateMawbPreview(){
+  const sel=document.getElementById("sc-mawb-series");
+  const prev=document.getElementById("sc-mawb-preview");
+  if(!sel||!prev) return;
+  const id=parseInt(sel.value);
+  if(!id){prev.textContent="";return}
+  const s=allSeries.find(x=>x.id===id);
+  if(s) prev.textContent="Will assign: "+s.prefix+String(s.current_number).padStart(s.digit_length,"0");
+  else prev.textContent="";
+}
+
+// Generate MAWB during scan save
+async function generateMawb(){
+  const sel=document.getElementById("sc-mawb-series");
+  if(!sel||!sel.value) return null;
+  const r=await api({action:"generate-next-number",adminEmail:adm.email,adminPassword:adm.password,seriesId:parseInt(sel.value)});
+  if(r.ok) return r.number;
+  return null;
+}
+
+// ── Consolidate / Split ──
+async function consolidateEntries(entryIds){
+  if(!entryIds.length){alert("Select items first");return}
+  // Find active HAWB series
+  const hawbSeries=allSeries.filter(s=>s.type==="HAWB"&&s.active);
+  if(!hawbSeries.length){alert("No active HAWB series. Add one in Settings > Numbering Series.");return}
+  const hawbSeriesId=hawbSeries[0].id;
+  const r=await api({action:"consolidate",adminEmail:adm.email,adminPassword:adm.password,entryIds,hawbSeriesId});
+  if(r.ok){
+    alert("Consolidated under HAWB: "+r.hawb);
+    loadNumberSeries();
+    return r.hawb;
+  } else {
+    alert(r.error||"Consolidation failed");
+    return null;
+  }
+}
+async function splitEntries(entryIds){
+  if(!entryIds.length){alert("Select items first");return}
+  if(!confirm("Remove HAWB grouping from "+entryIds.length+" item(s)?")) return;
+  const r=await api({action:"split",adminEmail:adm.email,adminPassword:adm.password,entryIds});
+  if(r.ok) alert("Split "+r.updated+" item(s) from HAWB");
+  else alert(r.error||"Split failed");
+}
+
 // ── Auto-archive (3 months) ──
 async function autoArchiveOldPackages(){
   if(!adm) return;
@@ -2413,6 +2713,8 @@ function renderViewer(){
     <div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">${esc(e.tracking_number)}</div>${statusBadge(e.status)}</div>
     <div class="dt">${fmt(e.created_at)}${route?' · '+route:''}</div>
     ${etaStr}
+    ${e.mawb?'<div style="margin-top:3px"><span style="background:#1e3a5f;color:#60a5fa;font-size:10px;padding:2px 6px;border-radius:4px;cursor:pointer" onclick="printMawb(&#39;'+esc(e.mawb)+'&#39;)">MAWB: '+esc(e.mawb)+'</span></div>':''}
+    ${e.hawb?'<div style="margin-top:3px"><span style="background:#3b1f6e;color:#c084fc;font-size:10px;padding:2px 6px;border-radius:4px;cursor:pointer" onclick="printHawb(&#39;'+esc(e.hawb)+'&#39;)">HAWB: '+esc(e.hawb)+'</span></div>':''}
     ${timelineHtml}
     ${e.raw_text?`<span class="rt" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block';this.textContent=this.nextElementSibling.style.display==='block'?'Hide notes':'Show notes'">Show notes</span><div class="rb">${esc(e.raw_text)}</div>`:''}
   </div>`;
