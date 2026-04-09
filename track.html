@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>BuyDirectFromUSA — Track</title>
+<title id="page-title">BuyDirectFromUSA — Track</title>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0f172a">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -105,6 +105,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .st-out-for-delivery{background:#4c1d95;color:#c4b5fd}
 .st-held{background:#78350f;color:#fdba74}
 .st-delivered{background:#065f46;color:#34d399}
+.st-archived{background:#1e1b4b;color:#a5b4fc}
 /* Bulk status page */
 .bs-date-chip{display:inline-block;padding:8px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#94a3b8;font-size:13px;cursor:pointer;margin:0 5px 6px 0}
 .bs-date-chip.on{border-color:#3b82f6;background:#1e3a5f;color:#60a5fa}
@@ -138,7 +139,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 <div id="gate" class="pg on">
   <div class="cen">
     <div class="lbx" style="text-align:center">
-      <h2 style="font-size:22px">BuyDirectFromUSA</h2>
+      <h2 style="font-size:22px" class="company-name-el" id="gate-company-name">BuyDirectFromUSA</h2>
       <p style="font-size:14px;margin-bottom:20px">Package Tracking</p>
 
       <!-- Public Tracking Box -->
@@ -176,7 +177,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 <!-- SCANNER (logged-in admin) -->
 <div id="pg-scanner" class="pg">
   <div class="hdr" style="display:flex;justify-content:space-between;align-items:center">
-    <div><h1 style="font-size:17px;color:#f8fafc;margin:0">BuyDirectFromUSA</h1><p id="sc-sub" style="font-size:11px;color:#64748b;margin-top:2px"></p></div>
+    <div><h1 style="font-size:17px;color:#f8fafc;margin:0" class="company-name-el" id="scanner-company-name">BuyDirectFromUSA</h1><p id="sc-sub" style="font-size:11px;color:#64748b;margin-top:2px"></p></div>
     <button style="padding:5px 10px;border:1px solid #475569;border-radius:8px;background:none;color:#f87171;font-size:12px;cursor:pointer" onclick="adminLogout()">Log out</button>
   </div>
   <!-- Admin bottom nav -->
@@ -273,12 +274,12 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div id="del-scan-msg" style="font-size:11px;margin-top:4px"></div>
     </div>
 
-    <!-- Search by name -->
+    <!-- Search by name or tracking -->
     <div class="cd">
-      <label class="fl">Search by Name</label>
+      <label class="fl">Search by Name or Tracking</label>
       <div style="display:flex;gap:6px">
-        <input class="fi" id="del-name-search" placeholder="Recipient name..." style="flex:1;font-size:13px;padding:9px" autocomplete="off">
-        <button onclick="delSearchName()" style="padding:9px 14px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:13px;cursor:pointer">Search</button>
+        <input class="fi" id="del-name-search" placeholder="Name, tracking # or last 6 digits..." style="flex:1;font-size:13px;padding:9px" autocomplete="off">
+        <button onclick="delSearchAny()" style="padding:9px 14px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:13px;cursor:pointer">Search</button>
       </div>
       <div id="del-name-results" style="margin-top:8px"></div>
       <div id="del-name-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px"></div>
@@ -334,6 +335,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
           <button onclick="delBulkStatus('Delay')" style="padding:7px 12px;border:1px solid #7f1d1d;border-radius:8px;background:#7f1d1d;color:#fca5a5;font-size:12px;font-weight:700;cursor:pointer">Delay</button>
           <button onclick="delBulkStatus('Held')" style="padding:7px 12px;border:1px solid #78350f;border-radius:8px;background:#78350f;color:#fdba74;font-size:12px;font-weight:700;cursor:pointer">Held</button>
           <button onclick="delBulkStatus('Return')" style="padding:7px 12px;border:1px solid #713f12;border-radius:8px;background:#713f12;color:#fde68a;font-size:12px;font-weight:700;cursor:pointer">Return</button>
+          <button onclick="delBulkStatus('Archived')" style="padding:7px 12px;border:1px solid #3730a3;border-radius:8px;background:#1e1b4b;color:#a5b4fc;font-size:12px;font-weight:700;cursor:pointer">Archive</button>
         </div>
         <div id="del-bulk-msg" style="font-size:12px;margin-top:4px"></div>
       </div>
@@ -366,16 +368,26 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div id="set-adm-msg" style="font-size:12px;margin-top:6px"></div>
     </div>
 
-    <!-- Upload Logo -->
+    <!-- Company Branding -->
     <div class="cd" style="padding:14px">
-      <label class="fl" style="margin-bottom:8px;font-size:12px">Company Logo</label>
+      <label class="fl" style="margin-bottom:8px;font-size:12px">Company Branding</label>
+      <div class="fg">
+        <label class="fl">Company Name</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="fi" id="set-company-name" placeholder="e.g. BuyDirectFromUSA" style="flex:1;font-size:14px;padding:10px">
+          <button onclick="saveCompanyName()" style="padding:10px 16px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Save</button>
+        </div>
+        <div style="font-size:11px;color:#64748b;margin-top:4px">Shown in the header and on all pages</div>
+        <div id="company-name-msg" style="font-size:12px;margin-top:4px"></div>
+      </div>
+      <label class="fl" style="margin-bottom:6px;font-size:12px">Logo (optional — replaces company name text)</label>
       <div id="logo-preview" style="text-align:center;margin-bottom:10px"></div>
       <input type="file" id="logo-file-input" accept="image/*" style="display:none" onchange="handleLogoUpload(this)">
       <div style="display:flex;gap:8px">
         <button class="bt bb" style="flex:1;font-size:13px;padding:10px" onclick="document.getElementById('logo-file-input').click()">Choose Image</button>
         <button class="bt bo" style="font-size:13px;padding:10px" onclick="removeLogo()">Remove</button>
       </div>
-      <div style="font-size:11px;color:#64748b;margin-top:6px">Logo appears on printed barcodes and reports. Recommended: square, under 200KB.</div>
+      <div style="font-size:11px;color:#64748b;margin-top:6px">Logo replaces the text name in headers. Recommended: square, under 200KB.</div>
       <div id="logo-msg" style="font-size:12px;margin-top:4px"></div>
     </div>
 
@@ -488,6 +500,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
         <button class="bs-status-btn" onclick="bsSetStatus('Held')" style="padding:7px 12px;border:1px solid #78350f;border-radius:8px;background:#78350f;color:#fdba74;font-size:12px;font-weight:700;cursor:pointer">Held</button>
         <button class="bs-status-btn" onclick="bsSetStatus('Delivered')" style="padding:7px 12px;border:1px solid #065f46;border-radius:8px;background:#065f46;color:#34d399;font-size:12px;font-weight:700;cursor:pointer">Delivered</button>
         <button class="bs-status-btn" onclick="bsSetStatus('Scanned')" style="padding:7px 12px;border:1px solid #334155;border-radius:8px;background:#334155;color:#94a3b8;font-size:12px;font-weight:700;cursor:pointer">Scanned</button>
+        <button class="bs-status-btn" onclick="bsSetStatus('Archived')" style="padding:7px 12px;border:1px solid #3730a3;border-radius:8px;background:#1e1b4b;color:#a5b4fc;font-size:12px;font-weight:700;cursor:pointer">Archive</button>
       </div>
       <div id="bs-action-msg" style="font-size:12px;margin-top:4px"></div>
     </div>
@@ -584,7 +597,7 @@ function playChime(){
 async function api(b){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});return r.json()}
 
 // Status badge helper
-const STATUS_CLASSES={"Scanned":"st-scanned","In Transit":"st-in-transit","Delay":"st-delay","Return":"st-return","Arrived Destination":"st-arrived-destination","Out for Delivery":"st-out-for-delivery","Held":"st-held","Delivered":"st-delivered"};
+const STATUS_CLASSES={"Scanned":"st-scanned","In Transit":"st-in-transit","Delay":"st-delay","Return":"st-return","Arrived Destination":"st-arrived-destination","Out for Delivery":"st-out-for-delivery","Held":"st-held","Delivered":"st-delivered","Archived":"st-archived"};
 const STATUS_COLORS={
   "Scanned":{bg:"#334155",border:"#475569",text:"#94a3b8"},
   "In Transit":{bg:"#1e3a5f",border:"#2563eb",text:"#60a5fa"},
@@ -593,7 +606,8 @@ const STATUS_COLORS={
   "Arrived Destination":{bg:"#064e3b",border:"#065f46",text:"#6ee7b7"},
   "Out for Delivery":{bg:"#4c1d95",border:"#5b21b6",text:"#c4b5fd"},
   "Held":{bg:"#78350f",border:"#92400e",text:"#fdba74"},
-  "Delivered":{bg:"#065f46",border:"#047857",text:"#34d399"}
+  "Delivered":{bg:"#065f46",border:"#047857",text:"#34d399"},
+  "Archived":{bg:"#1e1b4b",border:"#3730a3",text:"#a5b4fc"}
 };
 let batchPrefix=localStorage.getItem("batch_prefix")||"BDUSA";
 function statusBadge(s){
@@ -626,9 +640,11 @@ function switchAdmTab(tab){
     initBatchPrefix();
     initSettingsProfile();
     initLogoPreview();
+    const cnInp=document.getElementById("set-company-name");
+    if(cnInp) cnInp.value=localStorage.getItem("company_name")||"BuyDirectFromUSA";
     loadViewers();
     populateMergeDropdowns();
-    if(adm&&adm.is_super) document.getElementById("super-section").style.display="block";
+    if(adm&&adm.is_super){document.getElementById("super-section").style.display="block";loadAdmins();}
   }
 }
 
@@ -748,6 +764,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
   const ptResults=document.getElementById("pt-results");
   if(ptResults) ptResults.innerHTML="";
+  applyCompanyBranding();
 });
 function startPtAutoRefresh(){
   stopPtAutoRefresh();
@@ -784,6 +801,7 @@ async function enterScanner(){
   showTab("scanner");
   document.getElementById("adm-bnav").style.display="flex";
   restoreScanSettings();
+  applyCompanyBranding();
   await Promise.all([loadLocations(),loadDests()]);
   loadViewers();
   if(adm.is_super) loadAdmins();
@@ -791,6 +809,7 @@ async function enterScanner(){
   loadKnownNames();
   loadDashStats();
   initBatchPrefix();
+  autoArchiveOldPackages();
 }
 
 function adminLogout(){
@@ -1813,15 +1832,23 @@ async function delSingleStatus(entryId,newStatus){
 
 // ── Search by name ──
 let delNamePage=1;
-async function delSearchName(page){
+async function delSearchAny(page){
   if(page) delNamePage=page; else delNamePage=1;
-  const name=document.getElementById("del-name-search").value.trim();
+  const query=document.getElementById("del-name-search").value.trim();
   const div=document.getElementById("del-name-results");
-  if(!name){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">Type a name to search</div>';return}
+  if(!query){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">Type a name or tracking number to search</div>';return}
   div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">Searching...</div>';
-  const r=await api({action:"search-by-name",adminEmail:adm.email,adminPassword:adm.password,name,page:delNamePage,perPage:DEL_PER_PAGE});
+  // Detect if input looks like a tracking number (all digits, or 6+ alphanumeric)
+  const isTracking=/^[A-Z0-9]{6,}$/i.test(query)||/^\d{6,}$/.test(query);
+  let r;
+  if(isTracking){
+    r=await api({action:"search-by-tracking",adminEmail:adm.email,adminPassword:adm.password,trackingNumber:query});
+    if(r.ok) r.total=r.entries?r.entries.length:0;
+  } else {
+    r=await api({action:"search-by-name",adminEmail:adm.email,adminPassword:adm.password,name:query,page:delNamePage,perPage:DEL_PER_PAGE});
+  }
   if(!r.ok||!r.entries||!r.entries.length){
-    div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No results for "'+esc(name)+'"</div>';
+    div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No results for "'+esc(query)+'"</div>';
     document.getElementById("del-name-pager").innerHTML="";
     return;
   }
@@ -1834,35 +1861,36 @@ async function delSearchName(page){
       <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:12px;font-weight:700;color:#f8fafc;font-family:monospace;word-break:break-all">${esc(e.tracking_number)}</div>${statusBadge(e.status)}</div>
       <div style="font-size:11px;color:#94a3b8;margin-top:2px">${esc(e.name)}${route?' · '+route:''}${etaLabel}</div>
       <div class="del-single-status">
-        <button style="background:#334155;color:#94a3b8" onclick="delSingleStatusRefreshName(${e.id},'Scanned')">Scanned</button>
-        <button style="background:#1e3a5f;color:#60a5fa" onclick="delSingleStatusRefreshName(${e.id},'In Transit')">In Transit</button>
-        <button style="background:#064e3b;color:#6ee7b7" onclick="delSingleStatusRefreshName(${e.id},'Arrived Destination')">Arrived</button>
-        <button style="background:#4c1d95;color:#c4b5fd" onclick="delSingleStatusRefreshName(${e.id},'Out for Delivery')">Out for Delivery</button>
-        <button style="background:#065f46;color:#34d399" onclick="delSingleStatusRefreshName(${e.id},'Delivered')">Delivered</button>
-        <button style="background:#7f1d1d;color:#fca5a5" onclick="delSingleStatusRefreshName(${e.id},'Delay')">Delay</button>
-        <button style="background:#78350f;color:#fdba74" onclick="delSingleStatusRefreshName(${e.id},'Held')">Held</button>
-        <button style="background:#713f12;color:#fde68a" onclick="delSingleStatusRefreshName(${e.id},'Return')">Return</button>
+        <button style="background:#334155;color:#94a3b8" onclick="delSingleStatusRefreshSearch(${e.id},'Scanned')">Scanned</button>
+        <button style="background:#1e3a5f;color:#60a5fa" onclick="delSingleStatusRefreshSearch(${e.id},'In Transit')">In Transit</button>
+        <button style="background:#064e3b;color:#6ee7b7" onclick="delSingleStatusRefreshSearch(${e.id},'Arrived Destination')">Arrived</button>
+        <button style="background:#4c1d95;color:#c4b5fd" onclick="delSingleStatusRefreshSearch(${e.id},'Out for Delivery')">Out for Delivery</button>
+        <button style="background:#065f46;color:#34d399" onclick="delSingleStatusRefreshSearch(${e.id},'Delivered')">Delivered</button>
+        <button style="background:#7f1d1d;color:#fca5a5" onclick="delSingleStatusRefreshSearch(${e.id},'Delay')">Delay</button>
+        <button style="background:#78350f;color:#fdba74" onclick="delSingleStatusRefreshSearch(${e.id},'Held')">Held</button>
+        <button style="background:#713f12;color:#fde68a" onclick="delSingleStatusRefreshSearch(${e.id},'Return')">Return</button>
+        <button style="background:#1e1b4b;color:#a5b4fc" onclick="delSingleStatusRefreshSearch(${e.id},'Archived')">Archive</button>
       </div>
     </div>`;
   }).join("");
-  // Pager
+  // Pager (only for name search which supports pagination)
   const totalPages=Math.ceil(total/DEL_PER_PAGE);
   const pg=document.getElementById("del-name-pager");
-  if(totalPages<=1){pg.innerHTML="";return}
-  pg.innerHTML='<button class="pager-btn" onclick="delSearchName('+(delNamePage-1)+')" '+(delNamePage<=1?'disabled':'')+'>Prev</button>'+
+  if(totalPages<=1||isTracking){pg.innerHTML="";return}
+  pg.innerHTML='<button class="pager-btn" onclick="delSearchAny('+(delNamePage-1)+')" '+(delNamePage<=1?'disabled':'')+'>Prev</button>'+
     '<span style="color:#64748b;font-size:12px">Page '+delNamePage+' of '+totalPages+'</span>'+
-    '<button class="pager-btn" onclick="delSearchName('+(delNamePage+1)+')" '+(delNamePage>=totalPages?'disabled':'')+'>Next</button>';
+    '<button class="pager-btn" onclick="delSearchAny('+(delNamePage+1)+')" '+(delNamePage>=totalPages?'disabled':'')+'>Next</button>';
 }
 
-async function delSingleStatusRefreshName(entryId,newStatus){
+async function delSingleStatusRefreshSearch(entryId,newStatus){
   await api({action:"update-status",adminEmail:adm.email,adminPassword:adm.password,entryId,status:newStatus});
-  delSearchName(delNamePage);
+  delSearchAny(delNamePage);
 }
 
-// Enter key for name search
+// Enter key for search
 document.addEventListener("DOMContentLoaded",()=>{
   const ns=document.getElementById("del-name-search");
-  if(ns) ns.addEventListener("keypress",(e)=>{if(e.key==="Enter") delSearchName()});
+  if(ns) ns.addEventListener("keypress",(e)=>{if(e.key==="Enter") delSearchAny()});
 });
 
 // ── ETA dates list ──
@@ -2134,7 +2162,43 @@ function handleLogoUpload(input){
 function removeLogo(){
   localStorage.removeItem("company_logo");
   initLogoPreview();
+  applyCompanyBranding();
   document.getElementById("logo-msg").innerHTML='<span class="ok">Logo removed</span>';
+}
+
+// ── Company name ──
+function saveCompanyName(){
+  const inp=document.getElementById("set-company-name");
+  const val=(inp.value||"").trim();
+  if(!val){document.getElementById("company-name-msg").innerHTML='<span class="er">Name cannot be empty</span>';return}
+  localStorage.setItem("company_name",val);
+  applyCompanyBranding();
+  document.getElementById("company-name-msg").innerHTML='<span class="ok">Company name saved</span>';
+}
+function applyCompanyBranding(){
+  const name=localStorage.getItem("company_name")||"BuyDirectFromUSA";
+  const logo=localStorage.getItem("company_logo");
+  document.querySelectorAll(".company-name-el").forEach(el=>{
+    if(logo){
+      el.innerHTML='<img src="'+logo+'" style="max-height:28px;max-width:140px;vertical-align:middle">';
+    } else {
+      el.textContent=name;
+    }
+  });
+  const title=document.getElementById("page-title");
+  if(title) title.textContent=name+" — Track";
+}
+
+// ── Auto-archive (3 months) ──
+async function autoArchiveOldPackages(){
+  if(!adm) return;
+  const cutoff=new Date();
+  cutoff.setMonth(cutoff.getMonth()-3);
+  const cutoffStr=cutoff.toISOString().slice(0,10);
+  try{
+    const r=await api({action:"auto-archive",adminEmail:adm.email,adminPassword:adm.password,cutoffDate:cutoffStr});
+    if(r.ok&&r.archived>0) console.log("Auto-archived "+r.archived+" packages older than 3 months");
+  }catch(e){console.log("Auto-archive check:",e)}
 }
 
 // ── Batch code lookup ──
