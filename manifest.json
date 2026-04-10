@@ -1,7 +1,7 @@
 {
-  "name": "BuyDirectFromUSA — Scan & Track",
-  "short_name": "BuyDirectUSA",
-  "start_url": "/",
+  "name": "BuyDirectFromUSA Track",
+  "short_name": "BDFUSA",
+  "start_url": "/track",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
