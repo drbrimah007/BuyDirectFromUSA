@@ -1349,10 +1349,10 @@ async function startCam(){
       const named=[Html5QrcodeSupportedFormats.QR_CODE,Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.ITF,Html5QrcodeSupportedFormats.DATA_MATRIX,Html5QrcodeSupportedFormats.CODABAR].filter(f=>f!==undefined);
       if(named.length>0) formats=named;
     }catch(e){}
-    html5Sc=new Html5Qrcode("scanner-camera",{formatsToSupport:formats,verbose:false,experimentalFeatures:{useBarCodeDetectorIfSupported:true}});
+    html5Sc=new Html5Qrcode("scanner-camera",{formatsToSupport:formats,verbose:false,experimentalFeatures:{useBarCodeDetectorIfSupported:false}});
     const w=Math.min(window.innerWidth-40,380);
     const camCfg=isIOS?
-      {fps:8,qrbox:function(vw,vh){const qw=Math.min(vw,Math.round(vw*0.95));return{width:qw,height:Math.round(qw*0.6)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:"environment",width:{ideal:1920},height:{ideal:1080}}}:
+      {fps:15,qrbox:function(vw,vh){const s=Math.min(vw,vh)*0.7;return{width:Math.round(s),height:Math.round(s*0.5)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{exact:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080}}}:
       {fps:15,qrbox:{width:w,height:Math.round(w*0.5)},disableFlip:false};
     await html5Sc.start(
       {facingMode:"environment"},
@@ -2296,10 +2296,10 @@ async function delStartCam(){
   try{
     if(typeof Html5Qrcode==="undefined"){st.innerHTML='<span class="er">Scanner not available. Type tracking # manually.</span>';return}
     st.textContent="Starting scanner...";
-    const delWidget=new Html5Qrcode("del-scanner-camera",{verbose:false,experimentalFeatures:{useBarCodeDetectorIfSupported:true}});
+    const delWidget=new Html5Qrcode("del-scanner-camera",{verbose:false,experimentalFeatures:{useBarCodeDetectorIfSupported:false}});
     const dw=Math.min(window.innerWidth-40,380);
     const delCamCfg=isIOSDel?
-      {fps:8,qrbox:function(vw,vh){const qw=Math.min(vw,Math.round(vw*0.95));return{width:qw,height:Math.round(qw*0.6)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:"environment",width:{ideal:1920},height:{ideal:1080}}}:
+      {fps:15,qrbox:function(vw,vh){const s=Math.min(vw,vh)*0.7;return{width:Math.round(s),height:Math.round(s*0.5)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{exact:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080}}}:
       {fps:15,qrbox:{width:dw,height:Math.round(dw*0.4)},disableFlip:false};
     await delWidget.start(
       {facingMode:"environment"},
