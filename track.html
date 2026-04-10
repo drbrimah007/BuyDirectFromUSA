@@ -242,7 +242,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div class="fg" style="flex:1"><label class="fl">ETA</label><input class="fi" id="sc-eta" type="date" style="font-size:13px" onchange="saveScanSettings()"></div>
       <div class="fg" style="flex:1"><label class="fl">Notes (optional)</label><input class="fi" id="sc-notes" placeholder="Extra info"></div>
     </div>
-    <div class="fg"><label class="fl">Shipment Series</label><select class="fi" id="sc-mawb-series" style="font-size:13px;padding:9px" onchange="updateMawbPreview()"><option value="">— No series —</option></select><div id="sc-mawb-preview" style="font-size:11px;color:#60a5fa;margin-top:3px;font-family:monospace"></div></div>
+    <div class="fg"><label class="fl">Shipment Series</label><select class="fi" id="sc-mawb-series" style="font-size:13px;padding:9px" onchange="updateMawbPreview();saveScanSettings()"><option value="">— No series —</option></select><div id="sc-mawb-preview" style="font-size:11px;color:#60a5fa;margin-top:3px;font-family:monospace"></div></div>
     <button class="bt bo" onclick="clearForm()" style="font-size:12px;padding:8px">Clear Form</button>
   </div>
 
@@ -287,7 +287,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div id="del-scan-msg" style="font-size:11px;margin-top:4px"></div>
     </div>
 
-    <!-- Search by name, tracking, MAWB, HAWB -->
+    <!-- Search by name, tracking, MAWB, Group -->
     <div class="cd">
       <label class="fl">Search by Name or Tracking</label>
       <div style="display:flex;gap:6px;margin-bottom:6px">
@@ -297,8 +297,8 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div style="display:flex;gap:6px">
         <input class="fi" id="del-mawb-search" placeholder="MAWB #..." style="flex:1;font-size:12px;padding:8px;font-family:monospace" autocomplete="off">
         <button onclick="delSearchMawb()" style="padding:8px 12px;border:1px solid #1e3a5f;border-radius:8px;background:#1e3a5f;color:#60a5fa;font-weight:700;font-size:12px;cursor:pointer">MAWB</button>
-        <input class="fi" id="del-hawb-search" placeholder="HAWB #..." style="flex:1;font-size:12px;padding:8px;font-family:monospace" autocomplete="off">
-        <button onclick="delSearchHawb()" style="padding:8px 12px;border:1px solid #4c1d95;border-radius:8px;background:#4c1d95;color:#c4b5fd;font-weight:700;font-size:12px;cursor:pointer">HAWB</button>
+        <input class="fi" id="del-hawb-search" placeholder="Group #..." style="flex:1;font-size:12px;padding:8px;font-family:monospace" autocomplete="off">
+        <button onclick="delSearchHawb()" style="padding:8px 12px;border:1px solid #4c1d95;border-radius:8px;background:#4c1d95;color:#c4b5fd;font-weight:700;font-size:12px;cursor:pointer">Group</button>
       </div>
       <div id="del-name-results" style="margin-top:8px"></div>
       <div id="del-name-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px"></div>
@@ -427,7 +427,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div style="font-size:11px;color:#64748b;margin-top:6px">Prefix + date = 18-char batch barcode. Current: <span id="batch-prefix-display" style="font-family:monospace;color:#60a5fa"></span></div>
     </div>
 
-    <!-- Numbering Settings (MAWB / BOL) — HAWB runs under MAWB -->
+    <!-- Numbering Settings (MAWB / BOL) — Groups run under MAWB -->
     <div class="cd" style="padding:14px">
       <label class="fl" style="margin-bottom:8px;font-size:12px">Numbering Series (MAWB / BOL)</label>
       <div id="ns-list" style="margin-bottom:10px"></div>
@@ -526,12 +526,25 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       </div>
     </div>
 
+    <!-- Series selector for bulk operations -->
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #334155">
+      <label class="fl" style="margin:0;white-space:nowrap">Series:</label>
+      <select id="bs-series-selector" class="fi" style="flex:1;font-size:12px;padding:7px"></select>
+    </div>
+
     <!-- Filter by current status -->
     <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
       <span class="bs-date-chip on" style="font-size:11px;padding:5px 10px" onclick="bsFilterStatus('')" id="bs-filter-all">All</span>
       <span class="bs-date-chip" style="font-size:11px;padding:5px 10px" onclick="bsFilterStatus('Scanned')">Scanned</span>
       <span class="bs-date-chip" style="font-size:11px;padding:5px 10px" onclick="bsFilterStatus('In Transit')">In Transit</span>
       <span class="bs-date-chip" style="font-size:11px;padding:5px 10px" onclick="bsFilterStatus('Arrived Destination')">Arrived</span>
+    </div>
+
+    <!-- Consolidate/Assign actions -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #334155">
+      <button onclick="bsConsolidateSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>
+      <button onclick="bsAssignSeriesSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Series</button>
+      <button onclick="bsSplitSelected()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer">Split</button>
     </div>
 
     <div id="bs-list" style="max-height:400px;overflow-y:auto"></div>
@@ -816,7 +829,7 @@ async function publicTrack(fromUrl){
       if(route) html+='<div style="font-size:11px;color:#94a3b8;margin-top:2px">'+route+'</div>';
       if(latestEta) html+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(latestEta.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
       if(latest.mawb) html+='<div style="font-size:10px;color:#60a5fa;margin-top:2px;font-family:monospace">MAWB: '+esc(latest.mawb)+'</div>';
-      if(latest.hawb) html+='<div style="font-size:10px;color:#a78bfa;font-family:monospace">HAWB: '+esc(latest.hawb)+'</div>';
+      if(latest.hawb) html+='<div style="font-size:10px;color:#a78bfa;font-family:monospace">Group: '+esc(latest.hawb)+'</div>';
       // Status timeline
       if(allHistory.length){
         html+='<div style="margin-top:8px;padding-left:12px;border-left:2px solid #334155">';
@@ -1363,8 +1376,12 @@ async function doSave(){
       if(!knownPeople.some(p=>p.name.toLowerCase()===name.toLowerCase())) knownPeople.unshift({name,company:""});
       const mawbNote=mawb?' · Shipment: '+mawb:'';
       st.innerHTML='<span class="ok">Saved! '+esc(name)+' — '+esc(tracking)+mawbNote+'</span>';
+      const savedSeriesVal=document.getElementById("sc-mawb-series").value;
       populateMawbSelector();
+      const mawbSel2=document.getElementById("sc-mawb-series");
+      if(mawbSel2){for(let i=0;i<mawbSel2.options.length;i++){if(mawbSel2.options[i].value===savedSeriesVal){mawbSel2.selectedIndex=i;break;}}}
       clearForm();
+      updateMawbPreview();
       loadAllEntries();
       loadViewers();
       loadDashStats();
@@ -1385,6 +1402,8 @@ function saveScanSettings(){
   localStorage.setItem("scan_loc",selectedLoc||"");
   localStorage.setItem("scan_dest",selectedDest||"");
   localStorage.setItem("scan_eta",document.getElementById("sc-eta").value||"");
+  const msel=document.getElementById("sc-mawb-series");
+  if(msel) localStorage.setItem("scan_series",msel.value||"");
 }
 function restoreScanSettings(){
   const loc=localStorage.getItem("scan_loc")||"";
@@ -1393,6 +1412,12 @@ function restoreScanSettings(){
   if(loc) selectedLoc=loc;
   if(dest) selectedDest=dest;
   if(eta) document.getElementById("sc-eta").value=eta;
+  const savedSeries=localStorage.getItem("scan_series")||"";
+  if(savedSeries){
+    const msel=document.getElementById("sc-mawb-series");
+    if(msel){for(let i=0;i<msel.options.length;i++){if(msel.options[i].value===savedSeries){msel.selectedIndex=i;break;}}}
+    updateMawbPreview();
+  }
 }
 
 // ── Viewers ──
@@ -1642,6 +1667,7 @@ async function openStatusPage(){
   }
   bsDates=r.dates;
   renderDateChips();
+  populateBsSeriesSelector();
 }
 
 function closeStatusPage(){
@@ -1712,6 +1738,7 @@ function renderBsEntries(){
           <div class="bs-tk">${esc(e.tracking_number)}</div>
           <div class="bs-nm">${esc(e.name)} ${statusBadge(e.status)}${etaLabel}</div>
           ${route?'<div class="bs-route">'+route+'</div>':''}
+          ${e.mawb?'<div style="font-size:10px;color:#60a5fa;font-family:monospace">'+esc(e.mawb)+(e.hawb?' · <span style="color:#a78bfa">'+esc(e.hawb)+'</span>':'')+'</div>':''}
         </div>
       </label>
     </div>`;
@@ -1736,6 +1763,51 @@ function bsSelectAll(){
 }
 function bsSelectNone(){
   document.querySelectorAll(".bs-cb").forEach(c=>c.checked=false);
+}
+
+function populateBsSeriesSelector(){
+  const sel=document.getElementById("bs-series-selector");
+  if(!sel) return;
+  const active=allSeries.filter(s=>s.active);
+  sel.innerHTML='<option value="">— No series —</option>'+active.map(s=>{
+    const cur=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
+    return '<option value="'+s.id+'">'+esc(s.type)+': '+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+' (current: '+cur+')</option>';
+  }).join("");
+}
+async function bsConsolidateSelected(){
+  const checked=Array.from(document.querySelectorAll(".bs-cb:checked")).map(c=>parseInt(c.value));
+  if(!checked.length){alert("Select items first");return}
+  const sel=document.getElementById("bs-series-selector");
+  let mawbOverride=null;
+  if(sel&&sel.value){
+    const s=allSeries.find(x=>x.id===parseInt(sel.value));
+    if(s) mawbOverride=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
+  }
+  const hawb=await consolidateEntries(checked,mawbOverride);
+  if(hawb) await loadDateEntries();
+}
+async function bsAssignSeriesSelected(){
+  const checked=Array.from(document.querySelectorAll(".bs-cb:checked")).map(c=>parseInt(c.value));
+  if(!checked.length){alert("Select items first");return}
+  const sel=document.getElementById("bs-series-selector");
+  if(!sel||!sel.value){alert("Select a series first");return}
+  const series=allSeries.find(s=>s.id===parseInt(sel.value));
+  if(!series){alert("Series not found");return}
+  const mawbNumber=series.prefix+String(series.current_number).padStart(series.digit_length,"0");
+  const r=await api({action:"assign-series",adminEmail:adm.email,adminPassword:adm.password,entryIds:checked,mawb:mawbNumber});
+  if(r.ok){
+    alert("Assigned "+r.updated+" items under "+mawbNumber+" (Groups: "+r.groups.join(", ")+")");
+    loadNumberSeries();
+    await loadDateEntries();
+  } else {
+    alert(r.error||"Failed to assign series");
+  }
+}
+async function bsSplitSelected(){
+  const checked=Array.from(document.querySelectorAll(".bs-cb:checked")).map(c=>parseInt(c.value));
+  if(!checked.length){alert("Select items first");return}
+  await splitEntries(checked);
+  await loadDateEntries();
 }
 
 async function bsSetStatus(newStatus){
@@ -2027,6 +2099,7 @@ function buildActionBar(){
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center">'+
     '<label style="font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:4px"><input type="checkbox" id="del-select-all" onchange="delToggleSelectAll(this.checked)"> Select All</label>'+
     '<button onclick="delConsolidateSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>'+
+    '<button onclick="delAssignSeriesSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Series</button>'+
     '<button onclick="delSplitSelected()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer">Split</button>'+
     '<button onclick="delMarkDeliveredSelected()" style="padding:5px 10px;border:1px solid #065f46;border-radius:6px;background:#065f46;color:#34d399;font-size:11px;font-weight:700;cursor:pointer">Mark Delivered</button>'+
     '<button onclick="delClearResults()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:none;color:#64748b;font-size:11px;cursor:pointer">Clear</button>'+
@@ -2037,6 +2110,24 @@ async function delConsolidateSelected(){
   if(!ids.length){alert("Select items first");return}
   const hawb=await consolidateEntries(ids);
   if(hawb) delSearchAny(delNamePage);
+}
+async function delAssignSeriesSelected(){
+  const ids=getSelectedEntryIds();
+  if(!ids.length){alert("Select items first");return}
+  const sel=document.getElementById("del-sticky-series");
+  if(!sel||!sel.value){alert("Select a series first");return}
+  const seriesId=parseInt(sel.value);
+  const series=allSeries.find(s=>s.id===seriesId);
+  if(!series){alert("Series not found");return}
+  const mawbNumber=series.prefix+String(series.current_number).padStart(series.digit_length,"0");
+  const r=await api({action:"assign-series",adminEmail:adm.email,adminPassword:adm.password,entryIds:ids,mawb:mawbNumber});
+  if(r.ok){
+    alert("Assigned "+r.updated+" items under "+mawbNumber+" (Groups: "+r.groups.join(", ")+")");
+    loadNumberSeries();
+    delSearchAny(delNamePage);
+  } else {
+    alert(r.error||"Failed to assign series");
+  }
 }
 async function delSplitSelected(){
   const ids=getSelectedEntryIds();
@@ -2057,7 +2148,7 @@ function delClearResults(){
   document.getElementById("del-name-pager").innerHTML="";
 }
 
-// ── Search by MAWB / HAWB ──
+// ── Search by MAWB / Group ──
 async function delSearchMawb(){
   const q=(document.getElementById("del-mawb-search")||{}).value;
   if(!q||!q.trim()) return;
@@ -2071,9 +2162,9 @@ async function delSearchHawb(){
   const q=(document.getElementById("del-hawb-search")||{}).value;
   if(!q||!q.trim()) return;
   const div=document.getElementById("del-name-results");
-  div.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:4px">Searching HAWB...</div>';
+  div.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:4px">Searching Group...</div>';
   const r=await api({action:"search-by-hawb",adminEmail:adm.email,adminPassword:adm.password,hawb:q.trim()});
-  if(!r.ok||!r.entries||!r.entries.length){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No results for HAWB "'+esc(q)+'"</div>';return}
+  if(!r.ok||!r.entries||!r.entries.length){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No results for Group "'+esc(q)+'"</div>';return}
   renderDelSearchResults(r.entries,r.entries.length,false);
 }
 function renderDelSearchResults(entries,total,showPager){
@@ -2115,8 +2206,8 @@ function populateDelSeriesSelector(){
   if(!sel) return;
   const active=allSeries.filter(s=>s.active);
   const opts='<option value="">— No series —</option>'+active.map(s=>{
-    const next=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
-    return '<option value="'+s.id+'">'+esc(s.type)+': '+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+' (next: '+next+')</option>';
+    const cur=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
+    return '<option value="'+s.id+'">'+esc(s.type)+': '+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+' (current: '+cur+')</option>';
   }).join("");
   sel.innerHTML=opts;
 }
@@ -2187,7 +2278,7 @@ async function delPickEta(eta){
   await loadDelEtaEntries();
 }
 
-// ── Print MAWB / HAWB sheets ──
+// ── Print MAWB / Group sheets ──
 async function printMawb(mawbNumber){
   const r=await api({action:"search-by-mawb",adminEmail:adm.email,adminPassword:adm.password,mawb:mawbNumber});
   const entries=(r.ok&&r.entries)||[];
@@ -2197,7 +2288,7 @@ async function printMawb(mawbNumber){
   win.document.write('<h1>MAWB: '+esc(mawbNumber)+'</h1>');
   win.document.write('<svg id="barcode"></svg>');
   win.document.write('<h2>ETA: '+eta+' &middot; Items: '+entries.length+'</h2>');
-  win.document.write('<table><tr><th>#</th><th>Tracking</th><th>Name</th><th>HAWB</th><th>Status</th><th>Location</th></tr>');
+  win.document.write('<table><tr><th>#</th><th>Tracking</th><th>Name</th><th>Group</th><th>Status</th><th>Location</th></tr>');
   entries.forEach((e,i)=>{
     win.document.write('<tr><td>'+(i+1)+'</td><td>'+esc(e.tracking_number)+'</td><td>'+esc(e.name)+'</td><td>'+(e.hawb||'-')+'</td><td>'+esc(e.status)+'</td><td>'+(e.scan_location||'-')+'</td></tr>');
   });
@@ -2210,8 +2301,8 @@ async function printHawb(hawbNumber){
   const mawb=entries.length&&entries[0].mawb?entries[0].mawb:'N/A';
   const names=[...new Set(entries.map(e=>e.name))].join(', ');
   const win=window.open('','_blank','width=800,height=600');
-  win.document.write('<html><head><title>HAWB '+esc(hawbNumber)+'</title><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></scr'+'ipt><style>body{font-family:Arial,sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ccc;padding:6px 10px;text-align:left;font-size:12px}th{background:#f0f0f0}h1{font-size:20px}h2{font-size:14px;color:#666}#barcode{max-width:300px;margin:10px 0}</style></head><body>');
-  win.document.write('<h1>HAWB: '+esc(hawbNumber)+'</h1>');
+  win.document.write('<html><head><title>Group '+esc(hawbNumber)+'</title><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></scr'+'ipt><style>body{font-family:Arial,sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ccc;padding:6px 10px;text-align:left;font-size:12px}th{background:#f0f0f0}h1{font-size:20px}h2{font-size:14px;color:#666}#barcode{max-width:300px;margin:10px 0}</style></head><body>');
+  win.document.write('<h1>Group: '+esc(hawbNumber)+'</h1>');
   win.document.write('<svg id="barcode"></svg>');
   win.document.write('<h2>MAWB: '+esc(mawb)+' &middot; Items: '+entries.length+'</h2>');
   win.document.write('<h2>Name(s): '+esc(names)+'</h2>');
@@ -2287,19 +2378,19 @@ async function delAssignMawbEtaSelected(){
   const checked=Array.from(document.querySelectorAll(".del-cb:checked")).map(c=>parseInt(c.value));
   if(!checked.length){alert("Select items first");return}
   const sel=document.getElementById("del-sticky-series");
-  if(!sel||!sel.value){alert("Select a series for MAWB assignment");return}
+  if(!sel||!sel.value){alert("Select a series first");return}
   const seriesId=parseInt(sel.value);
   const series=allSeries.find(s=>s.id===seriesId);
   if(!series){alert("Series not found");return}
   const mawbNumber=series.prefix+String(series.current_number).padStart(series.digit_length,"0");
-  const r=await api({action:"bulk-assign-mawb",adminEmail:adm.email,adminPassword:adm.password,entryIds:checked,mawb:mawbNumber});
+  const r=await api({action:"assign-series",adminEmail:adm.email,adminPassword:adm.password,entryIds:checked,mawb:mawbNumber});
   if(r.ok){
-    alert("Assigned MAWB "+mawbNumber+" to "+r.updated+" package(s)");
+    alert("Assigned "+r.updated+" items under "+mawbNumber+" (Groups: "+r.groups.join(", ")+")");
     loadNumberSeries();
     await loadDelEtaEntries();
     delLoadEtas();
   } else {
-    alert(r.error||"Failed to assign MAWB");
+    alert(r.error||"Failed to assign series");
   }
 }
 
@@ -2484,7 +2575,7 @@ function applyCompanyBranding(){
   if(title) title.textContent=name+" — Track";
 }
 
-// ── Number Series (MAWB / BOL) — HAWB auto-derived as MAWB-001, MAWB-002, etc. ──
+// ── Number Series (MAWB / BOL) — Groups auto-derived as MAWB-001, MAWB-002, etc. ──
 let allSeries=[];
 async function loadNumberSeries(){
   if(!adm) return;
@@ -2551,37 +2642,49 @@ function populateMawbSelector(){
   const sel=document.getElementById("sc-mawb-series");
   if(!sel) return;
   const active=allSeries.filter(s=>s.active);
-  sel.innerHTML='<option value="">None</option>'+active.map(s=>{
-    const next=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
-    return '<option value="'+s.id+'">'+esc(s.type)+': '+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+' (next: '+next+')</option>';
+  sel.innerHTML='<option value="">— No series —</option>'+active.map(s=>{
+    const cur=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
+    return '<option value="'+s.id+'">'+esc(s.type)+': '+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+' (current: '+cur+')</option>';
   }).join("");
 }
-function updateMawbPreview(){
+async function updateMawbPreview(){
   const sel=document.getElementById("sc-mawb-series");
   const prev=document.getElementById("sc-mawb-preview");
   if(!sel||!prev) return;
   const id=parseInt(sel.value);
   if(!id){prev.textContent="";return}
-  const s=allSeries.find(x=>x.id===id);
-  if(s) prev.textContent="Next: "+s.prefix+String(s.current_number).padStart(s.digit_length,"0");
-  else prev.textContent="";
+  try{
+    const r=await api({action:"get-current-mawb",adminEmail:adm.email,adminPassword:adm.password,seriesId:id});
+    if(r.ok) prev.textContent="Current MAWB: "+r.mawb+" · Next Group: "+r.nextGroup;
+    else{const s=allSeries.find(x=>x.id===id);if(s) prev.textContent="Current MAWB: "+s.prefix+String(s.current_number).padStart(s.digit_length,"0");else prev.textContent="";}
+  }catch(e){const s=allSeries.find(x=>x.id===id);if(s) prev.textContent="Current MAWB: "+s.prefix+String(s.current_number).padStart(s.digit_length,"0");else prev.textContent="";}
 }
 
 // Generate MAWB during scan save
 async function generateMawb(){
   const sel=document.getElementById("sc-mawb-series");
   if(!sel||!sel.value) return null;
-  const r=await api({action:"generate-next-number",adminEmail:adm.email,adminPassword:adm.password,seriesId:parseInt(sel.value)});
-  if(r.ok) return r.number;
+  const r=await api({action:"get-current-mawb",adminEmail:adm.email,adminPassword:adm.password,seriesId:parseInt(sel.value)});
+  if(r.ok) return r.mawb;
   return null;
 }
 
 // ── Consolidate / Split ──
-async function consolidateEntries(entryIds){
+async function consolidateEntries(entryIds,mawbOverride){
   if(!entryIds.length){alert("Select items first");return}
-  const r=await api({action:"consolidate",adminEmail:adm.email,adminPassword:adm.password,entryIds});
+  const body={action:"consolidate",adminEmail:adm.email,adminPassword:adm.password,entryIds};
+  if(mawbOverride) body.mawb=mawbOverride;
+  else{
+    const sel=document.getElementById("del-sticky-series");
+    if(sel&&sel.value){
+      const sid=parseInt(sel.value);
+      const s=allSeries.find(x=>x.id===sid);
+      if(s) body.mawb=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
+    }
+  }
+  const r=await api(body);
   if(r.ok){
-    alert("Consolidated under HAWB: "+r.hawb);
+    alert("Consolidated under Group: "+r.hawb);
     loadNumberSeries();
     return r.hawb;
   } else {
@@ -2591,9 +2694,9 @@ async function consolidateEntries(entryIds){
 }
 async function splitEntries(entryIds){
   if(!entryIds.length){alert("Select items first");return}
-  if(!confirm("Remove HAWB grouping from "+entryIds.length+" item(s)?")) return;
+  if(!confirm("Remove Group from "+entryIds.length+" item(s)?")) return;
   const r=await api({action:"split",adminEmail:adm.email,adminPassword:adm.password,entryIds});
-  if(r.ok) alert("Split "+r.updated+" item(s) from HAWB");
+  if(r.ok) alert("Split "+r.updated+" item(s) from Group");
   else alert(r.error||"Split failed");
 }
 
@@ -2762,7 +2865,7 @@ function renderViewer(){
     <div class="dt">${fmt(e.created_at)}${route?' · '+route:''}</div>
     ${etaStr}
     ${e.mawb?'<div style="margin-top:3px"><span style="background:#1e3a5f;color:#60a5fa;font-size:10px;padding:2px 6px;border-radius:4px;cursor:pointer" onclick="printMawb(&#39;'+esc(e.mawb)+'&#39;)">MAWB: '+esc(e.mawb)+'</span></div>':''}
-    ${e.hawb?'<div style="margin-top:3px"><span style="background:#3b1f6e;color:#c084fc;font-size:10px;padding:2px 6px;border-radius:4px;cursor:pointer" onclick="printHawb(&#39;'+esc(e.hawb)+'&#39;)">HAWB: '+esc(e.hawb)+'</span></div>':''}
+    ${e.hawb?'<div style="margin-top:3px"><span style="background:#3b1f6e;color:#c084fc;font-size:10px;padding:2px 6px;border-radius:4px;cursor:pointer" onclick="printHawb(&#39;'+esc(e.hawb)+'&#39;)">Group: '+esc(e.hawb)+'</span></div>':''}
     ${timelineHtml}
     ${e.raw_text?`<span class="rt" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block';this.textContent=this.nextElementSibling.style.display==='block'?'Hide notes':'Show notes'">Show notes</span><div class="rb">${esc(e.raw_text)}</div>`:''}
   </div>`;
