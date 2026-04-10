@@ -284,7 +284,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <div class="cd">
       <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:6px">
         <div style="flex:1"><label class="fl">Assign Batch</label><select id="del-sticky-series" class="fi" style="font-size:13px;padding:9px"></select></div>
-        <button onclick="delFilterByBatch()" style="padding:9px 12px;border:1px solid #1e3a5f;border-radius:8px;background:#1e3a5f;color:#60a5fa;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Filter Batch</button>
+        <button onclick="delFilterByBatch()" style="padding:9px 12px;border:1px solid #1e3a5f;border-radius:8px;background:#1e3a5f;color:#60a5fa;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Filter</button>
         <button onclick="document.getElementById('del-sticky-series').value='';delClearBatchFilter()" style="padding:9px 12px;border:1px solid #334155;border-radius:8px;background:none;color:#94a3b8;font-size:12px;cursor:pointer">Clear</button>
       </div>
       <div id="del-batch-filter-msg" style="font-size:11px;color:#60a5fa;display:none"></div>
@@ -1350,7 +1350,7 @@ async function loadKnownNames(){
       ru.users.forEach(u=>{
         if(u.name&&!seen.has(u.name.toLowerCase())){
           seen.add(u.name.toLowerCase());
-          knownPeople.push({name:u.name,company:u.company||""});
+          knownPeople.push({name:u.name,company:u.company||"",address:u.address||""});
         }
       });
     }
@@ -1559,6 +1559,7 @@ function renderUsers(){
       <div style="cursor:pointer" onclick="toggleUserScans('${esc(u.name).replace(/'/g,"\\'")}',${u.id})">
         <div class="usr-name">${esc(u.name)}</div>
         ${u.company?'<div class="usr-co">'+esc(u.company)+'</div>':''}
+        ${u.address?'<div style="font-size:10px;color:#64748b">'+esc(u.address)+'</div>':''}
         ${u.email?'<div class="usr-email">'+esc(u.email)+'</div>':'<div class="usr-email" style="color:#7f1d1d">No email</div>'}
         <div class="usr-date">Joined ${new Date(u.created_at).toLocaleDateString()}</div>
       </div>
@@ -1575,6 +1576,7 @@ function renderUsers(){
       <input id="ue-name-${u.id}" value="${esc(u.name)}" placeholder="Name">
       <input id="ue-email-${u.id}" value="${esc(u.email||"")}" placeholder="Email" type="email">
       <input id="ue-co-${u.id}" value="${esc(u.company||"")}" placeholder="Company">
+      <input id="ue-addr-${u.id}" value="${esc(u.address||"")}" placeholder="Address">
       <input id="ue-pw-${u.id}" value="" placeholder="New password (leave blank to keep)" type="password">
       <div style="display:flex;gap:5px">
         <button style="background:#3b82f6;color:#fff" onclick="saveEditUser(${u.id})">Save</button>
@@ -1635,9 +1637,10 @@ async function saveEditUser(id){
   const newName=document.getElementById("ue-name-"+id).value.trim();
   const newEmail=document.getElementById("ue-email-"+id).value.trim();
   const newCompany=document.getElementById("ue-co-"+id).value.trim();
+  const newAddress=document.getElementById("ue-addr-"+id).value.trim();
   const newPassword=document.getElementById("ue-pw-"+id).value.trim();
   const msg=document.getElementById("ue-msg-"+id);
-  const r=await api({action:"edit-user",adminEmail:adm.email,adminPassword:adm.password,userId:id,newName,newEmail,newCompany,newPassword:newPassword||undefined});
+  const r=await api({action:"edit-user",adminEmail:adm.email,adminPassword:adm.password,userId:id,newName,newEmail,newCompany,newAddress,newPassword:newPassword||undefined});
   if(r.ok){msg.innerHTML='<span class="ok">Saved!</span>';loadViewers();loadKnownNames()}
   else msg.innerHTML='<span class="er">'+esc(r.error)+'</span>';
 }
@@ -2461,7 +2464,14 @@ async function printMawb(batchNumber){
   if(!r.ok||!r.entries||!r.entries.length){
     r=await api({action:"search-by-bol",adminEmail:adm.email,adminPassword:adm.password,bol:batchNumber});
   }
-  const entries=(r.ok&&r.entries)||[];
+  const rawEntries=(r.ok&&r.entries)||[];
+  // Deduplicate: keep only one entry per tracking_number (latest)
+  const seenTk=new Set();
+  const entries=rawEntries.filter(e=>{
+    const tk=(e.tracking_number||'').toLowerCase();
+    if(seenTk.has(tk)) return false;
+    seenTk.add(tk);return true;
+  });
   const t=printComputeTotals(entries);
   // Group entries by series (hawb)
   const seriesMap={};
@@ -2497,7 +2507,9 @@ async function printMawb(batchNumber){
 // ── Print Series (HAWB) sheet ──
 async function printHawb(hawbNumber){
   const r=await api({action:"search-by-hawb",adminEmail:adm.email,adminPassword:adm.password,hawb:hawbNumber});
-  const entries=(r.ok&&r.entries)||[];
+  const rawE=(r.ok&&r.entries)||[];
+  const seenTk2=new Set();
+  const entries=rawE.filter(e=>{const tk=(e.tracking_number||'').toLowerCase();if(seenTk2.has(tk)) return false;seenTk2.add(tk);return true});
   const batch=entries.length?(entries[0].mawb||entries[0].bol||'N/A'):'N/A';
   const names=[...new Set(entries.map(e=>e.name))].join(', ');
   const t=printComputeTotals(entries);
@@ -2530,15 +2542,19 @@ function printEntryLabel(entryId){
   const e=_entryCache[entryId];
   if(!e){toast("Entry not found in cache","er");return}
   const origCode=e.tracking_number||'';
-  const intCode=e.internal_code||(batchPrefix.toUpperCase()+origCode);
+  const fullIntCode=e.internal_code||(batchPrefix.toUpperCase()+origCode);
+  const intCode=fullIntCode.length>15?fullIntCode.slice(5):fullIntCode;
   const name=e.name||'';
-  const route=(e.scan_location||'')+(e.destination?(' → '+e.destination):'');
-  const dims=e.dim_length?(e.dim_length+'×'+e.dim_breadth+'×'+e.dim_height):'';
+  // Lookup address from knownPeople
+  const person=knownPeople.find(p=>p.name.toLowerCase()===name.toLowerCase());
+  const address=(person&&person.address)?person.address:'';
+  const route=(e.scan_location||'')+(e.destination?(' \u2192 '+e.destination):'');
+  const dims=e.dim_length?(e.dim_length+'\u00d7'+e.dim_breadth+'\u00d7'+e.dim_height):'';
   const wt=e.actual_weight||'';
   const dimWt=e.dim_weight||'';
   const unit=getDimUnit();
-  const batch=e.mawb||e.bol||'';
-  const series=e.hawb||'';
+  // Combine batch + series into one line: "Batch: JFK103-04"
+  const batchFull=e.hawb||(e.mawb||e.bol||'');
   const eta=e.eta?new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):'';
   // Modal with toggle
   const modal=document.createElement("div");
@@ -2556,9 +2572,10 @@ function printEntryLabel(entryId){
       '<div style="text-align:center;margin-bottom:4px"><svg id="lbl-barcode" style="max-width:100%;height:auto"></svg></div>'+
       '<div id="lbl-code-text" style="text-align:center;font-family:monospace;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:6px;word-break:break-all">'+esc(origCode)+'</div>'+
       '<div style="border-top:1px solid #ccc;padding-top:6px">'+
-        '<div style="font-size:14px;font-weight:800;margin-bottom:2px">'+esc(name)+'</div>'+
+        '<div style="font-size:14px;font-weight:800;margin-bottom:1px">'+esc(name)+'</div>'+
+        (address?'<div style="font-size:10px;color:#444;margin-bottom:2px">'+esc(address)+'</div>':'')+
         (route?'<div style="font-size:11px;color:#333;margin-bottom:2px">'+esc(route)+'</div>':'')+
-        (batch?'<div style="font-size:10px;color:#555">Batch: <b>'+esc(batch)+'</b>'+(series?' · Series: <b>'+esc(series)+'</b>':'')+'</div>':'')+
+        (batchFull?'<div style="font-size:10px;color:#555">Batch: <b>'+esc(batchFull)+'</b></div>':'')+
         (eta?'<div style="font-size:10px;color:#555">ETA: '+esc(eta)+'</div>':'')+
         (dims||wt?'<div style="display:flex;gap:12px;margin-top:4px;padding-top:4px;border-top:1px dashed #ccc">'+
           (dims?'<div style="font-size:10px"><span style="color:#888">Dims:</span> <b>'+dims+'</b></div>':'')+
@@ -3099,7 +3116,9 @@ function showDimsModal(title,entries){
 function printFromDimsModal(){
   const modal=document.getElementById("dims-modal");
   if(!modal||!modal._entries) return;
-  const entries=modal._entries;
+  // Deduplicate by tracking_number for print
+  const seenTkP=new Set();
+  const entries=modal._entries.filter(e=>{const tk=(e.tracking_number||'').toLowerCase();if(seenTkP.has(tk)) return false;seenTkP.add(tk);return true});
   const title=modal._title||'Dims';
   const t=printComputeTotals(entries);
   // Determine barcode value from title (e.g. "Batch: JFK003" or "Series: JFK003-001" or "Dims: ...")
