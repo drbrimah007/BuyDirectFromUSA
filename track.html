@@ -240,9 +240,26 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <div class="fg"><div style="display:flex;justify-content:space-between;align-items:center"><label class="fl" style="margin:0">Tracking Number</label><div style="display:flex;gap:10px"><span style="font-size:11px;color:#f59e0b;cursor:pointer;font-weight:700" onclick="printTrackingBarcode()">Print</span><span style="font-size:11px;color:#3b82f6;cursor:pointer;font-weight:700" onclick="generateTracking()">Generate</span></div></div><input class="fi mono" id="sc-tracking" placeholder="Scanned or type here" style="margin-top:5px"></div>
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label class="fl">ETA</label><input class="fi" id="sc-eta" type="date" style="font-size:13px" onchange="saveScanSettings()"></div>
-      <div class="fg" style="flex:1"><label class="fl">Notes (optional)</label><input class="fi" id="sc-notes" placeholder="Extra info"></div>
+      <div class="fg" style="flex:1"><label class="fl">Notes</label><input class="fi" id="sc-notes" placeholder="Extra info" style="font-size:12px"></div>
     </div>
-    <div class="fg"><label class="fl">Shipment Series</label><select class="fi" id="sc-mawb-series" style="font-size:13px;padding:9px" onchange="updateMawbPreview();saveScanSettings()"><option value="">— No series —</option></select><div id="sc-mawb-preview" style="font-size:11px;color:#60a5fa;margin-top:3px;font-family:monospace"></div></div>
+    <!-- Dims tab -->
+    <div style="margin-bottom:8px">
+      <div onclick="const p=document.getElementById('sc-dims-panel');p.style.display=p.style.display==='none'?'block':'none';this.querySelector('span').textContent=p.style.display==='none'?'▶':'▼'" style="cursor:pointer;padding:8px 10px;background:#1e293b;border-radius:8px;display:flex;align-items:center;gap:6px;font-size:12px;color:#94a3b8;font-weight:600"><span>▶</span> Dims</div>
+      <div id="sc-dims-panel" style="display:none;background:#0f172a;border-radius:0 0 8px 8px;padding:10px;margin-top:-2px">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:11px;color:#64748b">L</span><input class="fi" id="sc-dim-l" type="number" step="0.1" min="0" placeholder="0" style="width:58px;font-size:12px;padding:7px;font-family:monospace;text-align:center" oninput="calcDimWt()">
+          <span style="font-size:11px;color:#64748b">×</span>
+          <span style="font-size:11px;color:#64748b">B</span><input class="fi" id="sc-dim-b" type="number" step="0.1" min="0" placeholder="0" style="width:58px;font-size:12px;padding:7px;font-family:monospace;text-align:center" oninput="calcDimWt()">
+          <span style="font-size:11px;color:#64748b">×</span>
+          <span style="font-size:11px;color:#64748b">H</span><input class="fi" id="sc-dim-h" type="number" step="0.1" min="0" placeholder="0" style="width:58px;font-size:12px;padding:7px;font-family:monospace;text-align:center" oninput="calcDimWt()">
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+          <div style="flex:1"><span style="font-size:11px;color:#64748b">Actual Wt</span><input class="fi" id="sc-actual-wt" type="number" step="0.1" min="0" placeholder="0" style="font-size:12px;padding:7px;font-family:monospace;text-align:center;margin-top:2px"></div>
+          <div style="flex:1"><span style="font-size:11px;color:#64748b">Dim Wt <span id="sc-dim-unit-label">(kg)</span></span><div id="sc-dim-wt-result" style="font-size:14px;font-weight:700;color:#60a5fa;font-family:monospace;text-align:center;padding:7px;margin-top:2px">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Shipment Batch</label><select class="fi" id="sc-mawb-series" style="font-size:13px;padding:9px" onchange="updateMawbPreview();saveScanSettings()"><option value="">— No batch —</option></select><div id="sc-mawb-preview" style="font-size:11px;color:#60a5fa;margin-top:3px;font-family:monospace"></div></div>
     <button class="bt bo" onclick="clearForm()" style="font-size:12px;padding:8px">Clear Form</button>
   </div>
 
@@ -262,7 +279,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 
     <!-- Sticky series selector -->
     <div class="cd">
-      <label class="fl">Assign Series</label>
+      <label class="fl">Assign Batch</label>
       <div style="display:flex;gap:6px;align-items:center">
         <select id="del-sticky-series" class="fi" style="flex:1;font-size:13px;padding:9px"></select>
         <button onclick="document.getElementById('del-sticky-series').value=''" style="padding:8px 14px;border:1px solid #334155;border-radius:8px;background:none;color:#94a3b8;font-size:12px;cursor:pointer">Clear</button>
@@ -295,10 +312,10 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
         <button onclick="delSearchAny()" style="padding:9px 14px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:13px;cursor:pointer">Search</button>
       </div>
       <div style="display:flex;gap:6px">
-        <input class="fi" id="del-mawb-search" placeholder="MAWB #..." style="flex:1;font-size:12px;padding:8px;font-family:monospace" autocomplete="off">
-        <button onclick="delSearchMawb()" style="padding:8px 12px;border:1px solid #1e3a5f;border-radius:8px;background:#1e3a5f;color:#60a5fa;font-weight:700;font-size:12px;cursor:pointer">MAWB</button>
-        <input class="fi" id="del-hawb-search" placeholder="Group #..." style="flex:1;font-size:12px;padding:8px;font-family:monospace" autocomplete="off">
-        <button onclick="delSearchHawb()" style="padding:8px 12px;border:1px solid #4c1d95;border-radius:8px;background:#4c1d95;color:#c4b5fd;font-weight:700;font-size:12px;cursor:pointer">Group</button>
+        <input class="fi" id="del-mawb-search" placeholder="MAWB/BOL #..." style="flex:1;font-size:12px;padding:8px;font-family:monospace" autocomplete="off">
+        <button onclick="delSearchMawb()" style="padding:8px 12px;border:1px solid #1e3a5f;border-radius:8px;background:#1e3a5f;color:#60a5fa;font-weight:700;font-size:12px;cursor:pointer">Batch</button>
+        <input class="fi" id="del-hawb-search" placeholder="Series (HAWB) #..." style="flex:1;font-size:12px;padding:8px;font-family:monospace" autocomplete="off">
+        <button onclick="delSearchHawb()" style="padding:8px 12px;border:1px solid #4c1d95;border-radius:8px;background:#4c1d95;color:#c4b5fd;font-weight:700;font-size:12px;cursor:pointer">Series</button>
       </div>
       <div id="del-name-results" style="margin-top:8px"></div>
       <div id="del-name-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px"></div>
@@ -342,7 +359,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <!-- Consolidate/Assign action bar -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #334155">
         <button onclick="delConsolidateEtaSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>
-        <button onclick="delAssignMawbEtaSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Series</button>
+        <button onclick="delAssignMawbEtaSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Batch</button>
       </div>
       <div id="del-eta-list" style="max-height:400px;overflow-y:auto"></div>
       <div id="del-eta-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px"></div>
@@ -427,9 +444,27 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div style="font-size:11px;color:#64748b;margin-top:6px">Prefix + date = 18-char batch barcode. Current: <span id="batch-prefix-display" style="font-family:monospace;color:#60a5fa"></span></div>
     </div>
 
+    <!-- Dims / Weight Settings -->
+    <div class="cd" style="padding:14px">
+      <label class="fl" style="margin-bottom:8px;font-size:12px">Dimensions &amp; Weight</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <span style="font-size:12px;color:#94a3b8;white-space:nowrap">Unit:</span>
+        <select id="dim-unit" class="fi" style="width:auto;font-size:13px;padding:8px" onchange="saveDimSettings()">
+          <option value="kg">Kg / cm</option>
+          <option value="lbs">Lbs / in</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:12px;color:#94a3b8;white-space:nowrap">Dim Wt = L×B×H ÷</span>
+        <input id="dim-divisor" type="number" class="fi" style="width:80px;font-size:13px;padding:8px;font-family:monospace" value="5000" min="1">
+        <button onclick="saveDimSettings()" style="padding:8px 14px;border:none;border-radius:6px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer">Save</button>
+      </div>
+      <div style="font-size:11px;color:#64748b;margin-top:6px">Kg/cm default divisor: 5000 · Lbs/in default divisor: 139</div>
+    </div>
+
     <!-- Numbering Settings (MAWB / BOL) — Groups run under MAWB -->
     <div class="cd" style="padding:14px">
-      <label class="fl" style="margin-bottom:8px;font-size:12px">Numbering Series (MAWB / BOL)</label>
+      <label class="fl" style="margin-bottom:8px;font-size:12px">Numbering Batches (MAWB / BOL)</label>
       <div id="ns-list" style="margin-bottom:10px"></div>
       <div style="background:#0f172a;border-radius:8px;padding:10px;margin-top:6px">
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
@@ -443,7 +478,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
           <input id="ns-start" type="number" value="1" min="1" placeholder="Start #" style="width:70px;padding:8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#f8fafc;font-size:12px">
           <input id="ns-digits" type="number" value="4" min="1" max="10" placeholder="Digits" style="width:70px;padding:8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#f8fafc;font-size:12px">
-          <button onclick="addNumberSeries()" style="padding:8px 14px;border:none;border-radius:6px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Add Series</button>
+          <button onclick="addNumberSeries()" style="padding:8px 14px;border:none;border-radius:6px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Add Batch</button>
         </div>
         <div style="font-size:11px;color:#64748b">Preview: <span id="ns-preview" style="font-family:monospace;color:#60a5fa">JFK0001</span></div>
       </div>
@@ -528,7 +563,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 
     <!-- Series selector for bulk operations -->
     <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #334155">
-      <label class="fl" style="margin:0;white-space:nowrap">Series:</label>
+      <label class="fl" style="margin:0;white-space:nowrap">Batch:</label>
       <select id="bs-series-selector" class="fi" style="flex:1;font-size:12px;padding:7px"></select>
     </div>
 
@@ -543,7 +578,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <!-- Consolidate/Assign actions -->
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #334155">
       <button onclick="bsConsolidateSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>
-      <button onclick="bsAssignSeriesSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Series</button>
+      <button onclick="bsAssignSeriesSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Batch</button>
       <button onclick="bsSplitSelected()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer">Split</button>
     </div>
 
@@ -829,7 +864,7 @@ async function publicTrack(fromUrl){
       if(route) html+='<div style="font-size:11px;color:#94a3b8;margin-top:2px">'+route+'</div>';
       if(latestEta) html+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(latestEta.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
       if(latest.mawb) html+='<div style="font-size:10px;color:#60a5fa;margin-top:2px;font-family:monospace">MAWB: '+esc(latest.mawb)+'</div>';
-      if(latest.hawb) html+='<div style="font-size:10px;color:#a78bfa;font-family:monospace">Group: '+esc(latest.hawb)+'</div>';
+      if(latest.hawb) html+='<div style="font-size:10px;color:#a78bfa;font-family:monospace">Series: '+esc(latest.hawb)+'</div>';
       // Status timeline
       if(allHistory.length){
         html+='<div style="margin-top:8px;padding-left:12px;border-left:2px solid #334155">';
@@ -918,6 +953,7 @@ async function enterScanner(){
   showTab("scanner");
   document.getElementById("adm-bnav").style.display="flex";
   restoreScanSettings();
+  loadDimSettings();
   applyCompanyBranding();
   await Promise.all([loadLocations(),loadDests()]);
   loadViewers();
@@ -1364,18 +1400,29 @@ async function doSave(){
   document.getElementById("btn-save").disabled=true;st.textContent="Saving...";
   try{
     // Generate shipment number if series selected
-    let mawb=null;
+    let seriesNum=null;let seriesType="MAWB";
     const mawbSel=document.getElementById("sc-mawb-series");
     if(mawbSel&&mawbSel.value){
-      mawb=await generateMawb();
-      if(!mawb){st.innerHTML='<span class="er">Failed to generate shipment number</span>';document.getElementById("btn-save").disabled=false;return}
+      const gen=await generateMawb();
+      if(!gen){st.innerHTML='<span class="er">Failed to generate shipment number</span>';document.getElementById("btn-save").disabled=false;return}
+      seriesNum=gen.number;seriesType=gen.type;
     }
-    const r=await api({action:"scan",adminEmail:adm.email,adminPassword:adm.password,name,trackingNumber:tracking,rawText:notes,scanLocation:selectedLoc,destination:selectedDest,eta,mawb});
+    // Pass mawb or bol based on series type + dims
+    const dims=getScannedDims();
+    const scanPayload={action:"scan",adminEmail:adm.email,adminPassword:adm.password,name,trackingNumber:tracking,rawText:notes,scanLocation:selectedLoc,destination:selectedDest,eta,...dims};
+    if(seriesNum){if(seriesType==="BOL") scanPayload.bol=seriesNum; else scanPayload.mawb=seriesNum;}
+    const r=await api(scanPayload);
     if(r.ok){
+      // Auto-assign group under series if selected
+      let groupNote='';
+      if(seriesNum&&r.entry&&r.entry.id){
+        const gr=await api({action:"assign-series",adminEmail:adm.email,adminPassword:adm.password,entryIds:[r.entry.id],mawb:seriesNum,seriesType});
+        if(gr.ok&&gr.groups&&gr.groups.length) groupNote=' · Series: '+gr.groups[0];
+      }
       lastSavedName=name;
       if(!knownPeople.some(p=>p.name.toLowerCase()===name.toLowerCase())) knownPeople.unshift({name,company:""});
-      const mawbNote=mawb?' · Shipment: '+mawb:'';
-      st.innerHTML='<span class="ok">Saved! '+esc(name)+' — '+esc(tracking)+mawbNote+'</span>';
+      const seriesNote=seriesNum?' · Batch: '+seriesNum+groupNote:'';
+      st.innerHTML='<span class="ok">Saved! '+esc(name)+' — '+esc(tracking)+seriesNote+'</span>';
       const savedSeriesVal=document.getElementById("sc-mawb-series").value;
       populateMawbSelector();
       const mawbSel2=document.getElementById("sc-mawb-series");
@@ -1396,6 +1443,52 @@ function clearForm(){
   document.getElementById("sc-name").value=lastSavedName;
   document.getElementById("sc-tracking").value="";
   document.getElementById("sc-notes").value="";
+  ["sc-dim-l","sc-dim-b","sc-dim-h","sc-actual-wt"].forEach(id=>{const el=document.getElementById(id);if(el) el.value=""});
+  const dwr=document.getElementById("sc-dim-wt-result");if(dwr) dwr.textContent="—";
+}
+// ── Dims settings ──
+function getDimUnit(){return localStorage.getItem("dim_unit")||"kg"}
+function getDimDivisor(){return parseFloat(localStorage.getItem("dim_divisor"))||(getDimUnit()==="lbs"?139:5000)}
+function saveDimSettings(){
+  const u=document.getElementById("dim-unit");
+  const d=document.getElementById("dim-divisor");
+  if(u) localStorage.setItem("dim_unit",u.value);
+  if(d&&d.value) localStorage.setItem("dim_divisor",d.value);
+  updateDimUnitLabels();
+}
+function loadDimSettings(){
+  const u=document.getElementById("dim-unit");
+  const d=document.getElementById("dim-divisor");
+  if(u) u.value=getDimUnit();
+  if(d) d.value=getDimDivisor();
+  updateDimUnitLabels();
+}
+function updateDimUnitLabels(){
+  const unit=getDimUnit();
+  const lbl=document.getElementById("sc-dim-unit-label");
+  if(lbl) lbl.textContent="("+unit+")";
+}
+function calcDimWt(){
+  const l=parseFloat(document.getElementById("sc-dim-l").value)||0;
+  const b=parseFloat(document.getElementById("sc-dim-b").value)||0;
+  const h=parseFloat(document.getElementById("sc-dim-h").value)||0;
+  const div=getDimDivisor();
+  const res=document.getElementById("sc-dim-wt-result");
+  if(l>0&&b>0&&h>0&&div>0){
+    const dw=(l*b*h)/div;
+    res.textContent=dw.toFixed(2)+" "+getDimUnit();
+  } else {
+    res.textContent="—";
+  }
+}
+function getScannedDims(){
+  const l=parseFloat(document.getElementById("sc-dim-l").value)||null;
+  const b=parseFloat(document.getElementById("sc-dim-b").value)||null;
+  const h=parseFloat(document.getElementById("sc-dim-h").value)||null;
+  const wt=parseFloat(document.getElementById("sc-actual-wt").value)||null;
+  let dimWt=null;
+  if(l&&b&&h){const div=getDimDivisor();dimWt=parseFloat(((l*b*h)/div).toFixed(2));}
+  return {dim_length:l,dim_breadth:b,dim_height:h,actual_weight:wt,dim_weight:dimWt};
 }
 // ── Persist scan settings ──
 function saveScanSettings(){
@@ -1738,7 +1831,7 @@ function renderBsEntries(){
           <div class="bs-tk">${esc(e.tracking_number)}</div>
           <div class="bs-nm">${esc(e.name)} ${statusBadge(e.status)}${etaLabel}</div>
           ${route?'<div class="bs-route">'+route+'</div>':''}
-          ${e.mawb?'<div style="font-size:10px;color:#60a5fa;font-family:monospace">'+esc(e.mawb)+(e.hawb?' · <span style="color:#a78bfa">'+esc(e.hawb)+'</span>':'')+'</div>':''}
+          ${(e.mawb||e.bol)?'<div style="font-size:10px;color:#60a5fa;font-family:monospace">'+esc(e.mawb||e.bol)+(e.hawb?' · <span style="color:#a78bfa">'+esc(e.hawb)+'</span>':'')+'</div>':''}
         </div>
       </label>
     </div>`;
@@ -1769,7 +1862,7 @@ function populateBsSeriesSelector(){
   const sel=document.getElementById("bs-series-selector");
   if(!sel) return;
   const active=allSeries.filter(s=>s.active);
-  sel.innerHTML='<option value="">— No series —</option>'+active.map(s=>{
+  sel.innerHTML='<option value="">— No batch —</option>'+active.map(s=>{
     const cur=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
     return '<option value="'+s.id+'">'+esc(s.type)+': '+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+' (current: '+cur+')</option>';
   }).join("");
@@ -1783,24 +1876,25 @@ async function bsConsolidateSelected(){
     const s=allSeries.find(x=>x.id===parseInt(sel.value));
     if(s) mawbOverride=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
   }
-  const hawb=await consolidateEntries(checked,mawbOverride);
+  const hawb=await consolidateEntries(checked,mawbOverride,"bs-series-selector");
   if(hawb) await loadDateEntries();
 }
 async function bsAssignSeriesSelected(){
   const checked=Array.from(document.querySelectorAll(".bs-cb:checked")).map(c=>parseInt(c.value));
   if(!checked.length){alert("Select items first");return}
   const sel=document.getElementById("bs-series-selector");
-  if(!sel||!sel.value){alert("Select a series first");return}
+  if(!sel||!sel.value){alert("Select a batch first");return}
   const series=allSeries.find(s=>s.id===parseInt(sel.value));
-  if(!series){alert("Series not found");return}
+  if(!series){alert("Batch not found");return}
   const mawbNumber=series.prefix+String(series.current_number).padStart(series.digit_length,"0");
-  const r=await api({action:"assign-series",adminEmail:adm.email,adminPassword:adm.password,entryIds:checked,mawb:mawbNumber});
+  const sType=(series.type||"MAWB").toUpperCase();
+  const r=await api({action:"assign-series",adminEmail:adm.email,adminPassword:adm.password,entryIds:checked,mawb:mawbNumber,seriesType:sType});
   if(r.ok){
-    alert("Assigned "+r.updated+" items under "+mawbNumber+" (Groups: "+r.groups.join(", ")+")");
+    alert("Assigned "+r.updated+" items under "+mawbNumber+" (Series: "+r.groups.join(", ")+")");
     loadNumberSeries();
     await loadDateEntries();
   } else {
-    alert(r.error||"Failed to assign series");
+    alert(r.error||"Failed to assign batch");
   }
 }
 async function bsSplitSelected(){
@@ -1953,11 +2047,19 @@ async function delLookupTracking(tracking){
   const div=document.getElementById("del-scan-entries");
   card.style.display="block";
   div.innerHTML='<div style="text-align:center;padding:8px;color:#475569;font-size:12px">Looking up...</div>';
-  const r=await api({action:"search-by-tracking",adminEmail:adm.email,adminPassword:adm.password,trackingNumber:tracking});
+  let r=await api({action:"search-by-tracking",adminEmail:adm.email,adminPassword:adm.password,trackingNumber:tracking});
+  // If no tracking results, try MAWB then Group
+  if(!r.ok||!r.entries||!r.entries.length){
+    r=await api({action:"search-by-mawb",adminEmail:adm.email,adminPassword:adm.password,mawb:tracking});
+  }
+  if(!r.ok||!r.entries||!r.entries.length){
+    r=await api({action:"search-by-hawb",adminEmail:adm.email,adminPassword:adm.password,hawb:tracking});
+  }
   if(!r.ok||!r.entries||!r.entries.length){
     div.innerHTML='<div style="text-align:center;padding:8px;color:#475569;font-size:12px">No matching entry found for '+esc(tracking)+'</div>';
     return;
   }
+  cacheEntries(r.entries);
   // Group by tracking number, show only 1 result per tracking (latest entry)
   const grouped={};
   r.entries.forEach(e=>{
@@ -1980,7 +2082,12 @@ async function delLookupTracking(tracking){
       <div style="display:flex;justify-content:space-between;align-items:center"><div class="del-tk" style="font-size:12px;font-weight:700;color:#f8fafc;font-family:monospace;word-break:break-all">${esc(e.tracking_number)}</div>${statusBadge(e.status)}</div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
         <div style="font-size:11px;color:#94a3b8">${esc(e.name)}${route?' · '+route:''}${etaLabel}</div>
-        <div style="text-align:right;font-size:10px;font-family:monospace">${e.mawb?'<div style="color:#60a5fa;cursor:pointer" onclick="printMawb(\''+esc(e.mawb)+'\')">'+esc(e.mawb)+' <span style="font-size:9px">🖨</span></div>':''}${e.hawb?'<div style="color:#a78bfa;cursor:pointer" onclick="printHawb(\''+esc(e.hawb)+'\')">'+esc(e.hawb)+' <span style="font-size:9px">🖨</span></div>':''}</div>
+        <div style="text-align:right;font-size:10px;font-family:monospace">${(e.mawb||e.bol)?'<div style="color:#60a5fa;cursor:pointer" onclick="printMawb(\''+esc(e.mawb||e.bol)+'\')">'+esc(e.mawb||e.bol)+' <span style="font-size:9px">🖨</span></div>':''}${e.hawb?'<div style="color:#a78bfa;cursor:pointer" onclick="printHawb(\''+esc(e.hawb)+'\')">'+esc(e.hawb)+' <span style="font-size:9px">🖨</span></div>':''}</div>
+      </div>
+      <div style="display:flex;gap:4px;margin:4px 0;flex-wrap:wrap">
+        <button onclick="viewDimsSingleEntry(${e.id})" style="padding:4px 8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:10px;cursor:pointer">Dims</button>
+        ${e.hawb?'<button onclick="viewDimsHawb(\''+esc(e.hawb)+'\')" style="padding:4px 8px;border:1px solid #4c1d95;border-radius:6px;background:#2e1065;color:#c4b5fd;font-size:10px;cursor:pointer">Series</button>':''}
+        ${(e.mawb||e.bol)?'<button onclick="viewDimsMawb(\''+esc(e.mawb||e.bol)+'\')" style="padding:4px 8px;border:1px solid #1e3a5f;border-radius:6px;background:#172554;color:#93c5fd;font-size:10px;cursor:pointer">Batch</button>':''}
       </div>
       <div class="del-single-status" id="del-ss-${e.id}">
         <button style="background:#334155;color:#94a3b8" onclick="delBulkSingleStatus(${ids},'Scanned')">Scanned</button>
@@ -2035,6 +2142,16 @@ async function delSearchAny(page){
   if(isTracking){
     r=await api({action:"search-by-tracking",adminEmail:adm.email,adminPassword:adm.password,trackingNumber:query});
     if(r.ok) r.total=r.entries?r.entries.length:0;
+    // If no tracking results, try MAWB search
+    if(!r.ok||!r.entries||!r.entries.length){
+      r=await api({action:"search-by-mawb",adminEmail:adm.email,adminPassword:adm.password,mawb:query});
+      if(r.ok) r.total=r.entries?r.entries.length:0;
+    }
+    // If still nothing, try Group/HAWB search
+    if(!r.ok||!r.entries||!r.entries.length){
+      r=await api({action:"search-by-hawb",adminEmail:adm.email,adminPassword:adm.password,hawb:query});
+      if(r.ok) r.total=r.entries?r.entries.length:0;
+    }
   } else {
     r=await api({action:"search-by-name",adminEmail:adm.email,adminPassword:adm.password,name:query,page:delNamePage,perPage:DEL_PER_PAGE});
   }
@@ -2057,7 +2174,7 @@ async function delSearchAny(page){
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
         <div style="font-size:11px;color:#94a3b8">${esc(e.name)}${route?' · '+route:''}${etaLabel}</div>
-        <div style="text-align:right;font-size:10px;font-family:monospace">${e.mawb?'<div style="color:#60a5fa;cursor:pointer" onclick="printMawb(\''+esc(e.mawb)+'\')">'+esc(e.mawb)+' <span style="font-size:9px">🖨</span></div>':''}${e.hawb?'<div style="color:#a78bfa;cursor:pointer" onclick="printHawb(\''+esc(e.hawb)+'\')">'+esc(e.hawb)+' <span style="font-size:9px">🖨</span></div>':''}</div>
+        <div style="text-align:right;font-size:10px;font-family:monospace">${(e.mawb||e.bol)?'<div style="color:#60a5fa;cursor:pointer" onclick="printMawb(\''+esc(e.mawb||e.bol)+'\')">'+esc(e.mawb||e.bol)+' <span style="font-size:9px">🖨</span></div>':''}${e.hawb?'<div style="color:#a78bfa;cursor:pointer" onclick="printHawb(\''+esc(e.hawb)+'\')">'+esc(e.hawb)+' <span style="font-size:9px">🖨</span></div>':''}</div>
       </div>
       <div class="del-single-status">
         <button style="background:#334155;color:#94a3b8" onclick="delSingleStatusRefreshSearch(${e.id},'Scanned')">Scanned</button>
@@ -2099,7 +2216,7 @@ function buildActionBar(){
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center">'+
     '<label style="font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:4px"><input type="checkbox" id="del-select-all" onchange="delToggleSelectAll(this.checked)"> Select All</label>'+
     '<button onclick="delConsolidateSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>'+
-    '<button onclick="delAssignSeriesSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Series</button>'+
+    '<button onclick="delAssignSeriesSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Batch</button>'+
     '<button onclick="delSplitSelected()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer">Split</button>'+
     '<button onclick="delMarkDeliveredSelected()" style="padding:5px 10px;border:1px solid #065f46;border-radius:6px;background:#065f46;color:#34d399;font-size:11px;font-weight:700;cursor:pointer">Mark Delivered</button>'+
     '<button onclick="delClearResults()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:none;color:#64748b;font-size:11px;cursor:pointer">Clear</button>'+
@@ -2115,18 +2232,19 @@ async function delAssignSeriesSelected(){
   const ids=getSelectedEntryIds();
   if(!ids.length){alert("Select items first");return}
   const sel=document.getElementById("del-sticky-series");
-  if(!sel||!sel.value){alert("Select a series first");return}
+  if(!sel||!sel.value){alert("Select a batch first");return}
   const seriesId=parseInt(sel.value);
   const series=allSeries.find(s=>s.id===seriesId);
-  if(!series){alert("Series not found");return}
+  if(!series){alert("Batch not found");return}
   const mawbNumber=series.prefix+String(series.current_number).padStart(series.digit_length,"0");
-  const r=await api({action:"assign-series",adminEmail:adm.email,adminPassword:adm.password,entryIds:ids,mawb:mawbNumber});
+  const sType=(series.type||"MAWB").toUpperCase();
+  const r=await api({action:"assign-series",adminEmail:adm.email,adminPassword:adm.password,entryIds:ids,mawb:mawbNumber,seriesType:sType});
   if(r.ok){
-    alert("Assigned "+r.updated+" items under "+mawbNumber+" (Groups: "+r.groups.join(", ")+")");
+    alert("Assigned "+r.updated+" items under "+mawbNumber+" (Series: "+r.groups.join(", ")+")");
     loadNumberSeries();
     delSearchAny(delNamePage);
   } else {
-    alert(r.error||"Failed to assign series");
+    alert(r.error||"Failed to assign batch");
   }
 }
 async function delSplitSelected(){
@@ -2153,21 +2271,26 @@ async function delSearchMawb(){
   const q=(document.getElementById("del-mawb-search")||{}).value;
   if(!q||!q.trim()) return;
   const div=document.getElementById("del-name-results");
-  div.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:4px">Searching MAWB...</div>';
-  const r=await api({action:"search-by-mawb",adminEmail:adm.email,adminPassword:adm.password,mawb:q.trim()});
-  if(!r.ok||!r.entries||!r.entries.length){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No results for MAWB "'+esc(q)+'"</div>';return}
+  div.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:4px">Searching Batch...</div>';
+  // Search MAWB first, then BOL
+  let r=await api({action:"search-by-mawb",adminEmail:adm.email,adminPassword:adm.password,mawb:q.trim()});
+  if(!r.ok||!r.entries||!r.entries.length){
+    r=await api({action:"search-by-bol",adminEmail:adm.email,adminPassword:adm.password,bol:q.trim()});
+  }
+  if(!r.ok||!r.entries||!r.entries.length){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No results for Batch "'+esc(q)+'"</div>';return}
   renderDelSearchResults(r.entries,r.entries.length,false);
 }
 async function delSearchHawb(){
   const q=(document.getElementById("del-hawb-search")||{}).value;
   if(!q||!q.trim()) return;
   const div=document.getElementById("del-name-results");
-  div.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:4px">Searching Group...</div>';
+  div.innerHTML='<div style="color:#94a3b8;font-size:12px;padding:4px">Searching Series...</div>';
   const r=await api({action:"search-by-hawb",adminEmail:adm.email,adminPassword:adm.password,hawb:q.trim()});
-  if(!r.ok||!r.entries||!r.entries.length){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No results for Group "'+esc(q)+'"</div>';return}
+  if(!r.ok||!r.entries||!r.entries.length){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No results for Series "'+esc(q)+'"</div>';return}
   renderDelSearchResults(r.entries,r.entries.length,false);
 }
 function renderDelSearchResults(entries,total,showPager){
+  cacheEntries(entries);
   const div=document.getElementById("del-name-results");
   let actionBar=buildActionBar();
   div.innerHTML=actionBar+entries.map(e=>{
@@ -2181,7 +2304,12 @@ function renderDelSearchResults(entries,total,showPager){
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
         <div style="font-size:11px;color:#94a3b8">${esc(e.name)}${route?' · '+route:''}${etaLabel}</div>
-        <div style="text-align:right;font-size:10px;font-family:monospace">${e.mawb?'<div style="color:#60a5fa;cursor:pointer" onclick="printMawb(\''+esc(e.mawb)+'\')">'+esc(e.mawb)+' <span style="font-size:9px">🖨</span></div>':''}${e.hawb?'<div style="color:#a78bfa;cursor:pointer" onclick="printHawb(\''+esc(e.hawb)+'\')">'+esc(e.hawb)+' <span style="font-size:9px">🖨</span></div>':''}</div>
+        <div style="text-align:right;font-size:10px;font-family:monospace">${(e.mawb||e.bol)?'<div style="color:#60a5fa;cursor:pointer" onclick="printMawb(\''+esc(e.mawb||e.bol)+'\')">'+esc(e.mawb||e.bol)+' <span style="font-size:9px">🖨</span></div>':''}${e.hawb?'<div style="color:#a78bfa;cursor:pointer" onclick="printHawb(\''+esc(e.hawb)+'\')">'+esc(e.hawb)+' <span style="font-size:9px">🖨</span></div>':''}</div>
+      </div>
+      <div style="display:flex;gap:4px;margin:4px 0;flex-wrap:wrap">
+        <button onclick="viewDimsSingleEntry(${e.id})" style="padding:3px 7px;border:1px solid #334155;border-radius:5px;background:#1e293b;color:#94a3b8;font-size:10px;cursor:pointer">Dims</button>
+        ${e.hawb?'<button onclick="viewDimsHawb(\''+esc(e.hawb)+'\')" style="padding:3px 7px;border:1px solid #4c1d95;border-radius:5px;background:#2e1065;color:#c4b5fd;font-size:10px;cursor:pointer">Series</button>':''}
+        ${(e.mawb||e.bol)?'<button onclick="viewDimsMawb(\''+esc(e.mawb||e.bol)+'\')" style="padding:3px 7px;border:1px solid #1e3a5f;border-radius:5px;background:#172554;color:#93c5fd;font-size:10px;cursor:pointer">Batch</button>':''}
       </div>
       <div class="del-single-status">
         <button style="background:#334155;color:#94a3b8" onclick="delSingleStatusRefreshSearch(${e.id},'Scanned')">Scanned</button>
@@ -2205,7 +2333,7 @@ function populateDelSeriesSelector(){
   const sel=document.getElementById("del-sticky-series");
   if(!sel) return;
   const active=allSeries.filter(s=>s.active);
-  const opts='<option value="">— No series —</option>'+active.map(s=>{
+  const opts='<option value="">— No batch —</option>'+active.map(s=>{
     const cur=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
     return '<option value="'+s.id+'">'+esc(s.type)+': '+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+' (current: '+cur+')</option>';
   }).join("");
@@ -2279,32 +2407,36 @@ async function delPickEta(eta){
 }
 
 // ── Print MAWB / Group sheets ──
-async function printMawb(mawbNumber){
-  const r=await api({action:"search-by-mawb",adminEmail:adm.email,adminPassword:adm.password,mawb:mawbNumber});
+async function printMawb(seriesNumber){
+  // Search MAWB first, then BOL
+  let r=await api({action:"search-by-mawb",adminEmail:adm.email,adminPassword:adm.password,mawb:seriesNumber});
+  if(!r.ok||!r.entries||!r.entries.length){
+    r=await api({action:"search-by-bol",adminEmail:adm.email,adminPassword:adm.password,bol:seriesNumber});
+  }
   const entries=(r.ok&&r.entries)||[];
   const eta=entries.length&&entries[0].eta?new Date(entries[0].eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):'N/A';
   const win=window.open('','_blank','width=800,height=600');
-  win.document.write('<html><head><title>MAWB '+esc(mawbNumber)+'</title><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></scr'+'ipt><style>body{font-family:Arial,sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ccc;padding:6px 10px;text-align:left;font-size:12px}th{background:#f0f0f0}h1{font-size:20px}h2{font-size:14px;color:#666}#barcode{max-width:300px;margin:10px 0}</style></head><body>');
-  win.document.write('<h1>MAWB: '+esc(mawbNumber)+'</h1>');
+  win.document.write('<html><head><title>Batch '+esc(seriesNumber)+'</title><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></scr'+'ipt><style>body{font-family:Arial,sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ccc;padding:6px 10px;text-align:left;font-size:12px}th{background:#f0f0f0}h1{font-size:20px}h2{font-size:14px;color:#666}#barcode{max-width:300px;margin:10px 0}</style></head><body>');
+  win.document.write('<h1>Batch: '+esc(seriesNumber)+'</h1>');
   win.document.write('<svg id="barcode"></svg>');
   win.document.write('<h2>ETA: '+eta+' &middot; Items: '+entries.length+'</h2>');
-  win.document.write('<table><tr><th>#</th><th>Tracking</th><th>Name</th><th>Group</th><th>Status</th><th>Location</th></tr>');
+  win.document.write('<table><tr><th>#</th><th>Tracking</th><th>Name</th><th>Series</th><th>Status</th><th>Location</th></tr>');
   entries.forEach((e,i)=>{
     win.document.write('<tr><td>'+(i+1)+'</td><td>'+esc(e.tracking_number)+'</td><td>'+esc(e.name)+'</td><td>'+(e.hawb||'-')+'</td><td>'+esc(e.status)+'</td><td>'+(e.scan_location||'-')+'</td></tr>');
   });
-  win.document.write('<scr'+'ipt>JsBarcode("#barcode","'+esc(mawbNumber)+'",{format:"CODE128",width:2,height:60,displayValue:true});setTimeout(()=>window.print(),500)</scr'+'ipt></body></html>');
+  win.document.write('<scr'+'ipt>JsBarcode("#barcode","'+esc(seriesNumber)+'",{format:"CODE128",width:2,height:60,displayValue:true});setTimeout(()=>window.print(),500)</scr'+'ipt></body></html>');
   win.document.close();
 }
 async function printHawb(hawbNumber){
   const r=await api({action:"search-by-hawb",adminEmail:adm.email,adminPassword:adm.password,hawb:hawbNumber});
   const entries=(r.ok&&r.entries)||[];
-  const mawb=entries.length&&entries[0].mawb?entries[0].mawb:'N/A';
+  const series=entries.length?(entries[0].mawb||entries[0].bol||'N/A'):'N/A';
   const names=[...new Set(entries.map(e=>e.name))].join(', ');
   const win=window.open('','_blank','width=800,height=600');
-  win.document.write('<html><head><title>Group '+esc(hawbNumber)+'</title><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></scr'+'ipt><style>body{font-family:Arial,sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ccc;padding:6px 10px;text-align:left;font-size:12px}th{background:#f0f0f0}h1{font-size:20px}h2{font-size:14px;color:#666}#barcode{max-width:300px;margin:10px 0}</style></head><body>');
-  win.document.write('<h1>Group: '+esc(hawbNumber)+'</h1>');
+  win.document.write('<html><head><title>Series '+esc(hawbNumber)+'</title><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></scr'+'ipt><style>body{font-family:Arial,sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ccc;padding:6px 10px;text-align:left;font-size:12px}th{background:#f0f0f0}h1{font-size:20px}h2{font-size:14px;color:#666}#barcode{max-width:300px;margin:10px 0}</style></head><body>');
+  win.document.write('<h1>Series: '+esc(hawbNumber)+'</h1>');
   win.document.write('<svg id="barcode"></svg>');
-  win.document.write('<h2>MAWB: '+esc(mawb)+' &middot; Items: '+entries.length+'</h2>');
+  win.document.write('<h2>Batch: '+esc(series)+' &middot; Items: '+entries.length+'</h2>');
   win.document.write('<h2>Name(s): '+esc(names)+'</h2>');
   win.document.write('<table><tr><th>#</th><th>Tracking</th><th>Name</th><th>Status</th><th>ETA</th></tr>');
   entries.forEach((e,i)=>{
@@ -2338,6 +2470,7 @@ function renderDelEtaEntries(){
     document.getElementById("del-eta-pager").innerHTML="";
     return;
   }
+  cacheEntries(delEtaEntries);
   d.innerHTML=delEtaEntries.map(e=>{
     let route=e.scan_location?esc(e.scan_location):'';
     if(e.destination) route+=(route?' &rarr; ':'')+esc(e.destination);
@@ -2348,7 +2481,8 @@ function renderDelEtaEntries(){
           <div class="del-tk">${esc(e.tracking_number)}</div>
           <div class="del-nm">${esc(e.name)} ${statusBadge(e.status)}</div>
           ${route?'<div class="del-route">'+route+'</div>':''}
-          ${e.mawb?'<div style="font-size:11px;color:#60a5fa;font-family:monospace;margin-top:3px">'+esc(e.mawb)+'</div>':'<div style="font-size:11px;color:#64748b;margin-top:3px">No MAWB</div>'}
+          ${(e.mawb||e.bol)?'<div style="font-size:11px;color:#60a5fa;font-family:monospace;margin-top:3px">Batch: '+esc(e.mawb||e.bol)+'</div>':'<div style="font-size:11px;color:#64748b;margin-top:3px">No Batch</div>'}
+          <div style="display:flex;gap:4px;margin-top:4px"><button onclick="event.preventDefault();viewDimsSingleEntry(${e.id})" style="padding:3px 7px;border:1px solid #334155;border-radius:5px;background:#1e293b;color:#94a3b8;font-size:10px;cursor:pointer">Dims</button>${e.hawb?'<button onclick="event.preventDefault();viewDimsHawb(\''+esc(e.hawb)+'\')" style="padding:3px 7px;border:1px solid #4c1d95;border-radius:5px;background:#2e1065;color:#c4b5fd;font-size:10px;cursor:pointer">Series</button>':''}${(e.mawb||e.bol)?'<button onclick="event.preventDefault();viewDimsMawb(\''+esc(e.mawb||e.bol)+'\')" style="padding:3px 7px;border:1px solid #1e3a5f;border-radius:5px;background:#172554;color:#93c5fd;font-size:10px;cursor:pointer">Batch</button>':''}</div>
         </div>
       </label>
     </div>`;
@@ -2378,19 +2512,20 @@ async function delAssignMawbEtaSelected(){
   const checked=Array.from(document.querySelectorAll(".del-cb:checked")).map(c=>parseInt(c.value));
   if(!checked.length){alert("Select items first");return}
   const sel=document.getElementById("del-sticky-series");
-  if(!sel||!sel.value){alert("Select a series first");return}
+  if(!sel||!sel.value){alert("Select a batch first");return}
   const seriesId=parseInt(sel.value);
   const series=allSeries.find(s=>s.id===seriesId);
-  if(!series){alert("Series not found");return}
+  if(!series){alert("Batch not found");return}
   const mawbNumber=series.prefix+String(series.current_number).padStart(series.digit_length,"0");
-  const r=await api({action:"assign-series",adminEmail:adm.email,adminPassword:adm.password,entryIds:checked,mawb:mawbNumber});
+  const sType=(series.type||"MAWB").toUpperCase();
+  const r=await api({action:"assign-series",adminEmail:adm.email,adminPassword:adm.password,entryIds:checked,mawb:mawbNumber,seriesType:sType});
   if(r.ok){
-    alert("Assigned "+r.updated+" items under "+mawbNumber+" (Groups: "+r.groups.join(", ")+")");
+    alert("Assigned "+r.updated+" items under "+mawbNumber+" (Series: "+r.groups.join(", ")+")");
     loadNumberSeries();
     await loadDelEtaEntries();
     delLoadEtas();
   } else {
-    alert(r.error||"Failed to assign series");
+    alert(r.error||"Failed to assign batch");
   }
 }
 
@@ -2587,8 +2722,10 @@ async function loadNumberSeries(){
 function renderNumberSeries(){
   const div=document.getElementById("ns-list");
   if(!div) return;
-  if(!allSeries.length){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No series configured yet</div>';return}
-  div.innerHTML=allSeries.map(s=>{
+  if(!allSeries.length){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No batches configured yet</div>';return}
+  const active=allSeries.filter(s=>s.active);
+  const disabled=allSeries.filter(s=>!s.active);
+  function seriesCard(s){
     const next=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:#0f172a;border-radius:6px;margin-bottom:4px">'+
       '<div><span style="font-size:11px;font-weight:700;color:'+(s.active?'#60a5fa':'#475569')+'">'+esc(s.type)+'</span>'+
@@ -2598,7 +2735,13 @@ function renderNumberSeries(){
       '<button onclick="toggleSeries('+s.id+','+!s.active+')" style="padding:3px 8px;border:1px solid #334155;border-radius:4px;background:none;color:'+(s.active?'#f59e0b':'#22c55e')+';font-size:10px;cursor:pointer">'+(s.active?'Disable':'Enable')+'</button>'+
       '<button onclick="deleteSeries('+s.id+')" style="padding:3px 8px;border:1px solid #334155;border-radius:4px;background:none;color:#f87171;font-size:10px;cursor:pointer">Del</button>'+
       '</div></div>';
-  }).join("");
+  }
+  let html=active.map(seriesCard).join("");
+  if(disabled.length){
+    html+='<div style="margin-top:8px"><div onclick="const p=document.getElementById(\'ns-disabled-panel\');p.style.display=p.style.display===\'none\'?\'block\':\'none\';this.querySelector(\'span\').textContent=p.style.display===\'none\'?\'▶\':\'▼\'" style="cursor:pointer;padding:6px 8px;background:#1e293b;border-radius:6px;display:flex;align-items:center;gap:6px;font-size:11px;color:#64748b"><span>▶</span> Disabled Batches ('+disabled.length+')</div>'+
+    '<div id="ns-disabled-panel" style="display:none;margin-top:4px">'+disabled.map(seriesCard).join("")+'</div></div>';
+  }
+  div.innerHTML=html;
 }
 async function addNumberSeries(){
   const msg=document.getElementById("ns-msg");
@@ -2610,7 +2753,7 @@ async function addNumberSeries(){
   if(!prefix){msg.innerHTML='<span class="er">Prefix is required</span>';return}
   msg.innerHTML='<span style="color:#94a3b8">Adding...</span>';
   const r=await api({action:"add-number-series",adminEmail:adm.email,adminPassword:adm.password,type,prefix,label,startNumber,digitLength});
-  if(r.ok){msg.innerHTML='<span class="ok">Series added</span>';document.getElementById("ns-prefix").value="";document.getElementById("ns-label").value="";loadNumberSeries();}
+  if(r.ok){msg.innerHTML='<span class="ok">Batch added</span>';document.getElementById("ns-prefix").value="";document.getElementById("ns-label").value="";loadNumberSeries();}
   else msg.innerHTML='<span class="er">'+(r.error||"Failed")+'</span>';
 }
 async function toggleSeries(id,active){
@@ -2642,7 +2785,7 @@ function populateMawbSelector(){
   const sel=document.getElementById("sc-mawb-series");
   if(!sel) return;
   const active=allSeries.filter(s=>s.active);
-  sel.innerHTML='<option value="">— No series —</option>'+active.map(s=>{
+  sel.innerHTML='<option value="">— No batch —</option>'+active.map(s=>{
     const cur=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
     return '<option value="'+s.id+'">'+esc(s.type)+': '+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+' (current: '+cur+')</option>';
   }).join("");
@@ -2655,36 +2798,48 @@ async function updateMawbPreview(){
   if(!id){prev.textContent="";return}
   try{
     const r=await api({action:"get-current-mawb",adminEmail:adm.email,adminPassword:adm.password,seriesId:id});
-    if(r.ok) prev.textContent="Current MAWB: "+r.mawb+" · Next Group: "+r.nextGroup;
-    else{const s=allSeries.find(x=>x.id===id);if(s) prev.textContent="Current MAWB: "+s.prefix+String(s.current_number).padStart(s.digit_length,"0");else prev.textContent="";}
-  }catch(e){const s=allSeries.find(x=>x.id===id);if(s) prev.textContent="Current MAWB: "+s.prefix+String(s.current_number).padStart(s.digit_length,"0");else prev.textContent="";}
+    if(r.ok) prev.textContent="Current Batch: "+r.mawb+" · Next Series: "+r.nextGroup;
+    else{const s=allSeries.find(x=>x.id===id);if(s) prev.textContent="Current Batch: "+s.prefix+String(s.current_number).padStart(s.digit_length,"0");else prev.textContent="";}
+  }catch(e){const s=allSeries.find(x=>x.id===id);if(s) prev.textContent="Current Batch: "+s.prefix+String(s.current_number).padStart(s.digit_length,"0");else prev.textContent="";}
 }
 
-// Generate MAWB during scan save
+// Generate MAWB during scan save — returns {number, type} or null
 async function generateMawb(){
   const sel=document.getElementById("sc-mawb-series");
   if(!sel||!sel.value) return null;
   const r=await api({action:"get-current-mawb",adminEmail:adm.email,adminPassword:adm.password,seriesId:parseInt(sel.value)});
-  if(r.ok) return r.mawb;
+  if(r.ok) return {number:r.mawb, type:r.type||"MAWB"};
   return null;
+}
+// Helper: get seriesType from a series selector element
+function getSeriesType(selElement){
+  if(!selElement||!selElement.value) return "MAWB";
+  const s=allSeries.find(x=>x.id===parseInt(selElement.value));
+  return (s&&s.type)?s.type.toUpperCase():"MAWB";
 }
 
 // ── Consolidate / Split ──
-async function consolidateEntries(entryIds,mawbOverride){
+async function consolidateEntries(entryIds,mawbOverride,selectorId){
   if(!entryIds.length){alert("Select items first");return}
   const body={action:"consolidate",adminEmail:adm.email,adminPassword:adm.password,entryIds};
+  const selId=selectorId||"del-sticky-series";
   if(mawbOverride) body.mawb=mawbOverride;
   else{
-    const sel=document.getElementById("del-sticky-series");
+    const sel=document.getElementById(selId);
     if(sel&&sel.value){
       const sid=parseInt(sel.value);
       const s=allSeries.find(x=>x.id===sid);
-      if(s) body.mawb=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
+      if(s){body.mawb=s.prefix+String(s.current_number).padStart(s.digit_length,"0");body.seriesType=(s.type||"MAWB").toUpperCase();}
     }
+  }
+  // Determine seriesType from selector if not already set
+  if(!body.seriesType){
+    const sel=document.getElementById(selId);
+    if(sel&&sel.value){const s=allSeries.find(x=>x.id===parseInt(sel.value));if(s) body.seriesType=(s.type||"MAWB").toUpperCase();}
   }
   const r=await api(body);
   if(r.ok){
-    alert("Consolidated under Group: "+r.hawb);
+    alert("Consolidated under Series: "+r.hawb);
     loadNumberSeries();
     return r.hawb;
   } else {
@@ -2694,9 +2849,9 @@ async function consolidateEntries(entryIds,mawbOverride){
 }
 async function splitEntries(entryIds){
   if(!entryIds.length){alert("Select items first");return}
-  if(!confirm("Remove Group from "+entryIds.length+" item(s)?")) return;
+  if(!confirm("Remove Series from "+entryIds.length+" item(s)?")) return;
   const r=await api({action:"split",adminEmail:adm.email,adminPassword:adm.password,entryIds});
-  if(r.ok) alert("Split "+r.updated+" item(s) from Group");
+  if(r.ok) alert("Split "+r.updated+" item(s) from Series");
   else alert(r.error||"Split failed");
 }
 
@@ -2710,6 +2865,115 @@ async function autoArchiveOldPackages(){
     const r=await api({action:"auto-archive",adminEmail:adm.email,adminPassword:adm.password,cutoffDate:cutoffStr});
     if(r.ok&&r.archived>0) console.log("Auto-archived "+r.archived+" packages older than 3 months");
   }catch(e){console.log("Auto-archive check:",e)}
+}
+
+// ── View Dims Modal (editable) ──
+function showDimsModal(title,entries){
+  const unit=getDimUnit();
+  const divisor=getDimDivisor();
+  let totalDimWt=0,totalActWt=0,count=0;
+  entries.forEach(e=>{
+    if(e.dim_weight) totalDimWt+=parseFloat(e.dim_weight);
+    if(e.actual_weight) totalActWt+=parseFloat(e.actual_weight);
+    if(e.dim_length||e.actual_weight) count++;
+  });
+  const modal=document.createElement("div");
+  modal.id="dims-modal";
+  modal.style.cssText="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:12px";
+  modal.onclick=()=>modal.remove();
+  // Build editable rows for ALL entries (not just ones with dims)
+  const inp='style="width:48px;padding:3px;border:1px solid #334155;border-radius:4px;background:#0f172a;color:#f8fafc;font-size:11px;font-family:monospace;text-align:center"';
+  let rows=entries.map((e,i)=>{
+    const id=e.id||0;
+    return '<tr data-eid="'+id+'" style="border-bottom:1px solid #1e293b">'+
+      '<td style="padding:4px 2px;font-family:monospace;font-size:10px;color:#94a3b8;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(e.tracking_number||'')+'">'+esc(e.tracking_number?(e.tracking_number.length>12?'...'+e.tracking_number.slice(-10):e.tracking_number):'—')+'</td>'+
+      '<td style="padding:4px 1px"><input '+inp+' id="dl-'+i+'" value="'+(e.dim_length||'')+'" oninput="dimRowCalc('+i+')"></td>'+
+      '<td style="padding:4px 1px"><input '+inp+' id="db-'+i+'" value="'+(e.dim_breadth||'')+'" oninput="dimRowCalc('+i+')"></td>'+
+      '<td style="padding:4px 1px"><input '+inp+' id="dh-'+i+'" value="'+(e.dim_height||'')+'" oninput="dimRowCalc('+i+')"></td>'+
+      '<td style="padding:4px 1px"><input '+inp+' id="dw-'+i+'" value="'+(e.actual_weight||'')+'"></td>'+
+      '<td style="padding:4px 1px;font-family:monospace;font-size:11px;color:#60a5fa;text-align:center" id="ddw-'+i+'">'+(e.dim_weight?parseFloat(e.dim_weight).toFixed(1):'—')+'</td>'+
+      '<td style="padding:4px 1px"><button onclick="saveDimRow('+i+','+id+')" style="padding:2px 6px;border:none;border-radius:4px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;font-weight:700" id="dsb-'+i+'">Save</button></td>'+
+    '</tr>';
+  }).join("");
+  if(!entries.length) rows='<tr><td colspan="7" style="text-align:center;color:#64748b;padding:12px">No entries</td></tr>';
+  modal.innerHTML='<div style="background:#1e293b;border-radius:12px;padding:16px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)" onclick="event.stopPropagation()">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:15px;font-weight:800;color:#f8fafc">'+esc(title)+'</div><button onclick="this.closest(\'#dims-modal\').remove()" style="width:28px;height:28px;border:none;border-radius:50%;background:#334155;color:#94a3b8;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">&times;</button></div>'+
+    '<div style="display:flex;gap:10px;margin-bottom:10px">'+
+      '<div style="flex:1;background:#0f172a;border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:#64748b;text-transform:uppercase">Total Dim Wt</div><div id="dims-total-dw" style="font-size:16px;font-weight:800;color:#60a5fa;font-family:monospace">'+totalDimWt.toFixed(2)+'<span style="font-size:10px;color:#64748b"> '+unit+'</span></div></div>'+
+      '<div style="flex:1;background:#0f172a;border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:#64748b;text-transform:uppercase">Total Actual Wt</div><div id="dims-total-aw" style="font-size:16px;font-weight:800;color:#34d399;font-family:monospace">'+totalActWt.toFixed(2)+'<span style="font-size:10px;color:#64748b"> '+unit+'</span></div></div>'+
+    '</div>'+
+    '<div style="font-size:10px;color:#64748b;margin-bottom:6px">'+count+' of '+entries.length+' have dims · Edit values inline, click Save per row</div>'+
+    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;color:#e2e8f0"><thead><tr style="border-bottom:1px solid #334155;color:#64748b;font-size:9px"><th style="padding:3px;text-align:left">Track</th><th>L</th><th>B</th><th>H</th><th>Wt</th><th>DimWt</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+  '</div>';
+  document.body.appendChild(modal);
+  // Store entries ref for save
+  modal._entries=entries;
+  modal._divisor=divisor;
+  modal._unit=unit;
+}
+function dimRowCalc(i){
+  const l=parseFloat(document.getElementById("dl-"+i).value)||0;
+  const b=parseFloat(document.getElementById("db-"+i).value)||0;
+  const h=parseFloat(document.getElementById("dh-"+i).value)||0;
+  const modal=document.getElementById("dims-modal");
+  const divisor=modal?modal._divisor:getDimDivisor();
+  const el=document.getElementById("ddw-"+i);
+  if(l>0&&b>0&&h>0){el.textContent=((l*b*h)/divisor).toFixed(1);}
+  else{el.textContent="—";}
+}
+async function saveDimRow(i,entryId){
+  const btn=document.getElementById("dsb-"+i);
+  btn.textContent="...";btn.disabled=true;
+  const l=parseFloat(document.getElementById("dl-"+i).value)||null;
+  const b=parseFloat(document.getElementById("db-"+i).value)||null;
+  const h=parseFloat(document.getElementById("dh-"+i).value)||null;
+  const wt=parseFloat(document.getElementById("dw-"+i).value)||null;
+  const modal=document.getElementById("dims-modal");
+  const divisor=modal?modal._divisor:getDimDivisor();
+  let dimWt=null;
+  if(l&&b&&h) dimWt=parseFloat(((l*b*h)/divisor).toFixed(2));
+  const r=await api({action:"update-dims",adminEmail:adm.email,adminPassword:adm.password,entryId,dim_length:l,dim_breadth:b,dim_height:h,actual_weight:wt,dim_weight:dimWt});
+  if(r.ok){
+    btn.textContent="Saved";btn.style.background="#065f46";
+    // Update cache
+    if(_entryCache[entryId]){Object.assign(_entryCache[entryId],{dim_length:l,dim_breadth:b,dim_height:h,actual_weight:wt,dim_weight:dimWt})}
+    // Recalc totals
+    if(modal&&modal._entries){
+      const ent=modal._entries.find(e=>e.id===entryId);
+      if(ent){ent.dim_length=l;ent.dim_breadth=b;ent.dim_height=h;ent.actual_weight=wt;ent.dim_weight=dimWt;}
+      let tdw=0,taw=0;
+      modal._entries.forEach(e=>{if(e.dim_weight)tdw+=parseFloat(e.dim_weight);if(e.actual_weight)taw+=parseFloat(e.actual_weight)});
+      const unit=modal._unit||getDimUnit();
+      const dwEl=document.getElementById("dims-total-dw");if(dwEl) dwEl.innerHTML=tdw.toFixed(2)+'<span style="font-size:10px;color:#64748b"> '+unit+'</span>';
+      const awEl=document.getElementById("dims-total-aw");if(awEl) awEl.innerHTML=taw.toFixed(2)+'<span style="font-size:10px;color:#64748b"> '+unit+'</span>';
+    }
+    setTimeout(()=>{btn.textContent="Save";btn.style.background="#3b82f6";btn.disabled=false},1500);
+  } else {
+    btn.textContent="Err";btn.style.background="#7f1d1d";btn.disabled=false;
+    setTimeout(()=>{btn.textContent="Save";btn.style.background="#3b82f6"},2000);
+  }
+}
+// Cache entries by ID for quick dims lookup
+let _entryCache={};
+function cacheEntries(entries){entries.forEach(e=>{if(e.id) _entryCache[e.id]=e})}
+function viewDimsSingleEntry(id){
+  const e=_entryCache[id];
+  if(e) showDimsModal("Item: "+e.tracking_number,[e]);
+  else showDimsModal("Item #"+id,[{tracking_number:"#"+id,dim_length:null,actual_weight:null}]);
+}
+async function viewDimsHawb(hawbNumber){
+  const r=await api({action:"search-by-hawb",adminEmail:adm.email,adminPassword:adm.password,hawb:hawbNumber});
+  const entries=(r.ok&&r.entries)||[];
+  showDimsModal("Series: "+hawbNumber,entries);
+}
+async function viewDimsMawb(mawbNumber){
+  // Search MAWB first, then BOL
+  let r=await api({action:"search-by-mawb",adminEmail:adm.email,adminPassword:adm.password,mawb:mawbNumber});
+  if(!r.ok||!r.entries||!r.entries.length){
+    r=await api({action:"search-by-bol",adminEmail:adm.email,adminPassword:adm.password,bol:mawbNumber});
+  }
+  const entries=(r.ok&&r.entries)||[];
+  showDimsModal("Batch: "+mawbNumber+" (all series)",entries);
 }
 
 // ── Batch code lookup ──
@@ -2864,8 +3128,8 @@ function renderViewer(){
     <div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">${esc(e.tracking_number)}</div>${statusBadge(e.status)}</div>
     <div class="dt">${fmt(e.created_at)}${route?' · '+route:''}</div>
     ${etaStr}
-    ${e.mawb?'<div style="margin-top:3px"><span style="background:#1e3a5f;color:#60a5fa;font-size:10px;padding:2px 6px;border-radius:4px;cursor:pointer" onclick="printMawb(&#39;'+esc(e.mawb)+'&#39;)">MAWB: '+esc(e.mawb)+'</span></div>':''}
-    ${e.hawb?'<div style="margin-top:3px"><span style="background:#3b1f6e;color:#c084fc;font-size:10px;padding:2px 6px;border-radius:4px;cursor:pointer" onclick="printHawb(&#39;'+esc(e.hawb)+'&#39;)">Group: '+esc(e.hawb)+'</span></div>':''}
+    ${(e.mawb||e.bol)?'<div style="margin-top:3px"><span style="background:#1e3a5f;color:#60a5fa;font-size:10px;padding:2px 6px;border-radius:4px;cursor:pointer" onclick="printMawb(&#39;'+esc(e.mawb||e.bol)+'&#39;)">Batch: '+esc(e.mawb||e.bol)+'</span></div>':''}
+    ${e.hawb?'<div style="margin-top:3px"><span style="background:#3b1f6e;color:#c084fc;font-size:10px;padding:2px 6px;border-radius:4px;cursor:pointer" onclick="printHawb(&#39;'+esc(e.hawb)+'&#39;)">Series: '+esc(e.hawb)+'</span></div>':''}
     ${timelineHtml}
     ${e.raw_text?`<span class="rt" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block';this.textContent=this.nextElementSibling.style.display==='block'?'Hide notes':'Show notes'">Show notes</span><div class="rb">${esc(e.raw_text)}</div>`:''}
   </div>`;
