@@ -3756,12 +3756,20 @@ function showIOSGuide(){document.getElementById("ios-guide-overlay").style.displ
   const sAndroid=document.getElementById("settings-install-android");
   const sIOS=document.getElementById("settings-install-ios");
   const sDone=document.getElementById("settings-install-done");
+  const sSection=document.getElementById("settings-install-section");
   if(isStandalone){
     if(sDone) sDone.style.display="block";
   } else if(isIOS){
     if(sIOS) sIOS.style.display="block";
-  } else {
-    if(sAndroid) sAndroid.style.display="block";
+  } else if(isAndroid){
+    // Show manual instructions by default; button appears when beforeinstallprompt fires
+    if(sSection){
+      let manualHint=document.createElement("div");
+      manualHint.id="settings-install-manual";
+      manualHint.style.cssText="font-size:12px;color:#94a3b8;text-align:center;padding:8px";
+      manualHint.innerHTML='In Chrome, tap <b style="color:#f8fafc">⋮</b> menu → <b style="color:#f8fafc">Add to Home screen</b>';
+      sSection.appendChild(manualHint);
+    }
   }
 
   if(isStandalone) return;
@@ -3785,6 +3793,8 @@ function showIOSGuide(){document.getElementById("ios-guide-overlay").style.displ
     msg.innerHTML='<b style="color:#f8fafc;font-size:14px">Install BDFUSA as an app</b>';
     btn.style.display="inline-block";
     if(sAndroid) sAndroid.style.display="block";
+    const mh=document.getElementById("settings-install-manual");
+    if(mh) mh.style.display="none";
   });
 
   window.installPWA=function(){
