@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title id="page-title">BuyDirectFromUSA — Track</title>
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BuyDirectUSA">
 <meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -1185,8 +1190,10 @@ async function startCam(){
   scanConfirm={};
   scanDone=false;
 
-  // METHOD 1: Native BarcodeDetector
-  if("BarcodeDetector" in window){
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&"ontouchend" in document);
+
+  // METHOD 1: Native BarcodeDetector (not on iOS)
+  if(!isIOS && "BarcodeDetector" in window){
     try{
       nativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a","data_matrix","itf"]});
       camStream=await navigator.mediaDevices.getUserMedia({
@@ -1222,8 +1229,8 @@ async function startCam(){
     }
   }
 
-  // METHOD 2: Direct camera + html5-qrcode decode
-  try{
+  // METHOD 2: Direct camera + html5-qrcode decode (skip on iOS — canvas frame-grab unreliable)
+  if(!isIOS) try{
     camStream=await navigator.mediaDevices.getUserMedia({
       video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}
     });
@@ -1293,7 +1300,7 @@ async function startCam(){
     if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}
   }
 
-  // METHOD 3: html5-qrcode built-in UI (last resort)
+  // METHOD 3: html5-qrcode built-in UI (primary on iOS)
   try{
     if(typeof Html5Qrcode==="undefined"){
       st.innerHTML='<span class="er">Scanner not available. Please type the tracking number manually.</span>';
@@ -1301,17 +1308,17 @@ async function startCam(){
       document.getElementById("btn-cam-stop").style.display="none";
       return;
     }
-    st.textContent="Starting scanner (widget mode)...";
+    st.textContent="Starting scanner...";
     const formats=[0,2,4,6,10,13];
     html5Sc=new Html5Qrcode("scanner-camera",{formatsToSupport:formats,verbose:false});
     const w=Math.min(window.innerWidth-40,380);
     await html5Sc.start(
       {facingMode:"environment"},
-      {fps:15,qrbox:{width:w,height:Math.round(w*0.4)},disableFlip:false},
+      {fps:isIOS?10:15,qrbox:{width:w,height:Math.round(w*0.4)},aspectRatio:isIOS?1.777:undefined,disableFlip:false},
       (decoded)=>{ onBarcodeDetected(decoded); },
       ()=>{}
     );
-    st.innerHTML='<span class="ok">Camera ready (widget) — point at barcode</span>';
+    st.innerHTML='<span class="ok">Camera ready — point at barcode</span>';
   }catch(e){
     st.innerHTML='<span class="er">Camera error: '+esc(String(e))+'</span>';
     document.getElementById("btn-cam-start").style.display="block";
@@ -2179,7 +2186,10 @@ async function delStartCam(){
   delScanConfirm={};
   delScanDone=false;
 
-  if("BarcodeDetector" in window){
+  const isIOSDel=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&"ontouchend" in document);
+
+  // METHOD 1: Native BarcodeDetector (not on iOS)
+  if(!isIOSDel && "BarcodeDetector" in window){
     try{
       delNativeDetector=new BarcodeDetector({formats:["code_128","code_39","ean_13","upc_a","data_matrix","itf"]});
       delCamStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}});
@@ -2205,8 +2215,8 @@ async function delStartCam(){
     }
   }
 
-  // Fallback: direct camera + frame decode
-  try{
+  // METHOD 2: Direct camera + frame decode (skip on iOS)
+  if(!isIOSDel) try{
     delCamStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}});
     const video=document.createElement("video");
     video.id="del-cam-video";
@@ -2235,6 +2245,26 @@ async function delStartCam(){
         if(result&&result.decodedText) delOnBarcode(result.decodedText);
       }catch(e){}
     },250);
+    return;
+  }catch(e){
+    if(delCamStream){delCamStream.getTracks().forEach(t=>t.stop());delCamStream=null}
+  }
+
+  // METHOD 3: html5-qrcode widget (primary on iOS)
+  try{
+    if(typeof Html5Qrcode==="undefined"){st.innerHTML='<span class="er">Scanner not available. Type tracking # manually.</span>';return}
+    st.textContent="Starting scanner...";
+    const delWidget=new Html5Qrcode("del-scanner-camera",{verbose:false});
+    const dw=Math.min(window.innerWidth-40,380);
+    await delWidget.start(
+      {facingMode:"environment"},
+      {fps:isIOSDel?10:15,qrbox:{width:dw,height:Math.round(dw*0.4)},aspectRatio:isIOSDel?1.777:undefined,disableFlip:false},
+      (decoded)=>{ delOnBarcode(decoded); },
+      ()=>{}
+    );
+    // Store ref so delStopCam can clean up
+    html5Sc=delWidget;
+    st.innerHTML='<span class="ok">Camera ready — point at barcode</span>';
   }catch(e){
     st.innerHTML='<span class="er">Camera error: '+esc(String(e))+'</span>';
     document.getElementById("btn-del-cam-start").style.display="block";
