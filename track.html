@@ -240,16 +240,16 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <div class="fg"><div style="display:flex;justify-content:space-between;align-items:center"><label class="fl" style="margin:0">Tracking Number</label><div style="display:flex;gap:10px"><span style="font-size:11px;color:#f59e0b;cursor:pointer;font-weight:700" onclick="printTrackingBarcode()">Print</span><span style="font-size:11px;color:#3b82f6;cursor:pointer;font-weight:700" onclick="generateTracking()">Generate</span></div></div><input class="fi mono" id="sc-tracking" placeholder="Scanned or type here" style="margin-top:5px"></div>
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label class="fl">ETA</label><input class="fi" id="sc-eta" type="date" style="font-size:13px" onchange="saveScanSettings()"></div>
-      <div class="fg" style="flex:1"><label class="fl">Notes</label><input class="fi" id="sc-notes" placeholder="Extra info" style="font-size:12px"></div>
+      <div class="fg ft-notes" style="flex:1"><label class="fl">Notes</label><input class="fi" id="sc-notes" placeholder="Extra info" style="font-size:12px"></div>
     </div>
     <!-- Shipment Batch + Dims on same line -->
     <div style="margin-bottom:8px">
       <div style="display:flex;gap:8px;align-items:flex-end">
         <div class="fg" style="flex:1;margin-bottom:0"><label class="fl">Shipment Batch</label><select class="fi" id="sc-mawb-series" style="font-size:13px;padding:9px" onchange="updateMawbPreview();saveScanSettings()"><option value="">— No batch —</option></select></div>
-        <button onclick="const p=document.getElementById('sc-dims-panel');p.style.display=p.style.display==='none'?'block':'none';this.textContent=p.style.display==='none'?'Dims ▶':'Dims ▼'" style="padding:9px 14px;border:1px solid #334155;border-radius:8px;background:#1e293b;color:#94a3b8;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;margin-bottom:0">Dims ▶</button>
+        <button class="ft-dims" onclick="const p=document.getElementById('sc-dims-panel');p.style.display=p.style.display==='none'?'block':'none';this.textContent=p.style.display==='none'?'Dims ▶':'Dims ▼'" style="padding:9px 14px;border:1px solid #334155;border-radius:8px;background:#1e293b;color:#94a3b8;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;margin-bottom:0">Dims ▶</button>
       </div>
       <div id="sc-mawb-preview" style="font-size:11px;color:#60a5fa;margin-top:3px;font-family:monospace"></div>
-      <div id="sc-dims-panel" style="display:none;background:#0f172a;border-radius:8px;padding:10px;margin-top:6px">
+      <div id="sc-dims-panel" class="ft-dims" style="display:none;background:#0f172a;border-radius:8px;padding:10px;margin-top:6px">
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           <span style="font-size:11px;color:#64748b">L</span><input class="fi" id="sc-dim-l" type="number" step="0.1" min="0" placeholder="0" style="width:54px;font-size:12px;padding:6px;font-family:monospace;text-align:center" oninput="calcDimWt()">
           <span style="font-size:11px;color:#64748b">×</span>
@@ -363,27 +363,15 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <!-- Consolidate/Assign action bar -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #334155">
         <button onclick="delConsolidateEtaSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>
-        <button onclick="delAssignMawbEtaSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Batch</button>
+        <button class="ft-assign-batch" onclick="delAssignMawbEtaSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Batch</button>
       </div>
       <div id="del-eta-list" style="max-height:400px;overflow-y:auto"></div>
       <div id="del-eta-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px"></div>
 
-      <!-- Status buttons -->
+      <!-- Status buttons (dynamic) -->
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid #334155">
         <label class="fl">Set Status for Selected</label>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-          <button onclick="delBulkStatus('Scanned')" style="padding:7px 12px;border:1px solid #334155;border-radius:8px;background:#334155;color:#94a3b8;font-size:12px;font-weight:700;cursor:pointer">Scanned</button>
-          <button onclick="delBulkStatus('In Transit')" style="padding:7px 12px;border:1px solid #1e3a5f;border-radius:8px;background:#1e3a5f;color:#60a5fa;font-size:12px;font-weight:700;cursor:pointer">In Transit</button>
-          <button onclick="delBulkStatus('Arrived Destination')" style="padding:7px 12px;border:1px solid #064e3b;border-radius:8px;background:#064e3b;color:#6ee7b7;font-size:12px;font-weight:700;cursor:pointer">Arrived</button>
-          <button onclick="delBulkStatus('Out for Delivery')" style="padding:10px 18px;border:1px solid #4c1d95;border-radius:8px;background:#4c1d95;color:#c4b5fd;font-size:14px;font-weight:700;cursor:pointer">Out for Delivery</button>
-          <button onclick="delBulkStatus('Delivered')" style="padding:10px 18px;border:1px solid #065f46;border-radius:8px;background:#065f46;color:#34d399;font-size:14px;font-weight:700;cursor:pointer">Delivered</button>
-          <button onclick="delBulkStatus('Delay')" style="padding:7px 12px;border:1px solid #7f1d1d;border-radius:8px;background:#7f1d1d;color:#fca5a5;font-size:12px;font-weight:700;cursor:pointer">Delay</button>
-          <button onclick="delBulkStatus('Held')" style="padding:7px 12px;border:1px solid #78350f;border-radius:8px;background:#78350f;color:#fdba74;font-size:12px;font-weight:700;cursor:pointer">Held</button>
-          <button onclick="delBulkStatus('Return')" style="padding:7px 12px;border:1px solid #713f12;border-radius:8px;background:#713f12;color:#fde68a;font-size:12px;font-weight:700;cursor:pointer">Return</button>
-          <button onclick="delBulkStatus('Customs')" style="padding:7px 12px;border:1px solid #a16207;border-radius:8px;background:#713f12;color:#fbbf24;font-size:12px;font-weight:700;cursor:pointer">Customs</button>
-          <div style="display:flex;gap:4px;margin-top:6px;width:100%"><input id="del-bulk-custom-status" placeholder="Custom status text..." style="flex:1;padding:7px 10px;border:1px solid #475569;border-radius:8px;background:#0f172a;color:#f8fafc;font-size:12px"><button onclick="const v=document.getElementById('del-bulk-custom-status').value.trim();if(v){delBulkStatus(v);document.getElementById('del-bulk-custom-status').value='';}" style="padding:7px 12px;border:1px solid #475569;border-radius:8px;background:#1e293b;color:#e2e8f0;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Set</button></div>
-          <button onclick="delBulkStatus('Archived')" style="padding:7px 12px;border:1px solid #3730a3;border-radius:8px;background:#1e1b4b;color:#a5b4fc;font-size:12px;font-weight:700;cursor:pointer;margin-top:6px">Archive</button>
-        </div>
+        <div id="del-bulk-status-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
         <div id="del-bulk-msg" style="font-size:12px;margin-top:4px"></div>
       </div>
 
@@ -438,6 +426,47 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div id="logo-msg" style="font-size:12px;margin-top:4px"></div>
     </div>
 
+    <!-- Feature Toggles -->
+    <div class="cd" style="padding:14px">
+      <label class="fl" style="margin-bottom:10px;font-size:12px">Features &amp; Modules</label>
+      <div style="font-size:11px;color:#64748b;margin-bottom:10px">Enable or disable features per device. Changes take effect immediately.</div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
+          <input type="checkbox" id="ft-dims" onchange="saveFeatureToggles()" checked>
+          <span style="font-size:12px;color:#f8fafc;font-weight:700">Dims</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
+          <input type="checkbox" id="ft-notes" onchange="saveFeatureToggles()" checked>
+          <span style="font-size:12px;color:#f8fafc;font-weight:700">Notes</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
+          <input type="checkbox" id="ft-internal-barcode" onchange="saveFeatureToggles()" checked>
+          <span style="font-size:12px;color:#f8fafc;font-weight:700">Internal Barcode</span>
+        </label>
+      </div>
+
+      <label class="fl" style="margin-bottom:6px;font-size:11px;color:#64748b">Series Types</label>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1">
+          <input type="checkbox" id="ft-mawb" onchange="saveFeatureToggles()" checked>
+          <span style="font-size:12px;color:#60a5fa;font-weight:700">MAWB</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1">
+          <input type="checkbox" id="ft-bol" onchange="saveFeatureToggles()" checked>
+          <span style="font-size:12px;color:#34d399;font-weight:700">BOL</span>
+        </label>
+      </div>
+
+      <label class="fl" style="margin-bottom:6px;font-size:11px;color:#64748b">Transit Statuses</label>
+      <div id="ft-statuses" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      <div style="display:flex;gap:6px;margin-top:10px;align-items:center">
+        <input id="ft-custom-status-input" class="fi" placeholder="New custom status name..." style="flex:1;font-size:12px;padding:8px 10px">
+        <button onclick="addCustomStatus()" style="padding:8px 14px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Add Status</button>
+      </div>
+      <div style="font-size:10px;color:#64748b;margin-top:4px">Custom statuses appear as bulk action buttons everywhere.</div>
+    </div>
+
     <!-- Batch code prefix config -->
     <div class="cd" style="padding:14px">
       <label class="fl" style="margin-bottom:8px;font-size:12px">Batch Code Prefix</label>
@@ -449,7 +478,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     </div>
 
     <!-- Dims / Weight Settings -->
-    <div class="cd" style="padding:14px">
+    <div class="cd ft-dims" style="padding:14px">
       <label class="fl" style="margin-bottom:8px;font-size:12px">Dimensions &amp; Weight</label>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
         <span style="font-size:12px;color:#94a3b8;white-space:nowrap">Unit:</span>
@@ -583,29 +612,17 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <!-- Consolidate/Assign actions -->
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #334155">
       <button onclick="bsConsolidateSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>
-      <button onclick="bsAssignSeriesSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Batch</button>
+      <button class="ft-assign-batch" onclick="bsAssignSeriesSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Batch</button>
       <button onclick="bsSplitSelected()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer">Split</button>
     </div>
 
     <div id="bs-list" style="max-height:400px;overflow-y:auto"></div>
     <div id="bs-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px"></div>
 
-    <!-- Bulk action bar -->
+    <!-- Bulk action bar (dynamic) -->
     <div style="margin-top:12px;padding-top:12px;border-top:1px solid #334155">
       <label class="fl">Set Status for Selected</label>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-        <button class="bs-status-btn" onclick="bsSetStatus('In Transit')" style="padding:7px 12px;border:1px solid #1e3a5f;border-radius:8px;background:#1e3a5f;color:#60a5fa;font-size:12px;font-weight:700;cursor:pointer">In Transit</button>
-        <button class="bs-status-btn" onclick="bsSetStatus('Delay')" style="padding:7px 12px;border:1px solid #7f1d1d;border-radius:8px;background:#7f1d1d;color:#fca5a5;font-size:12px;font-weight:700;cursor:pointer">Delay</button>
-        <button class="bs-status-btn" onclick="bsSetStatus('Return')" style="padding:7px 12px;border:1px solid #713f12;border-radius:8px;background:#713f12;color:#fde68a;font-size:12px;font-weight:700;cursor:pointer">Return</button>
-        <button class="bs-status-btn" onclick="bsSetStatus('Arrived Destination')" style="padding:7px 12px;border:1px solid #064e3b;border-radius:8px;background:#064e3b;color:#6ee7b7;font-size:12px;font-weight:700;cursor:pointer">Arrived Destination</button>
-        <button class="bs-status-btn" onclick="bsSetStatus('Out for Delivery')" style="padding:7px 12px;border:1px solid #4c1d95;border-radius:8px;background:#4c1d95;color:#c4b5fd;font-size:12px;font-weight:700;cursor:pointer">Out for Delivery</button>
-        <button class="bs-status-btn" onclick="bsSetStatus('Held')" style="padding:7px 12px;border:1px solid #78350f;border-radius:8px;background:#78350f;color:#fdba74;font-size:12px;font-weight:700;cursor:pointer">Held</button>
-        <button class="bs-status-btn" onclick="bsSetStatus('Delivered')" style="padding:7px 12px;border:1px solid #065f46;border-radius:8px;background:#065f46;color:#34d399;font-size:12px;font-weight:700;cursor:pointer">Delivered</button>
-        <button class="bs-status-btn" onclick="bsSetStatus('Scanned')" style="padding:7px 12px;border:1px solid #334155;border-radius:8px;background:#334155;color:#94a3b8;font-size:12px;font-weight:700;cursor:pointer">Scanned</button>
-        <button class="bs-status-btn" onclick="bsSetStatus('Customs')" style="padding:7px 12px;border:1px solid #a16207;border-radius:8px;background:#713f12;color:#fbbf24;font-size:12px;font-weight:700;cursor:pointer">Customs</button>
-        <div style="display:flex;gap:4px;margin-top:6px;width:100%"><input id="bs-custom-status" placeholder="Custom status text..." style="flex:1;padding:7px 10px;border:1px solid #475569;border-radius:8px;background:#0f172a;color:#f8fafc;font-size:12px"><button onclick="const v=document.getElementById('bs-custom-status').value.trim();if(v){bsSetStatus(v);document.getElementById('bs-custom-status').value='';}" style="padding:7px 12px;border:1px solid #475569;border-radius:8px;background:#1e293b;color:#e2e8f0;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Set</button></div>
-        <button class="bs-status-btn" onclick="bsSetStatus('Archived')" style="padding:7px 12px;border:1px solid #3730a3;border-radius:8px;background:#1e1b4b;color:#a5b4fc;font-size:12px;font-weight:700;cursor:pointer;margin-top:6px">Archive</button>
-      </div>
+      <div id="bs-bulk-status-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
       <div id="bs-action-msg" style="font-size:12px;margin-top:4px"></div>
     </div>
 
@@ -959,6 +976,9 @@ async function enterScanner(){
   document.getElementById("adm-bnav").style.display="flex";
   restoreScanSettings();
   loadDimSettings();
+  initFeatureTogglesUI();
+  rebuildAllDynamicStatusButtons();
+  applyFeatureToggles();
   applyCompanyBranding();
   await Promise.all([loadLocations(),loadDests()]);
   loadViewers();
@@ -1471,6 +1491,184 @@ function loadDimSettings(){
   if(d) d.value=getDimDivisor();
   updateDimUnitLabels();
 }
+// ── Feature Toggles ──
+const BASE_STATUSES=["Scanned","In Transit","Delay","Return","Arrived Destination","Out for Delivery","Held","Customs","Delivered","Archived"];
+function getCustomStatuses(){try{return JSON.parse(localStorage.getItem("custom_statuses"))||[]}catch(e){return[]}}
+function saveCustomStatuses(arr){localStorage.setItem("custom_statuses",JSON.stringify(arr))}
+function getAllStatuses(){return BASE_STATUSES.concat(getCustomStatuses())}
+const ALL_STATUSES=BASE_STATUSES; // kept for compat
+const FT_DEFAULTS={dims:true,notes:true,internalBarcode:true,mawb:true,bol:true,statuses:BASE_STATUSES.reduce((o,s)=>{o[s]=true;return o},{})};
+function loadFeatureToggles(){
+  let ft;
+  try{ft=JSON.parse(localStorage.getItem("feature_toggles"))||{}}catch(e){ft={}}
+  const r={...FT_DEFAULTS,...ft};
+  if(!r.statuses) r.statuses={...FT_DEFAULTS.statuses};
+  else r.statuses={...FT_DEFAULTS.statuses,...r.statuses};
+  // Merge in custom statuses (default enabled)
+  getCustomStatuses().forEach(s=>{if(r.statuses[s]===undefined) r.statuses[s]=true});
+  return r;
+}
+function saveFeatureToggles(){
+  const ft={
+    dims:!!document.getElementById("ft-dims").checked,
+    notes:!!document.getElementById("ft-notes").checked,
+    internalBarcode:!!document.getElementById("ft-internal-barcode").checked,
+    mawb:!!document.getElementById("ft-mawb").checked,
+    bol:!!document.getElementById("ft-bol").checked,
+    statuses:{}
+  };
+  getAllStatuses().forEach(s=>{
+    const cb=document.getElementById("ft-st-"+s.replace(/\s+/g,'-'));
+    ft.statuses[s]=cb?cb.checked:true;
+  });
+  localStorage.setItem("feature_toggles",JSON.stringify(ft));
+  applyFeatureToggles();
+  rebuildAllDynamicStatusButtons();
+}
+function initFeatureTogglesUI(){
+  const ft=loadFeatureToggles();
+  document.getElementById("ft-dims").checked=ft.dims;
+  document.getElementById("ft-notes").checked=ft.notes;
+  document.getElementById("ft-internal-barcode").checked=ft.internalBarcode;
+  document.getElementById("ft-mawb").checked=ft.mawb;
+  document.getElementById("ft-bol").checked=ft.bol;
+  buildStatusCheckboxes();
+}
+function buildStatusCheckboxes(){
+  const ft=loadFeatureToggles();
+  const box=document.getElementById("ft-statuses");
+  if(!box) return;
+  const all=getAllStatuses();
+  const customs=getCustomStatuses();
+  box.innerHTML=all.map(s=>{
+    const id="ft-st-"+s.replace(/\s+/g,'-');
+    const col=STATUS_COLORS[s]||{bg:'#1e293b',border:'#475569',text:'#e2e8f0'};
+    const chk=ft.statuses[s]!==false?' checked':'';
+    const isCustom=customs.includes(s);
+    return '<label style="display:flex;align-items:center;gap:5px;background:'+col.bg+';border:1px solid '+col.border+';padding:5px 10px;border-radius:6px;cursor:pointer">'+
+      '<input type="checkbox" id="'+id+'" onchange="saveFeatureToggles()"'+chk+'>'+
+      '<span style="font-size:11px;color:'+col.text+';font-weight:600">'+esc(s)+'</span>'+
+      (isCustom?'<span onclick="event.preventDefault();removeCustomStatus(\''+esc(s).replace(/'/g,"\\&#39;")+'\')" style="margin-left:4px;color:#ef4444;cursor:pointer;font-size:13px;line-height:1" title="Remove">&times;</span>':'')+
+      '</label>';
+  }).join("");
+}
+function addCustomStatus(){
+  const inp=document.getElementById("ft-custom-status-input");
+  if(!inp) return;
+  const name=inp.value.trim();
+  if(!name){return}
+  const all=getAllStatuses();
+  if(all.map(s=>s.toLowerCase()).includes(name.toLowerCase())){alert("Status '"+name+"' already exists");return}
+  const customs=getCustomStatuses();
+  customs.push(name);
+  saveCustomStatuses(customs);
+  inp.value='';
+  // Enable it in toggles
+  const ft=loadFeatureToggles();
+  ft.statuses[name]=true;
+  localStorage.setItem("feature_toggles",JSON.stringify(ft));
+  buildStatusCheckboxes();
+  rebuildAllDynamicStatusButtons();
+}
+function removeCustomStatus(name){
+  if(!confirm("Remove custom status '"+name+"'?")) return;
+  const customs=getCustomStatuses().filter(s=>s!==name);
+  saveCustomStatuses(customs);
+  // Remove from toggle data
+  const ft=loadFeatureToggles();
+  delete ft.statuses[name];
+  localStorage.setItem("feature_toggles",JSON.stringify(ft));
+  buildStatusCheckboxes();
+  rebuildAllDynamicStatusButtons();
+}
+function ftEnabled(key){const ft=loadFeatureToggles();return ft[key]!==false}
+function ftStatusEnabled(status){const ft=loadFeatureToggles();return ft.statuses&&ft.statuses[status]!==false}
+
+// Status color map for dynamic buttons
+const STATUS_BTN_STYLES={
+  "Scanned":{bg:"#334155",border:"#334155",color:"#94a3b8"},
+  "In Transit":{bg:"#1e3a5f",border:"#1e3a5f",color:"#60a5fa"},
+  "Delay":{bg:"#7f1d1d",border:"#7f1d1d",color:"#fca5a5"},
+  "Return":{bg:"#713f12",border:"#713f12",color:"#fde68a"},
+  "Arrived Destination":{bg:"#064e3b",border:"#064e3b",color:"#6ee7b7",label:"Arrived"},
+  "Out for Delivery":{bg:"#4c1d95",border:"#4c1d95",color:"#c4b5fd",big:true},
+  "Held":{bg:"#78350f",border:"#78350f",color:"#fdba74"},
+  "Customs":{bg:"#713f12",border:"#a16207",color:"#fbbf24"},
+  "Delivered":{bg:"#065f46",border:"#065f46",color:"#34d399",big:true},
+  "Archived":{bg:"#1e1b4b",border:"#3730a3",color:"#a5b4fc"}
+};
+function getStatusBtnStyle(status){
+  return STATUS_BTN_STYLES[status]||{bg:'#1e293b',border:'#475569',color:'#e2e8f0'};
+}
+
+// Build bulk status buttons for a container (ETA page, scan page)
+// fnName = function to call, e.g. "delBulkStatus" or "bsSetStatus"
+// customInputId = id for custom input field
+function buildBulkStatusHTML(fnName,customInputId){
+  const ft=loadFeatureToggles();
+  const all=getAllStatuses();
+  let html='';
+  all.forEach(s=>{
+    if(ft.statuses[s]===false) return;
+    const st=getStatusBtnStyle(s);
+    const pad=st.big?'padding:10px 18px;font-size:14px;':'padding:7px 12px;font-size:12px;';
+    const label=st.label||s;
+    html+='<button class="ft-status-btn" data-status="'+esc(s)+'" onclick="'+fnName+'(\''+esc(s).replace(/'/g,"\\'")+'\')" style="'+pad+'border:1px solid '+st.border+';border-radius:8px;background:'+st.bg+';color:'+st.color+';font-weight:700;cursor:pointer">'+esc(label)+'</button>';
+  });
+  // Custom input
+  html+='<div style="display:flex;gap:4px;margin-top:6px;width:100%"><input id="'+customInputId+'" placeholder="Custom status text..." style="flex:1;padding:7px 10px;border:1px solid #475569;border-radius:8px;background:#0f172a;color:#f8fafc;font-size:12px"><button onclick="const v=document.getElementById(\''+customInputId+'\').value.trim();if(v){'+fnName+'(v);document.getElementById(\''+customInputId+'\').value=\'\';}" style="padding:7px 12px;border:1px solid #475569;border-radius:8px;background:#1e293b;color:#e2e8f0;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Set</button></div>';
+  return html;
+}
+
+// Build single-entry status buttons (for per-entry rows) — supports single id or array
+function buildStatusButtonsForIds(ids,fnName){
+  const ft=loadFeatureToggles();
+  const all=getAllStatuses();
+  const idsArg=(typeof ids==='number')?String(ids):JSON.stringify(ids);
+  let html='';
+  all.forEach(s=>{
+    if(ft.statuses[s]===false) return;
+    const st=getStatusBtnStyle(s);
+    const label=st.label||s;
+    const pad=st.big?'padding:8px 14px;font-size:13px;':'';
+    html+='<button class="ft-status-btn" data-status="'+esc(s)+'" style="'+pad+'background:'+st.bg+';color:'+st.color+'" onclick="'+fnName+'('+idsArg+',\''+esc(s).replace(/'/g,"\\'")+'\')">'+(st.label||s)+'</button>';
+  });
+  // Custom input
+  const uid='cs-'+Math.random().toString(36).slice(2,8);
+  html+='<div style="display:flex;gap:4px;margin-top:4px;width:100%"><input id="'+uid+'" placeholder="Custom..." style="flex:1;padding:5px 8px;border:1px solid #475569;border-radius:6px;background:#0f172a;color:#f8fafc;font-size:11px"><button onclick="const v=document.getElementById(\''+uid+'\').value.trim();if(v)'+fnName+'('+idsArg+',v)" style="padding:5px 10px;border:1px solid #475569;border-radius:6px;background:#1e293b;color:#e2e8f0;font-size:11px;font-weight:700;cursor:pointer">Set</button></div>';
+  return html;
+}
+
+// Rebuild all dynamic status button containers
+function rebuildAllDynamicStatusButtons(){
+  const etaBox=document.getElementById("del-bulk-status-btns");
+  if(etaBox) etaBox.innerHTML=buildBulkStatusHTML('delBulkStatus','del-bulk-custom-status');
+  const bsBox=document.getElementById("bs-bulk-status-btns");
+  if(bsBox) bsBox.innerHTML=buildBulkStatusHTML('bsSetStatus','bs-custom-status');
+  // Update action bars visibility
+  applyFeatureToggles();
+}
+
+function applyFeatureToggles(){
+  const ft=loadFeatureToggles();
+  // Dims
+  document.querySelectorAll(".ft-dims").forEach(el=>el.style.display=ft.dims?'':'none');
+  // Notes
+  document.querySelectorAll(".ft-notes").forEach(el=>el.style.display=ft.notes?'':'none');
+  // Series types affect selectors — handled at populate time
+  // Internal barcode — handled in label modal
+  // Status buttons
+  document.querySelectorAll(".ft-status-btn").forEach(el=>{
+    const st=el.getAttribute("data-status");
+    el.style.display=(ft.statuses[st]!==false)?'':'none';
+  });
+  // Assign Batch buttons — hide if both mawb and bol off
+  const batchOn=ft.mawb||ft.bol;
+  document.querySelectorAll(".ft-assign-batch").forEach(el=>el.style.display=batchOn?'':'none');
+}
+function buildStatusButtons(entryId,fnName){
+  return buildStatusButtonsForIds(entryId,fnName);
+}
 function updateDimUnitLabels(){
   const unit=getDimUnit();
   const lbl=document.getElementById("sc-dim-unit-label");
@@ -1762,6 +1960,8 @@ let bsStatusFilter="";
 
 async function openStatusPage(){
   showTab("status");
+  rebuildAllDynamicStatusButtons();
+  applyFeatureToggles();
   document.getElementById("bs-entries-card").style.display="none";
   document.getElementById("bs-dates").innerHTML='<span style="color:#475569;font-size:12px">Loading dates...</span>';
   const r=await api({action:"scan-dates",adminEmail:adm.email,adminPassword:adm.password});
@@ -1872,7 +2072,8 @@ function bsSelectNone(){
 function populateBsSeriesSelector(){
   const sel=document.getElementById("bs-series-selector");
   if(!sel) return;
-  const active=allSeries.filter(s=>s.active);
+  const ft=loadFeatureToggles();
+  const active=allSeries.filter(s=>s.active&&(s.type==='MAWB'?ft.mawb!==false:ft.bol!==false));
   sel.innerHTML='<option value="">— No batch —</option>'+active.map(s=>{
     const cur=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
     return '<option value="'+s.id+'">'+esc(s.type)+': '+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+' (current: '+cur+')</option>';
@@ -2100,18 +2301,7 @@ async function delLookupTracking(tracking){
         ${e.hawb?'<button onclick="viewDimsHawb(\''+esc(e.hawb)+'\')" style="padding:4px 8px;border:1px solid #4c1d95;border-radius:6px;background:#2e1065;color:#c4b5fd;font-size:10px;cursor:pointer">Series</button>':''}
         ${(e.mawb||e.bol)?'<button onclick="viewDimsMawb(\''+esc(e.mawb||e.bol)+'\')" style="padding:4px 8px;border:1px solid #1e3a5f;border-radius:6px;background:#172554;color:#93c5fd;font-size:10px;cursor:pointer">Batch</button>':''}
       </div>
-      <div class="del-single-status" id="del-ss-${e.id}">
-        <button style="background:#334155;color:#94a3b8" onclick="delBulkSingleStatus(${ids},'Scanned')">Scanned</button>
-        <button style="background:#1e3a5f;color:#60a5fa" onclick="delBulkSingleStatus(${ids},'In Transit')">In Transit</button>
-        <button style="background:#064e3b;color:#6ee7b7" onclick="delBulkSingleStatus(${ids},'Arrived Destination')">Arrived</button>
-        <button style="padding:8px 14px;font-size:13px;background:#4c1d95;color:#c4b5fd" onclick="delBulkSingleStatus(${ids},'Out for Delivery')">Out for Delivery</button>
-        <button style="padding:8px 14px;font-size:13px;background:#065f46;color:#34d399" onclick="delBulkSingleStatus(${ids},'Delivered')">Delivered</button>
-        <button style="background:#7f1d1d;color:#fca5a5" onclick="delBulkSingleStatus(${ids},'Delay')">Delay</button>
-        <button style="background:#78350f;color:#fdba74" onclick="delBulkSingleStatus(${ids},'Held')">Held</button>
-        <button style="background:#713f12;color:#fde68a" onclick="delBulkSingleStatus(${ids},'Return')">Return</button>
-        <button style="background:#713f12;color:#fbbf24" onclick="delBulkSingleStatus(${ids},'Customs')">Customs</button>
-        <div style="display:flex;gap:4px;margin-top:4px;width:100%"><input id="del-cs-${e.id}" placeholder="Custom..." style="flex:1;padding:5px 8px;border:1px solid #475569;border-radius:6px;background:#0f172a;color:#f8fafc;font-size:11px"><button onclick="const v=document.getElementById('del-cs-${e.id}').value.trim();if(v)delBulkSingleStatus(${ids},v)" style="padding:5px 10px;border:1px solid #475569;border-radius:6px;background:#1e293b;color:#e2e8f0;font-size:11px;font-weight:700;cursor:pointer">Set</button></div>
-      </div>
+      <div class="del-single-status" id="del-ss-${e.id}">${buildStatusButtonsForIds(idsByTk[e.tracking_number],'delBulkSingleStatus')}</div>
     </div>`;
   }).join("");
 }
@@ -2187,19 +2377,7 @@ async function delSearchAny(page){
         <div style="font-size:11px;color:#94a3b8">${esc(e.name)}${route?' · '+route:''}${etaLabel}</div>
         <div style="text-align:right;font-size:10px;font-family:monospace">${(e.mawb||e.bol)?'<div style="color:#60a5fa;cursor:pointer" onclick="printMawb(\''+esc(e.mawb||e.bol)+'\')">'+esc(e.mawb||e.bol)+' <span style="font-size:9px">🖨</span></div>':''}${e.hawb?'<div style="color:#a78bfa;cursor:pointer" onclick="printHawb(\''+esc(e.hawb)+'\')">'+esc(e.hawb)+' <span style="font-size:9px">🖨</span></div>':''}</div>
       </div>
-      <div class="del-single-status">
-        <button style="background:#334155;color:#94a3b8" onclick="delSingleStatusRefreshSearch(${e.id},'Scanned')">Scanned</button>
-        <button style="background:#1e3a5f;color:#60a5fa" onclick="delSingleStatusRefreshSearch(${e.id},'In Transit')">In Transit</button>
-        <button style="background:#064e3b;color:#6ee7b7" onclick="delSingleStatusRefreshSearch(${e.id},'Arrived Destination')">Arrived</button>
-        <button style="background:#4c1d95;color:#c4b5fd" onclick="delSingleStatusRefreshSearch(${e.id},'Out for Delivery')">Out for Delivery</button>
-        <button style="background:#065f46;color:#34d399" onclick="delSingleStatusRefreshSearch(${e.id},'Delivered')">Delivered</button>
-        <button style="background:#7f1d1d;color:#fca5a5" onclick="delSingleStatusRefreshSearch(${e.id},'Delay')">Delay</button>
-        <button style="background:#78350f;color:#fdba74" onclick="delSingleStatusRefreshSearch(${e.id},'Held')">Held</button>
-        <button style="background:#713f12;color:#fde68a" onclick="delSingleStatusRefreshSearch(${e.id},'Return')">Return</button>
-        <button style="background:#713f12;color:#fbbf24" onclick="delSingleStatusRefreshSearch(${e.id},'Customs')">Customs</button>
-        <div style="display:flex;gap:4px;margin-top:4px;width:100%"><input id="del-cs2-${e.id}" placeholder="Custom..." style="flex:1;padding:5px 8px;border:1px solid #475569;border-radius:6px;background:#0f172a;color:#f8fafc;font-size:11px"><button onclick="const v=document.getElementById('del-cs2-${e.id}').value.trim();if(v)delSingleStatusRefreshSearch(${e.id},v)" style="padding:5px 10px;border:1px solid #475569;border-radius:6px;background:#1e293b;color:#e2e8f0;font-size:11px;font-weight:700;cursor:pointer">Set</button></div>
-        <button style="background:#1e1b4b;color:#a5b4fc;margin-top:4px" onclick="delSingleStatusRefreshSearch(${e.id},'Archived')">Archive</button>
-      </div>
+      <div class="del-single-status">${buildStatusButtons(e.id,'delSingleStatusRefreshSearch')}</div>
     </div>`;
   }).join("");
   // Pager (only for name search which supports pagination)
@@ -2224,14 +2402,25 @@ function getSelectedEntryIds(){
   return Array.from(document.querySelectorAll(".del-entry-cb:checked")).map(cb=>parseInt(cb.value));
 }
 function buildActionBar(){
+  const ft=loadFeatureToggles();
+  const batchOn=ft.mawb||ft.bol;
+  // Build status action buttons
+  const all=getAllStatuses();
+  let statusBtns='';
+  all.forEach(s=>{
+    if(ft.statuses[s]===false) return;
+    const st=getStatusBtnStyle(s);
+    const label=st.label||s;
+    statusBtns+='<button class="ft-status-btn" data-status="'+esc(s)+'" onclick="delBulkSelectedStatus(\''+esc(s).replace(/'/g,"\\'")+'\')" style="padding:5px 10px;border:1px solid '+st.border+';border-radius:6px;background:'+st.bg+';color:'+st.color+';font-size:11px;font-weight:700;cursor:pointer">'+esc(label)+'</button>';
+  });
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center">'+
     '<label style="font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:4px"><input type="checkbox" id="del-select-all" onchange="delToggleSelectAll(this.checked)"> Select All</label>'+
     '<button onclick="delConsolidateSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>'+
-    '<button onclick="delAssignSeriesSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Batch</button>'+
+    (batchOn?'<button class="ft-assign-batch" onclick="delAssignSeriesSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Batch</button>':'')+
     '<button onclick="delSplitSelected()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer">Split</button>'+
-    '<button onclick="delMarkDeliveredSelected()" style="padding:5px 10px;border:1px solid #065f46;border-radius:6px;background:#065f46;color:#34d399;font-size:11px;font-weight:700;cursor:pointer">Mark Delivered</button>'+
     '<button onclick="delClearResults()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:none;color:#64748b;font-size:11px;cursor:pointer">Clear</button>'+
-    '</div>';
+    '</div>'+
+    '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">'+statusBtns+'</div>';
 }
 async function delConsolidateSelected(){
   const ids=getSelectedEntryIds();
@@ -2269,6 +2458,13 @@ async function delMarkDeliveredSelected(){
   if(!ids.length){alert("Select items first");return}
   const r=await api({action:"bulk-update-status",adminEmail:adm.email,adminPassword:adm.password,entryIds:ids,status:"Delivered"});
   if(r.ok){alert("Marked "+r.updated+" as Delivered");delSearchAny(delNamePage)}
+  else alert(r.error||"Failed");
+}
+async function delBulkSelectedStatus(newStatus){
+  const ids=getSelectedEntryIds();
+  if(!ids.length){alert("Select items first");return}
+  const r=await api({action:"bulk-update-status",adminEmail:adm.email,adminPassword:adm.password,entryIds:ids,status:newStatus});
+  if(r.ok){alert("Updated "+r.updated+" to '"+newStatus+"'");delSearchAny(delNamePage)}
   else alert(r.error||"Failed");
 }
 function delClearResults(){
@@ -2343,17 +2539,11 @@ function renderDelSearchResults(entries,total,showPager){
       </div>
       <div style="display:flex;gap:4px;margin:4px 0;flex-wrap:wrap">
         <button onclick="printEntryLabel(${e.id})" style="padding:3px 7px;border:1px solid #065f46;border-radius:5px;background:#064e3b;color:#6ee7b7;font-size:10px;cursor:pointer;font-weight:700">Label</button>
-        <button onclick="viewDimsSingleEntry(${e.id})" style="padding:3px 7px;border:1px solid #334155;border-radius:5px;background:#1e293b;color:#94a3b8;font-size:10px;cursor:pointer">Dims</button>
+        ${ftEnabled('dims')?'<button onclick="viewDimsSingleEntry('+e.id+')" style="padding:3px 7px;border:1px solid #334155;border-radius:5px;background:#1e293b;color:#94a3b8;font-size:10px;cursor:pointer">Dims</button>':''}
         ${e.hawb?'<button onclick="viewDimsHawb(\''+esc(e.hawb)+'\')" style="padding:3px 7px;border:1px solid #4c1d95;border-radius:5px;background:#2e1065;color:#c4b5fd;font-size:10px;cursor:pointer">Series</button>':''}
         ${(e.mawb||e.bol)?'<button onclick="viewDimsMawb(\''+esc(e.mawb||e.bol)+'\')" style="padding:3px 7px;border:1px solid #1e3a5f;border-radius:5px;background:#172554;color:#93c5fd;font-size:10px;cursor:pointer">Batch</button>':''}
       </div>
-      <div class="del-single-status">
-        <button style="background:#334155;color:#94a3b8" onclick="delSingleStatusRefreshSearch(${e.id},'Scanned')">Scanned</button>
-        <button style="background:#1e3a5f;color:#60a5fa" onclick="delSingleStatusRefreshSearch(${e.id},'In Transit')">In Transit</button>
-        <button style="background:#065f46;color:#34d399" onclick="delSingleStatusRefreshSearch(${e.id},'Delivered')">Delivered</button>
-        <button style="background:#713f12;color:#fbbf24" onclick="delSingleStatusRefreshSearch(${e.id},'Customs')">Customs</button>
-        <button style="background:#1e1b4b;color:#a5b4fc" onclick="delSingleStatusRefreshSearch(${e.id},'Archived')">Archive</button>
-      </div>
+      <div class="del-single-status">${buildStatusButtons(e.id,'delSingleStatusRefreshSearch')}</div>
     </div>`;
   }).join("");
 }
@@ -2368,7 +2558,8 @@ document.addEventListener("DOMContentLoaded",()=>{
 function populateDelSeriesSelector(){
   const sel=document.getElementById("del-sticky-series");
   if(!sel) return;
-  const active=allSeries.filter(s=>s.active);
+  const ft=loadFeatureToggles();
+  const active=allSeries.filter(s=>s.active&&(s.type==='MAWB'?ft.mawb!==false:ft.bol!==false));
   const opts='<option value="">— No batch —</option>'+active.map(s=>{
     const cur=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
     return '<option value="'+s.id+'">'+esc(s.type)+': '+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+' (current: '+cur+')</option>';
@@ -2565,10 +2756,10 @@ function printEntryLabel(entryId){
     '<style>@media print{body>*:not(#label-modal){display:none!important}#label-modal{position:static!important;background:none!important;padding:0!important;display:block!important}#label-modal .lbl-card{box-shadow:none!important;border-radius:0!important;max-width:4in!important;width:4in!important;margin:0!important;padding:8px!important;border:1px solid #000!important;background:#fff!important}#label-modal .no-print{display:none!important}}</style>'+
     '<div class="lbl-card" style="background:#fff;border-radius:12px;padding:16px 14px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;color:#000;font-family:Arial,sans-serif" onclick="event.stopPropagation()">'+
       '<button class="no-print" onclick="this.closest(\'#label-modal\').remove()" style="position:absolute;top:6px;right:8px;width:24px;height:24px;border:none;border-radius:50%;background:#e2e8f0;color:#475569;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center">&times;</button>'+
-      '<div class="no-print" style="display:flex;gap:6px;margin-bottom:8px">'+
+      (ftEnabled('internalBarcode')?'<div class="no-print" style="display:flex;gap:6px;margin-bottom:8px">'+
         '<button id="lbl-btn-orig" onclick="labelSwitchBarcode(\'original\')" style="padding:4px 10px;border:2px solid #3b82f6;border-radius:6px;background:#3b82f6;color:#fff;font-size:11px;cursor:pointer;font-weight:700">Original</button>'+
         '<button id="lbl-btn-int" onclick="labelSwitchBarcode(\'internal\')" style="padding:4px 10px;border:2px solid #8b5cf6;border-radius:6px;background:transparent;color:#8b5cf6;font-size:11px;cursor:pointer;font-weight:700">Internal (BDUSA)</button>'+
-      '</div>'+
+      '</div>':'')+
       '<div style="text-align:center;margin-bottom:4px"><svg id="lbl-barcode" style="max-width:100%;height:auto"></svg></div>'+
       '<div id="lbl-code-text" style="text-align:center;font-family:monospace;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:6px;word-break:break-all">'+esc(origCode)+'</div>'+
       '<div style="border-top:1px solid #ccc;padding-top:6px">'+
@@ -2650,7 +2841,7 @@ function renderDelEtaEntries(){
           <div class="del-nm">${esc(e.name)} ${statusBadge(e.status)}</div>
           ${route?'<div class="del-route">'+route+'</div>':''}
           ${(e.mawb||e.bol)?'<div style="font-size:11px;color:#60a5fa;font-family:monospace;margin-top:3px">Batch: '+esc(e.mawb||e.bol)+'</div>':'<div style="font-size:11px;color:#64748b;margin-top:3px">No Batch</div>'}
-          <div style="display:flex;gap:4px;margin-top:4px"><button onclick="event.preventDefault();printEntryLabel(${e.id})" style="padding:3px 7px;border:1px solid #065f46;border-radius:5px;background:#064e3b;color:#6ee7b7;font-size:10px;cursor:pointer;font-weight:700">Label</button><button onclick="event.preventDefault();viewDimsSingleEntry(${e.id})" style="padding:3px 7px;border:1px solid #334155;border-radius:5px;background:#1e293b;color:#94a3b8;font-size:10px;cursor:pointer">Dims</button>${e.hawb?'<button onclick="event.preventDefault();viewDimsHawb(\''+esc(e.hawb)+'\')" style="padding:3px 7px;border:1px solid #4c1d95;border-radius:5px;background:#2e1065;color:#c4b5fd;font-size:10px;cursor:pointer">Series</button>':''}${(e.mawb||e.bol)?'<button onclick="event.preventDefault();viewDimsMawb(\''+esc(e.mawb||e.bol)+'\')" style="padding:3px 7px;border:1px solid #1e3a5f;border-radius:5px;background:#172554;color:#93c5fd;font-size:10px;cursor:pointer">Batch</button>':''}</div>
+          <div style="display:flex;gap:4px;margin-top:4px"><button onclick="event.preventDefault();printEntryLabel(${e.id})" style="padding:3px 7px;border:1px solid #065f46;border-radius:5px;background:#064e3b;color:#6ee7b7;font-size:10px;cursor:pointer;font-weight:700">Label</button>${ftEnabled('dims')?'<button onclick="event.preventDefault();viewDimsSingleEntry('+e.id+')" style="padding:3px 7px;border:1px solid #334155;border-radius:5px;background:#1e293b;color:#94a3b8;font-size:10px;cursor:pointer">Dims</button>':''}${e.hawb?'<button onclick="event.preventDefault();viewDimsHawb(\''+esc(e.hawb)+'\')" style="padding:3px 7px;border:1px solid #4c1d95;border-radius:5px;background:#2e1065;color:#c4b5fd;font-size:10px;cursor:pointer">Series</button>':''}${(e.mawb||e.bol)?'<button onclick="event.preventDefault();viewDimsMawb(\''+esc(e.mawb||e.bol)+'\')" style="padding:3px 7px;border:1px solid #1e3a5f;border-radius:5px;background:#172554;color:#93c5fd;font-size:10px;cursor:pointer">Batch</button>':''}</div>
         </div>
       </label>
     </div>`;
@@ -2961,7 +3152,8 @@ function updateNsPreview(){
 function populateMawbSelector(){
   const sel=document.getElementById("sc-mawb-series");
   if(!sel) return;
-  const active=allSeries.filter(s=>s.active);
+  const ft=loadFeatureToggles();
+  const active=allSeries.filter(s=>s.active&&(s.type==='MAWB'?ft.mawb!==false:ft.bol!==false));
   sel.innerHTML='<option value="">— No batch —</option>'+active.map(s=>{
     const cur=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
     return '<option value="'+s.id+'">'+esc(s.type)+': '+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+' (current: '+cur+')</option>';
