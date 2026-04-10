@@ -9,9 +9,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="BDFUSA">
 <meta name="theme-color" content="#0f172a">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-<link rel="manifest" href="manifest.json">
-<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});</script>
+<link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/icon-180.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/icon-180.png">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="manifest" href="/manifest.json">
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -3667,7 +3670,7 @@ function viewerLogout(){
   }catch(e){sessionStorage.removeItem("adm_session")}
 })();
 </script>
-<div id="install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1e293b;border-top:1px solid #334155;padding:12px 16px;z-index:9999;text-align:center">
+<div id="install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1e293b;border-top:2px solid #3b82f6;padding:16px 16px 20px;z-index:9999;text-align:center;box-shadow:0 -4px 20px rgba(0,0,0,0.5)">
   <span style="color:#94a3b8;font-size:13px" id="install-msg"></span>
   <button id="install-btn" onclick="installPWA()" style="display:none;background:#3b82f6;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;margin-left:10px;cursor:pointer">Install App</button>
   <span id="install-close" onclick="document.getElementById('install-banner').style.display='none'" style="position:absolute;right:12px;top:10px;color:#64748b;cursor:pointer;font-size:18px">&times;</span>
@@ -3685,7 +3688,7 @@ function viewerLogout(){
 
   if(isIOS){
     banner.style.display="block";
-    msg.innerHTML='Install this app: tap <svg style="display:inline;vertical-align:middle;width:18px;height:18px" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> then <b style="color:#f8fafc">Add to Home Screen</b>';
+    msg.innerHTML='<b style="color:#f8fafc">Install this app on iPhone:</b><br><span style="margin-top:4px;display:inline-block">1. Tap the <svg style="display:inline;vertical-align:middle;width:20px;height:20px" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> <b style="color:#3b82f6">Share</b> button below &nbsp; 2. Tap <b style="color:#f8fafc">Add to Home Screen</b></span>';
   }
 
   // Android install prompt
