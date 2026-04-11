@@ -1248,7 +1248,7 @@ async function startCam(){
       video.setAttribute("playsinline","true");
       video.setAttribute("autoplay","true");
       video.setAttribute("muted","true");
-      video.style.cssText="width:100%;display:block;background:#000";
+      video.style.cssText="width:100%;height:200px;object-fit:cover;display:block;background:#000";
       video.srcObject=camStream;
       const container=document.getElementById("scanner-camera");
       container.innerHTML="";
@@ -1283,7 +1283,7 @@ async function startCam(){
     video.setAttribute("playsinline","true");
     video.setAttribute("autoplay","true");
     video.setAttribute("muted","true");
-    video.style.cssText="width:100%;display:block;background:#000";
+    video.style.cssText="width:100%;height:200px;object-fit:cover;display:block;background:#000";
     video.srcObject=camStream;
     const container=document.getElementById("scanner-camera");
     container.innerHTML="";
@@ -2248,7 +2248,7 @@ async function delStartCam(){
       const video=document.createElement("video");
       video.id="del-cam-video";
       video.setAttribute("playsinline","true");video.setAttribute("autoplay","true");video.setAttribute("muted","true");
-      video.style.cssText="width:100%;display:block;background:#000";
+      video.style.cssText="width:100%;height:200px;object-fit:cover;display:block;background:#000";
       video.srcObject=delCamStream;
       const container=document.getElementById("del-scanner-camera");
       container.innerHTML="";container.appendChild(video);
@@ -2273,7 +2273,7 @@ async function delStartCam(){
     const video=document.createElement("video");
     video.id="del-cam-video";
     video.setAttribute("playsinline","true");video.setAttribute("autoplay","true");video.setAttribute("muted","true");
-    video.style.cssText="width:100%;display:block;background:#000";
+    video.style.cssText="width:100%;height:200px;object-fit:cover;display:block;background:#000";
     video.srcObject=delCamStream;
     const container=document.getElementById("del-scanner-camera");
     container.innerHTML="";container.appendChild(video);
