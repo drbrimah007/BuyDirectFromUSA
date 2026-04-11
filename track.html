@@ -1999,13 +1999,13 @@ async function saveAdminEdit(id){
   const msg=document.getElementById("ea-msg-"+id);
   if(!name){msg.innerHTML='<span class="er">Name required</span>';return}
   msg.innerHTML='<span style="color:#94a3b8">Saving...</span>';
-  const r=await api({action:"edit-admin",adminEmail:adm.email,adminPassword:adm.password,targetId:id,newName:name,newEmail:email||undefined,newPassword:pw||undefined});
+  const r=await api({action:"edit-admin",adminEmail:adm.email,adminPassword:adm.password,adminId:id,newName:name,newEmail:email||undefined,newPassword:pw||undefined});
   if(r.ok){msg.innerHTML='<span class="ok">Saved!</span>';setTimeout(loadAdmins,800);}
   else msg.innerHTML='<span class="er">'+(r.error||"Failed")+'</span>';
 }
 async function deleteAdmin(id,name){
   if(!confirm("Delete scanner account \""+name+"\"? This cannot be undone.")) return;
-  const r=await api({action:"delete-admin",adminEmail:adm.email,adminPassword:adm.password,targetId:id});
+  const r=await api({action:"delete-admin",adminEmail:adm.email,adminPassword:adm.password,adminId:id});
   if(r.ok) loadAdmins();
   else alert(r.error||"Delete failed");
 }
