@@ -105,7 +105,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .pt-note{font-size:11px;color:#64748b;margin-top:8px;padding:8px;background:#0f172a;border-radius:6px;border-left:2px solid #3b82f6}
 .pt-empty{text-align:center;padding:16px;color:#475569;font-size:12px}
 /* Post-scan name confirmation bottom sheet */
-#scan-confirm-sheet{position:fixed;left:0;right:0;bottom:0;z-index:500;background:#1e293b;border-top:2px solid #3b82f6;border-radius:18px 18px 0 0;padding:18px 16px 32px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:0 -8px 40px rgba(0,0,0,.6)}
+#scan-confirm-sheet{display:none!important;position:fixed;left:0;right:0;bottom:0;z-index:500;background:#1e293b;border-top:2px solid #3b82f6;border-radius:18px 18px 0 0;padding:18px 16px 32px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:0 -8px 40px rgba(0,0,0,.6)}
 #scan-confirm-sheet.open{transform:translateY(0)}
 #scan-confirm-sheet .sheet-handle{width:40px;height:4px;background:#334155;border-radius:2px;margin:0 auto 16px}
 #scan-confirm-sheet .sheet-tk{font-family:'SF Mono','Fira Code',monospace;color:#60a5fa;background:#0f172a;border-radius:6px;padding:10px 16px;text-align:center;margin-bottom:14px;overflow:hidden;font-weight:700;letter-spacing:.5px;display:block;width:100%}
@@ -123,10 +123,10 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 #scan-confirm-sheet .btn-confirm:disabled{opacity:.4}
 #scan-confirm-sheet .btn-skip{background:#334155;color:#94a3b8}
 /* Big name display for warehouse scanning */
-.name-big-display{display:none;margin-top:8px;background:#1e3a5f;border:2px solid #3b82f6;border-radius:10px;padding:12px 14px;text-align:center}
-.name-big-display.visible{display:block}
-.name-big-display .name-big-text{font-size:28px;font-weight:900;color:#f8fafc;letter-spacing:.5px;line-height:1.2;word-break:break-word}
-.name-big-display .name-big-label{font-size:10px;color:#60a5fa;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:700}
+.name-big-display,.tracking-big-display{display:none;margin-top:10px;background:#1e3a5f;border:2px solid #3b82f6;border-radius:12px;padding:16px 18px;text-align:center;box-shadow:0 6px 18px rgba(30,58,95,.25)}
+.name-big-display.visible,.tracking-big-display.visible{display:block}
+.name-big-display .name-big-text,.tracking-big-display .tracking-big-text{font-size:34px;font-weight:900;color:#f8fafc;letter-spacing:.5px;line-height:1.18;word-break:break-word;overflow-wrap:anywhere}
+.name-big-display .name-big-label,.tracking-big-display .tracking-big-label{font-size:11px;color:#60a5fa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:700}
 #sc-name:focus,#sc-name:not(:placeholder-shown){font-size:17px!important;font-weight:700!important;color:#f8fafc!important}
 /* Status badges */
 .st-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
@@ -230,8 +230,8 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <div class="lbx">
       <h2>Scanner Login</h2>
       <p>Log in to scan and manage packages</p>
-      <form id="admin-login-form" onsubmit="event.preventDefault();adminDoLogin();" method="post">
-      <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="al-email" name="email" placeholder="efficiency@buydirectfromusa.com" autocomplete="username"></div>
+      <form id="admin-login-form" onsubmit="event.preventDefault();adminDoLogin();" method="post" autocomplete="on">
+      <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="al-email" name="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="efficiency@buydirectfromusa.com" autocomplete="email"></div>
       <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="al-pw" name="password" placeholder="Enter password" autocomplete="current-password"></div>
       <button type="submit" class="bt bb g8">Log In</button>
       </form>
@@ -301,7 +301,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
   <!-- Entry form -->
   <div class="cd">
     <div class="fg" style="position:relative"><label class="fl">Recipient Name</label><input class="fi" id="sc-name" placeholder="e.g. John Smith" autocapitalize="words" autocomplete="off" oninput="nameAutocomplete(this.value);updateNameDisplay(this.value)" onchange="updateNameDisplay(this.value)"><div id="name-suggestions" class="name-ac"></div><div class="name-big-display" id="name-big-display"><div class="name-big-label">📦 Recipient</div><div class="name-big-text" id="name-big-text"></div></div></div>
-    <div class="fg"><div style="display:flex;justify-content:space-between;align-items:center"><label class="fl" style="margin:0">Tracking Number</label><div style="display:flex;gap:10px"><span style="font-size:11px;color:#f59e0b;cursor:pointer;font-weight:700" onclick="printTrackingBarcode()">Print</span><span style="font-size:11px;color:#3b82f6;cursor:pointer;font-weight:700" onclick="generateTracking()">Generate</span></div></div><input class="fi mono" id="sc-tracking" placeholder="Scanned or type here" style="margin-top:5px"></div>
+    <div class="fg"><div style="display:flex;justify-content:space-between;align-items:center"><label class="fl" style="margin:0">Tracking Number</label><div style="display:flex;gap:10px"><span style="font-size:11px;color:#f59e0b;cursor:pointer;font-weight:700" onclick="printTrackingBarcode()">Print</span><span style="font-size:11px;color:#3b82f6;cursor:pointer;font-weight:700" onclick="generateTracking()">Generate</span></div></div><input class="fi mono" id="sc-tracking" placeholder="Scanned or type here" style="margin-top:5px" oninput="updateTrackingDisplay(this.value)"><div class="tracking-big-display" id="tracking-big-display"><div class="tracking-big-label">📦 Tracking</div><div class="tracking-big-text" id="tracking-big-text"></div></div></div>
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label class="fl">ETA</label><input class="fi" id="sc-eta" type="date" style="font-size:13px" onchange="saveScanSettings()"></div>
       <div class="fg ft-notes" style="flex:1"><label class="fl">Notes</label><input class="fi" id="sc-notes" placeholder="Extra info" style="font-size:12px"></div>
@@ -786,7 +786,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
         <h2>Track My Package</h2>
         <p>Enter the name and password you registered with</p>
         <form id="viewer-login-form" onsubmit="event.preventDefault();viewerLogin();" method="post">
-        <div class="fg"><label class="fl">Your Name</label><input class="fi" id="vl-name" name="username" placeholder="e.g. John Smith" autocomplete="username"></div>
+        <div class="fg"><label class="fl">Your Name</label><input class="fi" id="vl-name" name="username" placeholder="e.g. John Smith" autocomplete="email"></div>
         <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="vl-pw" name="password" placeholder="Enter password" autocomplete="current-password"></div>
         <button type="submit" class="bt bb g8">View My Packages</button>
         </form>
@@ -946,6 +946,7 @@ function generateTracking(){
 // ── Print tracking number barcode ──
 function printTrackingBarcode(){
   const tracking=document.getElementById("sc-tracking").value.trim();
+  updateTrackingDisplay(tracking);
   if(!tracking){toast("No tracking number to print","er");return}
   const code=batchPrefix.toUpperCase()+tracking;
   const modal=document.createElement("div");
@@ -1106,6 +1107,16 @@ function getCookieBak(k){try{const m=document.cookie.match(new RegExp('(?:^|;\\s
 function delCookieBak(k){try{document.cookie=k+"=;max-age=0;path=/;SameSite=Strict"}catch(e){}}
 let selectedLoc="";
 let html5Sc=null;
+async function tryAutofillAdminLogin(){
+  try{
+    if(!(navigator.credentials&&window.PasswordCredential)) return;
+    const cred=await navigator.credentials.get({password:true,mediation:"optional"});
+    if(!cred) return;
+    const em=document.getElementById("al-email"), pw=document.getElementById("al-pw");
+    if(em&&!em.value) em.value=cred.id||"";
+    if(pw&&!pw.value) pw.value=cred.password||"";
+  }catch(e){}
+}
 
 async function adminDoLogin(){
   const email=document.getElementById("al-email").value.trim();
@@ -1115,6 +1126,7 @@ async function adminDoLogin(){
   const r=await api({action:"admin-login",email,password:pw});
   if(!r.ok){err.textContent=r.error||"Login failed.";err.style.display="block";return}
   adm={name:r.admin.name,email,password:pw,is_super:r.admin.is_super};
+  try{if(window.PasswordCredential&&navigator.credentials){const form=document.getElementById("admin-login-form"); if(form){const cred=new PasswordCredential(form); navigator.credentials.store(cred).catch(()=>{});}}}catch(e){}
   localStorage.setItem("adm_session",JSON.stringify(adm));
   setCookieBak("adm_session_bak",JSON.stringify(adm));
   enterScanner();
@@ -1146,6 +1158,7 @@ async function enterScanner(){
   loadKnownNames();
   loadDashStats();
   loadNumberSeries();
+  try{restoreScanSettings()}catch(e){}
   autoArchiveOldPackages();
 }
 
@@ -1282,7 +1295,7 @@ let camStream=null;
 let nativeDetector=null;
 let nativeScanInterval=null;
 let scanConfirm={};
-const CONFIRM_NEEDED=2;
+const CONFIRM_NEEDED=1;
 let scanDone=false;
 
 function isValidTracking(s){
@@ -1327,7 +1340,6 @@ function onBarcodeDetected(raw){
   const now=Date.now();
   const decoded=cleanBarcode(raw);
   if(!decoded) return;
-  if(_seenRecently(_recentScanHits,decoded)) return;
   if(!isValidTracking(decoded)){
     scanConfirm={};
     _lastBadRead=now;
@@ -1339,9 +1351,11 @@ function onBarcodeDetected(raw){
   if(scanConfirm[decoded]>=CONFIRM_NEEDED){
     scanDone=true;
     document.getElementById("sc-tracking").value=decoded;
+    updateTrackingDisplay(decoded);
     document.getElementById("sc-status").innerHTML='<span class="ok">Scanned: '+esc(decoded)+'</span>';
     playChime();
     if(navigator.vibrate) navigator.vibrate([100,50,100]);
+    _recentScanHits[decoded]=Date.now();
     stopCam();
     // Pre-fill name from existing entries, then open confirm sheet
     autoLookupNameForSheet(decoded);
@@ -1391,7 +1405,7 @@ async function startCam(){
         try{
           const vw=video.videoWidth,vh=video.videoHeight;
           if(!vw) return;
-          const cropH=Math.round(vh*0.3);
+          const cropH=Math.round(vh*0.5);
           const cropY=Math.round((vh-cropH)/2);
           cropCanvas.width=vw;cropCanvas.height=cropH;
           cropCtx.drawImage(video,0,cropY,vw,cropH,0,0,vw,cropH);
@@ -1400,7 +1414,7 @@ async function startCam(){
             onBarcodeDetected(barcodes[0].rawValue);
           }
         }catch(e){}
-      },120);
+      },110);
       return;
     }catch(e){
       st.textContent="Native scanner failed, trying backup...";
@@ -1465,7 +1479,7 @@ async function startCam(){
     nativeScanInterval=setInterval(async()=>{
       if(scanDone||!video.videoWidth) return;
       const vw=video.videoWidth,vh=video.videoHeight;
-      const cropH=Math.round(vh*0.3);
+      const cropH=Math.round(vh*0.5);
       const cropY=Math.round((vh-cropH)/2);
       canvas.width=vw;
       canvas.height=cropH;
@@ -1479,7 +1493,7 @@ async function startCam(){
           onBarcodeDetected(result.decodedText);
         }
       }catch(e){}
-    },400);
+    },250);
     return;
   }catch(e){
     st.textContent="Camera error: "+e;
@@ -1504,8 +1518,8 @@ async function startCam(){
     html5Sc=new Html5Qrcode("scanner-camera",{formatsToSupport:formats,verbose:false,experimentalFeatures:{useBarCodeDetectorIfSupported:false}});
     const w=Math.min(window.innerWidth-40,380);
     const camCfg=isIOS?
-      {fps:8,qrbox:function(vw,vh){const qw=Math.round(Math.min(vw*0.8,260));return{width:qw,height:Math.round(qw*0.48)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{ideal:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080},advanced:[{focusMode:"continuous"},{exposureMode:"continuous"},{whiteBalanceMode:"continuous"}]}}:
-      {fps:15,qrbox:{width:w,height:Math.round(w*0.5)},disableFlip:false};
+      {fps:10,qrbox:function(vw,vh){const qw=Math.round(Math.min(vw*0.92,340));return{width:qw,height:Math.round(qw*0.58)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{ideal:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080},advanced:[{focusMode:"continuous"},{exposureMode:"continuous"},{whiteBalanceMode:"continuous"}]}}:
+      {fps:12,qrbox:{width:w,height:Math.round(w*0.62)},disableFlip:false};
     await html5Sc.start(
       _pickCameraConfig("scanner_last_camera"),
       camCfg,
@@ -1562,18 +1576,12 @@ async function autoLookupNameForSheet(tracking){
       const r=await api({action:"all-entries",adminEmail:adm.email,adminPassword:adm.password});
       if(r.ok&&r.entries){
         const match=r.entries.find(e=>e.tracking_number&&e.tracking_number.toLowerCase()===tracking.toLowerCase());
-        if(match&&match.name){
-          lastSavedName=match.name;
-        }
+        if(match&&match.name) lastSavedName=match.name;
       }
     }
   }catch(e){}
-  const ft=loadFeatureToggles();
-  if(ft.expandOnScan!==false){
-    openConfirmSheet(tracking);
-  } else {
-    autoLookupName(tracking);
-  }
+  updateTrackingDisplay(tracking);
+  autoLookupName(tracking);
 }
 // ── Auto-lookup name from existing entries ──
 async function autoLookupName(tracking){
@@ -1616,65 +1624,12 @@ function fitTrackingFont(tracking){
     el.style.fontSize=size+"px";
   }
 }
-function openConfirmSheet(tracking){
-  const sheet=document.getElementById("scan-confirm-sheet");
-  const inp=document.getElementById("sheet-name-input");
-  const big=document.getElementById("sheet-name-big");
-  document.getElementById("sheet-tk-display").textContent=tracking;
-  fitTrackingFont(tracking);
-  // Pre-fill with lastSavedName if set
-  const pre=lastSavedName||"";
-  inp.value=pre;
-  big.textContent=pre;
-  document.getElementById("sheet-name-ac").classList.remove("show");
-  document.getElementById("sheet-name-ac").innerHTML="";
-  sheet.classList.add("open");
-  setTimeout(()=>{fitTrackingFont(tracking);inp.focus();},350);
-}
-function closeConfirmSheet(){
-  document.getElementById("scan-confirm-sheet").classList.remove("open");
-  document.getElementById("sheet-name-ac").classList.remove("show");
-  // Sync whatever was typed back to main form
-  const v=document.getElementById("sheet-name-input").value.trim();
-  if(v){
-    document.getElementById("sc-name").value=v;
-    updateNameDisplay(v);
-    lastSavedName=v;
-  }
-}
-function sheetNameAC(val){
-  const big=document.getElementById("sheet-name-big");
-  big.textContent=val.trim();
-  const box=document.getElementById("sheet-name-ac");
-  if(!val||val.length<1){box.classList.remove("show");box.innerHTML="";return}
-  const q=val.toLowerCase();
-  const matches=knownPeople.filter(p=>p.name.toLowerCase().startsWith(q)||p.company.toLowerCase().startsWith(q)).slice(0,6);
-  if(!matches.length){box.classList.remove("show");box.innerHTML="";return}
-  box.innerHTML=matches.map(p=>{
-    const co=p.company?' <span style="color:#64748b;font-size:13px">— '+esc(p.company)+'</span>':"";
-    return '<div class="ac-item" onmousedown="sheetPickName(\''+esc(p.name).replace(/'/g,"\\'")+'\')">'+esc(p.name)+co+'</div>';
-  }).join("");
-  box.classList.add("show");
-}
-function sheetPickName(name){
-  document.getElementById("sheet-name-input").value=name;
-  document.getElementById("sheet-name-big").textContent=name;
-  document.getElementById("sheet-name-ac").classList.remove("show");
-  document.getElementById("sheet-name-ac").innerHTML="";
-}
-async function sheetConfirmSave(){
-  const name=document.getElementById("sheet-name-input").value.trim();
-  // Sync to main form fields then trigger doSave
-  document.getElementById("sc-name").value=name||lastSavedName||"";
-  updateNameDisplay(document.getElementById("sc-name").value);
-  lastSavedName=document.getElementById("sc-name").value;
-  closeConfirmSheet();
-  await doSave();
-}
-document.addEventListener("DOMContentLoaded",()=>{
-  const si=document.getElementById("sheet-name-input");
-  if(si) si.addEventListener("blur",()=>{setTimeout(()=>{document.getElementById("sheet-name-ac").classList.remove("show")},180)});
-});
+function openConfirmSheet(tracking){ updateTrackingDisplay(tracking); autoLookupName(tracking); }
+function closeConfirmSheet(){}
+function sheetNameAC(val){}
+function sheetPickName(name){}
+async function sheetConfirmSave(){ await doSave(); }
+document.addEventListener("DOMContentLoaded",()=>{});
 // ── Name autocomplete ──
 let knownPeople=[];
 async function loadKnownNames(){
@@ -1715,6 +1670,14 @@ function updateNameDisplay(val){
     disp.classList.remove("visible");
     txt.textContent="";
   }
+}
+function updateTrackingDisplay(val){
+  const disp=document.getElementById("tracking-big-display");
+  const txt=document.getElementById("tracking-big-text");
+  if(!disp||!txt) return;
+  const v=(val||"").trim();
+  if(v){ txt.textContent=v; disp.classList.add("visible"); }
+  else { txt.textContent=""; disp.classList.remove("visible"); }
 }
 function nameAutocomplete(val){
   const box=document.getElementById("name-suggestions");
@@ -1797,10 +1760,12 @@ async function doSave(){
 function clearForm(){
   document.getElementById("sc-name").value=lastSavedName;
   document.getElementById("sc-tracking").value="";
+  updateTrackingDisplay("");
   document.getElementById("sc-notes").value="";
   ["sc-dim-l","sc-dim-b","sc-dim-h","sc-actual-wt"].forEach(id=>{const el=document.getElementById(id);if(el) el.value=""});
   const dwr=document.getElementById("sc-dim-wt-result");if(dwr) dwr.textContent="—";
   updateNameDisplay(lastSavedName);
+  updateTrackingDisplay("");
 }
 // ── Dims settings ──
 function getDimUnit(){return localStorage.getItem("dim_unit")||"kg"}
@@ -1875,14 +1840,15 @@ function saveAllFeatures(){
     try{getAllStatuses().forEach(s=>{const cb=document.getElementById("ft-st-"+s.replace(/\s+/g,'-'));ftFromDOM.statuses[s]=cb?cb.checked:true})}catch(e){}
     try{const j=JSON.stringify(ftFromDOM);localStorage.setItem("feature_toggles",j);sessionStorage.setItem("feature_toggles_bak",j)}catch(e){}
     try{applyFeatureToggles();rebuildAllDynamicStatusButtons()}catch(e){}
-    _doSave({feature_toggles:ftFromDOM},msg);
+    const settings=_buildSettingsPayload(false); settings.feature_toggles=ftFromDOM; _doSave(settings,msg);
   }catch(e){
     if(msg){msg.textContent="Bug: "+e.message;msg.style.opacity="1";setTimeout(()=>{msg.style.opacity="0"},4000)}
   }
 }
 let _saving=false;
+let _pendingSettingsSave=null;
 async function _doSave(settings,msgEl){
-  if(_saving) return;
+  if(_saving){ _pendingSettingsSave={settings:settings,msgEl:msgEl}; return; }
   _saving=true;
   if(msgEl){msgEl.textContent="Saving...";msgEl.style.opacity="1"}
   const ctrl=new AbortController();
@@ -1902,7 +1868,10 @@ async function _doSave(settings,msgEl){
     clearTimeout(timer);
     if(msgEl){msgEl.textContent=e.name==="AbortError"?"Timeout":"Error";setTimeout(()=>{msgEl.style.opacity="0"},3000)}
     console.error("Save failed:",e);
-  }finally{_saving=false}
+  }finally{
+    _saving=false;
+    if(_pendingSettingsSave){ const next=_pendingSettingsSave; _pendingSettingsSave=null; setTimeout(()=>_doSave(next.settings,next.msgEl),50); }
+  }
 }
 // ── Server-side settings sync (Android/iOS reliability) ──
 let _syncTimer=null;
@@ -1922,8 +1891,8 @@ function _buildSettingsPayload(includeLogo){
   }catch(e){ft=lj("feature_toggles","{}")}
   const bpInp=document.getElementById("batch-prefix-input");
   const cnInp=document.getElementById("set-company-name");
-  const duSel=document.getElementById("dim-unit-select");
-  const ddInp=document.getElementById("dim-divisor-input");
+  const duSel=document.getElementById("dim-unit");
+  const ddInp=document.getElementById("dim-divisor");
   const p={
     feature_toggles:ft,
     custom_statuses:lj("custom_statuses","[]"),
@@ -1947,10 +1916,7 @@ function syncSettingsToServer(){
   if(!adm) return;
   clearTimeout(_syncTimer);
   const settings=_buildSettingsPayload(false);
-  const ctrl=new AbortController();
-  setTimeout(()=>ctrl.abort(),8000);
-  fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:settings}),signal:ctrl.signal})
-  .then(r=>r.json()).then(r=>{if(!r||!r.ok)console.warn("Sync failed",r)}).catch(e=>console.warn("Sync error",e));
+  _syncTimer=setTimeout(()=>{ _doSave(settings,null); },250);
 }
 function _flushSettingsBeforeUnload(){
   if(!adm) return;
@@ -1973,35 +1939,30 @@ async function loadSettingsFromServer(){
     const r=await api({action:"load-settings",adminEmail:adm.email,adminPassword:adm.password});
     if(!r.ok||!r.settings) return;
     const s=r.settings;
-    // Write ALL settings to localStorage (best-effort) AND apply to UI directly
-    const safeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-    if(s.feature_toggles&&typeof s.feature_toggles==='object'&&Object.keys(s.feature_toggles).length){
-      safeSet("feature_toggles",JSON.stringify(s.feature_toggles));
-      // Apply directly to DOM checkboxes (don't rely on localStorage roundtrip)
-      try{
-        const ft=s.feature_toggles;
-        const sc=(id,val)=>{const el=document.getElementById(id);if(el)el.checked=!!val};
-        if(ft.dims!==undefined) sc("ft-dims",ft.dims);
-        if(ft.notes!==undefined) sc("ft-notes",ft.notes);
-        if(ft.internalBarcode!==undefined) sc("ft-internal-barcode",ft.internalBarcode);
-        if(ft.expandOnScan!==undefined) sc("ft-expand-on-scan",ft.expandOnScan);
-        if(ft.mawb!==undefined) sc("ft-mawb",ft.mawb);
-        if(ft.bol!==undefined) sc("ft-bol",ft.bol);
-      }catch(e){}
+    const safeSet=(k,v)=>{try{localStorage.setItem(k,v);sessionStorage.setItem(k+"_bak",v)}catch(e){}};
+    if(s.feature_toggles&&typeof s.feature_toggles==='object'){
+      const ftJson=JSON.stringify(s.feature_toggles);
+      safeSet("feature_toggles",ftJson);
+      try{sessionStorage.setItem("feature_toggles_bak",ftJson)}catch(e){}
     }
-    if(s.custom_statuses&&Array.isArray(s.custom_statuses)) safeSet("custom_statuses",JSON.stringify(s.custom_statuses));
+    if(Array.isArray(s.custom_statuses)) safeSet("custom_statuses",JSON.stringify(s.custom_statuses));
     if(s.custom_status_colors&&typeof s.custom_status_colors==='object') safeSet("custom_status_colors",JSON.stringify(s.custom_status_colors));
-    if(s.dim_unit) safeSet("dim_unit",s.dim_unit);
-    if(s.dim_divisor) safeSet("dim_divisor",s.dim_divisor);
-    if(s.batch_prefix){safeSet("batch_prefix",s.batch_prefix);batchPrefix=s.batch_prefix}
-    if(s.company_name) safeSet("company_name",s.company_name);
-    if(s.company_logo) safeSet("company_logo",s.company_logo);
-    if(s.scan_dests&&Array.isArray(s.scan_dests)) safeSet("scan_dests",JSON.stringify(s.scan_dests));
+    if(s.dim_unit){safeSet("dim_unit",s.dim_unit); const el=document.getElementById("dim-unit"); if(el) el.value=s.dim_unit;}
+    if(s.dim_divisor){safeSet("dim_divisor",String(s.dim_divisor)); const el=document.getElementById("dim-divisor"); if(el) el.value=s.dim_divisor;}
+    if(s.batch_prefix){safeSet("batch_prefix",s.batch_prefix); batchPrefix=s.batch_prefix; const el=document.getElementById("batch-prefix-input"); if(el) el.value=s.batch_prefix; const disp=document.getElementById("batch-prefix-display"); if(disp) disp.textContent=s.batch_prefix+" + YYYYMMDD = 18 chars";}
+    if(typeof s.company_name==="string"){safeSet("company_name",s.company_name); const el=document.getElementById("set-company-name"); if(el) el.value=s.company_name;}
+    if(s.company_logo){safeSet("company_logo",s.company_logo);}
+    if(Array.isArray(s.scan_dests)) safeSet("scan_dests",JSON.stringify(s.scan_dests));
     if(s.gen_tracking_seq) safeSet("gen_tracking_seq",s.gen_tracking_seq);
-    if(s.scan_loc) safeSet("scan_loc",s.scan_loc);
-    if(s.scan_dest) safeSet("scan_dest",s.scan_dest);
-    if(s.scan_eta) safeSet("scan_eta",s.scan_eta);
-    if(s.scan_series) safeSet("scan_series",s.scan_series);
+    if(typeof s.scan_loc==="string") safeSet("scan_loc",s.scan_loc);
+    if(typeof s.scan_dest==="string") safeSet("scan_dest",s.scan_dest);
+    if(typeof s.scan_eta==="string"){safeSet("scan_eta",s.scan_eta); const el=document.getElementById("sc-eta"); if(el) el.value=s.scan_eta;}
+    if(typeof s.scan_series==="string") safeSet("scan_series",s.scan_series);
+    try{initFeatureTogglesUI();buildStatusCheckboxes();applyFeatureToggles();rebuildAllDynamicStatusButtons();}catch(e){}
+    try{loadDimSettings();}catch(e){}
+    try{initBatchPrefix();}catch(e){}
+    try{restoreScanSettings();}catch(e){}
+    try{applyCompanyBranding();initLogoPreview();}catch(e){}
   }catch(e){console.warn("Load settings failed",e)}
 }
 function initFeatureTogglesUI(){
@@ -2703,7 +2664,6 @@ function delOnBarcode(raw){
   if(delScanDone) return;
   const decoded=cleanBarcode(raw);
   if(!decoded) return;
-  if(_seenRecently(_recentDelHits,decoded)) return;
   if(!isValidTracking(decoded)){
     document.getElementById("del-scan-status").innerHTML='<span class="er">Bad read — keep scanning</span>';
     return;
@@ -2714,6 +2674,7 @@ function delOnBarcode(raw){
     document.getElementById("del-scan-status").innerHTML='<span class="ok">Scanned: '+esc(decoded)+'</span>';
     playChime();
     if(navigator.vibrate) navigator.vibrate([100,50,100]);
+    _recentDelHits[decoded]=Date.now();
     delStopCam();
     delLookupTracking(decoded);
   } else {
@@ -2754,7 +2715,7 @@ async function delStartCam(){
       const delCropCtx=delCropCanvas.getContext("2d",{willReadFrequently:true});
       delScanInterval=setInterval(async()=>{
         if(delScanDone||!delNativeDetector) return;
-        try{const vw=video.videoWidth,vh=video.videoHeight;if(!vw)return;const cropH=Math.round(vh*0.3);const cropY=Math.round((vh-cropH)/2);delCropCanvas.width=vw;delCropCanvas.height=cropH;delCropCtx.drawImage(video,0,cropY,vw,cropH,0,0,vw,cropH);const barcodes=await delNativeDetector.detect(delCropCanvas);if(barcodes&&barcodes.length>0) delOnBarcode(barcodes[0].rawValue)}catch(e){}
+        try{const vw=video.videoWidth,vh=video.videoHeight;if(!vw)return;const cropH=Math.round(vh*0.5);const cropY=Math.round((vh-cropH)/2);delCropCanvas.width=vw;delCropCanvas.height=cropH;delCropCtx.drawImage(video,0,cropY,vw,cropH,0,0,vw,cropH);const barcodes=await delNativeDetector.detect(delCropCanvas);if(barcodes&&barcodes.length>0) delOnBarcode(barcodes[0].rawValue)}catch(e){}
       },120);
       return;
     }catch(e){
@@ -2789,7 +2750,7 @@ async function delStartCam(){
     delScanInterval=setInterval(async()=>{
       if(delScanDone||!video.videoWidth) return;
       const vw=video.videoWidth,vh=video.videoHeight;
-      const cropH=Math.round(vh*0.3);
+      const cropH=Math.round(vh*0.5);
       const cropY=Math.round((vh-cropH)/2);
       canvas.width=vw;canvas.height=cropH;
       ctx.drawImage(video,0,cropY,vw,cropH,0,0,vw,cropH);
@@ -2799,7 +2760,7 @@ async function delStartCam(){
         const result=await decoder.scanFileV2(file,false);
         if(result&&result.decodedText) delOnBarcode(result.decodedText);
       }catch(e){}
-    },400);
+    },250);
     return;
   }catch(e){
     if(delCamStream){delCamStream.getTracks().forEach(t=>t.stop());delCamStream=null}
@@ -2812,8 +2773,8 @@ async function delStartCam(){
     const delWidget=new Html5Qrcode("del-scanner-camera",{verbose:false,experimentalFeatures:{useBarCodeDetectorIfSupported:false}});
     const dw=Math.min(window.innerWidth-40,380);
     const delCamCfg=isIOSDel?
-      {fps:8,qrbox:function(vw,vh){const qw=Math.round(Math.min(vw*0.8,260));return{width:qw,height:Math.round(qw*0.48)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{ideal:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080},advanced:[{focusMode:"continuous"},{exposureMode:"continuous"},{whiteBalanceMode:"continuous"}]}}:
-      {fps:15,qrbox:{width:dw,height:Math.round(dw*0.4)},disableFlip:false};
+      {fps:10,qrbox:function(vw,vh){const qw=Math.round(Math.min(vw*0.92,340));return{width:qw,height:Math.round(qw*0.58)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{ideal:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080},advanced:[{focusMode:"continuous"},{exposureMode:"continuous"},{whiteBalanceMode:"continuous"}]}}:
+      {fps:12,qrbox:{width:dw,height:Math.round(dw*0.62)},disableFlip:false};
     await delWidget.start(
       _pickCameraConfig("deliver_last_camera"),
       delCamCfg,
