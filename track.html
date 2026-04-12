@@ -930,7 +930,7 @@ function generateTracking(){
     localStorage.setItem("gen_tracking_seq",s);
     document.getElementById("sc-tracking").value=s;
   }
-  syncSettingsToServer(true);
+  syncSettingsToServer();
 }
 
 // ── Print tracking number barcode ──
@@ -1252,7 +1252,7 @@ function addDest(){
   }
   savedDests.push(n);
   localStorage.setItem("scan_dests",JSON.stringify(savedDests));
-  syncSettingsToServer(true);
+  syncSettingsToServer();
   selectedDest=n;
   document.getElementById("new-dest-name").value="";
   renderDests();
@@ -1262,7 +1262,7 @@ function removeDest(name){
   if(!confirm("Remove destination: "+name+"?")) return;
   savedDests=savedDests.filter(d=>d!==name);
   localStorage.setItem("scan_dests",JSON.stringify(savedDests));
-  syncSettingsToServer(true);
+  syncSettingsToServer();
   if(selectedDest===name) selectedDest="";
   renderDests();
 }
@@ -1777,7 +1777,7 @@ function saveDimSettings(){
   updateDimUnitLabels();
   const msg=document.getElementById("dim-save-msg");
   if(msg){msg.textContent="Saved!";msg.style.color="#34d399";setTimeout(()=>{msg.textContent=""},2000)}
-  syncSettingsToServer(true);
+  syncSettingsToServer();
 }
 function loadDimSettings(){
   const u=document.getElementById("dim-unit");
@@ -1838,27 +1838,30 @@ function saveAllFeatures(){
     expandOnScan:g("ft-expand-on-scan"),mawb:g("ft-mawb"),bol:g("ft-bol"),statuses:{}
   };
   getAllStatuses().forEach(s=>{const cb=document.getElementById("ft-st-"+s.replace(/\s+/g,'-'));ftFromDOM.statuses[s]=cb?cb.checked:true});
-  // Try writing to localStorage (best-effort, may silently fail on mobile)
+  // Try writing to localStorage (best-effort)
   try{const j=JSON.stringify(ftFromDOM);localStorage.setItem("feature_toggles",j);sessionStorage.setItem("feature_toggles_bak",j)}catch(e){}
   try{applyFeatureToggles();rebuildAllDynamicStatusButtons()}catch(e){}
-  // Build full payload from DOM + localStorage fallbacks
-  const settings=_buildSettingsPayload();
-  settings.feature_toggles=ftFromDOM; // override with DOM-read values
-  const payload={action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:settings};
-  clearTimeout(_syncTimer);_lastSyncPayload=null;
-  api(payload).then(r=>{
-    if(r&&r.ok){
-      if(msg){msg.textContent="Saved!";setTimeout(()=>{msg.style.opacity="0"},2000)}
-      // Verify: reload from server to confirm persistence
-      loadSettingsFromServer().then(()=>{initFeatureTogglesUI();applyFeatureToggles()}).catch(()=>{});
-    }
-    else{console.error("Save failed",r);if(msg){msg.textContent="Error: "+(r&&r.error||"unknown");setTimeout(()=>{msg.style.opacity="0"},4000)}}
-  }).catch(e=>{console.error("Save network error",e);if(msg){msg.textContent="Network error";setTimeout(()=>{msg.style.opacity="0"},3000)}});
+  // Build lightweight payload (no logo) with DOM-read feature toggles
+  const settings=_buildSettingsPayload(false);
+  settings.feature_toggles=ftFromDOM;
+  _doSave(settings,msg);
+}
+function _doSave(settings,msgEl){
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),8000);
+  fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:settings}),signal:ctrl.signal})
+  .then(r=>r.json()).then(r=>{
+    clearTimeout(timer);
+    if(r&&r.ok){if(msgEl){msgEl.textContent="Saved!";setTimeout(()=>{msgEl.style.opacity="0"},1500)}}
+    else{if(msgEl){msgEl.textContent="Error";setTimeout(()=>{msgEl.style.opacity="0"},3000)}}
+  }).catch(e=>{
+    clearTimeout(timer);
+    if(msgEl){msgEl.textContent=e.name==="AbortError"?"Timeout":"Net err";setTimeout(()=>{msgEl.style.opacity="0"},3000)}
+  });
 }
 // ── Server-side settings sync (Android/iOS reliability) ──
 let _syncTimer=null;
-let _lastSyncPayload=null;
-function _buildSettingsPayload(){
+function _buildSettingsPayload(includeLogo){
   // Read from DOM first, fall back to localStorage
   const ls=(k,d)=>{try{return localStorage.getItem(k)||d}catch(e){return d}};
   const lj=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||d)}catch(e){try{return JSON.parse(d)}catch(e2){return d}}};
@@ -1872,12 +1875,11 @@ function _buildSettingsPayload(){
       getAllStatuses().forEach(s=>{const cb=document.getElementById("ft-st-"+s.replace(/\s+/g,'-'));ft.statuses[s]=cb?cb.checked:true});
     }else{ft=lj("feature_toggles","{}")}
   }catch(e){ft=lj("feature_toggles","{}")}
-  // Read other inputs from DOM where possible
   const bpInp=document.getElementById("batch-prefix-input");
   const cnInp=document.getElementById("set-company-name");
   const duSel=document.getElementById("dim-unit-select");
   const ddInp=document.getElementById("dim-divisor-input");
-  return {
+  const p={
     feature_toggles:ft,
     custom_statuses:lj("custom_statuses","[]"),
     custom_status_colors:lj("custom_status_colors","{}"),
@@ -1885,7 +1887,6 @@ function _buildSettingsPayload(){
     dim_divisor:(ddInp?ddInp.value:null)||ls("dim_divisor",""),
     batch_prefix:(bpInp?bpInp.value:null)||ls("batch_prefix",""),
     company_name:(cnInp?cnInp.value:null)||ls("company_name",""),
-    company_logo:ls("company_logo",""),
     scan_dests:lj("scan_dests","[]"),
     gen_tracking_seq:ls("gen_tracking_seq",""),
     scan_loc:ls("scan_loc",""),
@@ -1893,40 +1894,32 @@ function _buildSettingsPayload(){
     scan_eta:ls("scan_eta",""),
     scan_series:ls("scan_series","")
   };
+  // Only include logo when explicitly requested (it can be megabytes of base64)
+  if(includeLogo) p.company_logo=ls("company_logo","");
+  return p;
 }
-function syncSettingsToServer(immediate){
+function syncSettingsToServer(){
   if(!adm) return;
   clearTimeout(_syncTimer);
-  _lastSyncPayload={action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:_buildSettingsPayload()};
-  if(immediate){
-    const payload=_lastSyncPayload;
-    _lastSyncPayload=null;
-    api(payload).catch(e=>console.warn("Settings sync failed",e));
-  } else {
-    _syncTimer=setTimeout(()=>{
-      if(!_lastSyncPayload) return;
-      const payload=_lastSyncPayload;
-      _lastSyncPayload=null;
-      api(payload).catch(e=>console.warn("Settings sync failed",e));
-    },1500);
-  }
+  const settings=_buildSettingsPayload(false);
+  const ctrl=new AbortController();
+  setTimeout(()=>ctrl.abort(),8000);
+  fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:settings}),signal:ctrl.signal})
+  .then(r=>r.json()).then(r=>{if(!r||!r.ok)console.warn("Sync failed",r)}).catch(e=>console.warn("Sync error",e));
 }
 function _flushSettingsBeforeUnload(){
-  if(!_lastSyncPayload&&!_syncTimer) return;
-  clearTimeout(_syncTimer);
   if(!adm) return;
+  clearTimeout(_syncTimer);
   try{
-    const payload=JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:_buildSettingsPayload()});
-    const url=API;
+    const payload=JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:_buildSettingsPayload(false)});
     if(navigator.sendBeacon){
-      navigator.sendBeacon(url,new Blob([payload],{type:'application/json'}));
+      navigator.sendBeacon(API,new Blob([payload],{type:'application/json'}));
     } else {
       const xhr=new XMLHttpRequest();
-      xhr.open('POST',url,false);
+      xhr.open('POST',API,false);
       xhr.setRequestHeader('Content-Type','application/json');
       xhr.send(payload);
     }
-    _lastSyncPayload=null;
   }catch(e){}
 }
 async function loadSettingsFromServer(){
@@ -2039,7 +2032,7 @@ function addCustomStatus(){
   try{const cols=JSON.parse(localStorage.getItem("custom_status_colors")||"{}");cols[name]=color;localStorage.setItem("custom_status_colors",JSON.stringify(cols))}catch(e){}
   buildStatusCheckboxes();
   rebuildAllDynamicStatusButtons();
-  syncSettingsToServer(true);
+  syncSettingsToServer();
 }
 function removeCustomStatus(name){
   if(!confirm("Remove custom status '"+name+"'?")) return;
@@ -2052,7 +2045,7 @@ function removeCustomStatus(name){
   try{const cols=JSON.parse(localStorage.getItem("custom_status_colors")||"{}");delete cols[name];localStorage.setItem("custom_status_colors",JSON.stringify(cols))}catch(e){}
   buildStatusCheckboxes();
   rebuildAllDynamicStatusButtons();
-  syncSettingsToServer(true);
+  syncSettingsToServer();
 }
 function ftEnabled(key){const ft=loadFeatureToggles();return ft[key]!==false}
 function ftStatusEnabled(status){const ft=loadFeatureToggles();return ft.statuses&&ft.statuses[status]!==false}
@@ -2176,7 +2169,7 @@ function saveScanSettings(){
   try{localStorage.setItem("scan_eta",document.getElementById("sc-eta").value||"")}catch(e){}
   const msel=document.getElementById("sc-mawb-series");
   if(msel) try{localStorage.setItem("scan_series",msel.value||"")}catch(e){}
-  syncSettingsToServer(true);
+  syncSettingsToServer();
 }
 function restoreScanSettings(){
   const loc=localStorage.getItem("scan_loc")||"";
@@ -3517,7 +3510,7 @@ function saveBatchPrefix(){
   if(!val){toast("Prefix cannot be empty","er");return}
   batchPrefix=val;
   localStorage.setItem("batch_prefix",val);
-  syncSettingsToServer(true);
+  syncSettingsToServer();
   inp.value=val;
   const disp=document.getElementById("batch-prefix-display");
   if(disp) disp.textContent=val+" + YYYYMMDD = 18 chars";
@@ -3583,7 +3576,7 @@ function handleLogoUpload(input){
     initLogoPreview();
     applyCompanyBranding();
     msg.innerHTML='<span class="ok">Logo saved</span>';
-    syncSettingsToServer(true);
+    syncSettingsToServerWithLogo();
   };
   reader.onerror=function(){msg.innerHTML='<span class="er">Failed to read file</span>'};
   reader.readAsDataURL(file);
@@ -3594,7 +3587,12 @@ function removeLogo(){
   initLogoPreview();
   applyCompanyBranding();
   document.getElementById("logo-msg").innerHTML='<span class="ok">Logo removed</span>';
-  syncSettingsToServer(true);
+  syncSettingsToServerWithLogo();
+}
+function syncSettingsToServerWithLogo(){
+  if(!adm) return;
+  const payload={action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:_buildSettingsPayload(true)};
+  api(payload).catch(e=>console.warn("Logo sync failed",e));
 }
 
 // ── Company name ──
@@ -3603,7 +3601,7 @@ function saveCompanyName(){
   const val=(inp.value||"").trim();
   if(!val){document.getElementById("company-name-msg").innerHTML='<span class="er">Name cannot be empty</span>';return}
   localStorage.setItem("company_name",val);
-  syncSettingsToServer(true);
+  syncSettingsToServer();
   applyCompanyBranding();
   document.getElementById("company-name-msg").innerHTML='<span class="ok">Company name saved</span>';
 }
