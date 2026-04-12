@@ -104,6 +104,30 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .pt-results{margin-top:12px}
 .pt-note{font-size:11px;color:#64748b;margin-top:8px;padding:8px;background:#0f172a;border-radius:6px;border-left:2px solid #3b82f6}
 .pt-empty{text-align:center;padding:16px;color:#475569;font-size:12px}
+/* Post-scan name confirmation bottom sheet */
+#scan-confirm-sheet{position:fixed;left:0;right:0;bottom:0;z-index:500;background:#1e293b;border-top:2px solid #3b82f6;border-radius:18px 18px 0 0;padding:18px 16px 32px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:0 -8px 40px rgba(0,0,0,.6)}
+#scan-confirm-sheet.open{transform:translateY(0)}
+#scan-confirm-sheet .sheet-handle{width:40px;height:4px;background:#334155;border-radius:2px;margin:0 auto 16px}
+#scan-confirm-sheet .sheet-tk{font-size:12px;font-family:'SF Mono','Fira Code',monospace;color:#60a5fa;background:#0f172a;border-radius:6px;padding:7px 10px;text-align:center;margin-bottom:14px;word-break:break-all}
+#scan-confirm-sheet .sheet-name-input{width:100%;padding:14px;border:2px solid #334155;border-radius:10px;background:#0f172a;color:#f8fafc;font-size:20px;font-weight:700;outline:none;-webkit-appearance:none;margin-bottom:4px}
+#scan-confirm-sheet .sheet-name-input:focus{border-color:#3b82f6}
+#scan-confirm-sheet .sheet-name-ac{background:#1e293b;border:1px solid #334155;border-radius:0 0 10px 10px;max-height:180px;overflow-y:auto;margin-bottom:8px;display:none}
+#scan-confirm-sheet .sheet-name-ac.show{display:block}
+#scan-confirm-sheet .sheet-name-ac .ac-item{padding:13px 14px;font-size:16px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid #0f172a}
+#scan-confirm-sheet .sheet-name-ac .ac-item:active{background:#334155}
+#scan-confirm-sheet .sheet-name-ac .ac-item b{color:#3b82f6}
+#scan-confirm-sheet .sheet-name-big{font-size:32px;font-weight:900;color:#4ade80;text-align:center;padding:10px 0 4px;letter-spacing:.3px;word-break:break-word;min-height:50px}
+#scan-confirm-sheet .sheet-btns{display:flex;gap:8px;margin-top:12px}
+#scan-confirm-sheet .sheet-btns button{flex:1;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer}
+#scan-confirm-sheet .btn-confirm{background:#10b981;color:#fff}
+#scan-confirm-sheet .btn-confirm:disabled{opacity:.4}
+#scan-confirm-sheet .btn-skip{background:#334155;color:#94a3b8}
+/* Big name display for warehouse scanning */
+.name-big-display{display:none;margin-top:8px;background:#1e3a5f;border:2px solid #3b82f6;border-radius:10px;padding:12px 14px;text-align:center}
+.name-big-display.visible{display:block}
+.name-big-display .name-big-text{font-size:28px;font-weight:900;color:#f8fafc;letter-spacing:.5px;line-height:1.2;word-break:break-word}
+.name-big-display .name-big-label{font-size:10px;color:#60a5fa;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-weight:700}
+#sc-name:focus,#sc-name:not(:placeholder-shown){font-size:17px!important;font-weight:700!important;color:#f8fafc!important}
 /* Status badges */
 .st-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
 .st-scanned{background:#334155;color:#94a3b8}
@@ -276,7 +300,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 
   <!-- Entry form -->
   <div class="cd">
-    <div class="fg" style="position:relative"><label class="fl">Recipient Name</label><input class="fi" id="sc-name" placeholder="e.g. John Smith" autocapitalize="words" autocomplete="off" oninput="nameAutocomplete(this.value)"><div id="name-suggestions" class="name-ac"></div></div>
+    <div class="fg" style="position:relative"><label class="fl">Recipient Name</label><input class="fi" id="sc-name" placeholder="e.g. John Smith" autocapitalize="words" autocomplete="off" oninput="nameAutocomplete(this.value);updateNameDisplay(this.value)" onchange="updateNameDisplay(this.value)"><div id="name-suggestions" class="name-ac"></div><div class="name-big-display" id="name-big-display"><div class="name-big-label">📦 Recipient</div><div class="name-big-text" id="name-big-text"></div></div></div>
     <div class="fg"><div style="display:flex;justify-content:space-between;align-items:center"><label class="fl" style="margin:0">Tracking Number</label><div style="display:flex;gap:10px"><span style="font-size:11px;color:#f59e0b;cursor:pointer;font-weight:700" onclick="printTrackingBarcode()">Print</span><span style="font-size:11px;color:#3b82f6;cursor:pointer;font-weight:700" onclick="generateTracking()">Generate</span></div></div><input class="fi mono" id="sc-tracking" placeholder="Scanned or type here" style="margin-top:5px"></div>
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label class="fl">ETA</label><input class="fi" id="sc-eta" type="date" style="font-size:13px" onchange="saveScanSettings()"></div>
@@ -1223,7 +1247,8 @@ function onBarcodeDetected(raw){
     playChime();
     if(navigator.vibrate) navigator.vibrate([100,50,100]);
     stopCam();
-    autoLookupName(decoded);
+    // Pre-fill name from existing entries, then open confirm sheet
+    autoLookupNameForSheet(decoded);
   } else {
     document.getElementById("sc-status").textContent="Read: "+decoded+" — confirming...";
   }
@@ -1421,6 +1446,21 @@ function stopCam(){
   scanConfirm={};
 }
 
+// ── Auto-lookup name then open confirm sheet ──
+async function autoLookupNameForSheet(tracking){
+  try{
+    if(adm){
+      const r=await api({action:"all-entries",adminEmail:adm.email,adminPassword:adm.password});
+      if(r.ok&&r.entries){
+        const match=r.entries.find(e=>e.tracking_number&&e.tracking_number.toLowerCase()===tracking.toLowerCase());
+        if(match&&match.name){
+          lastSavedName=match.name;
+        }
+      }
+    }
+  }catch(e){}
+  openConfirmSheet(tracking);
+}
 // ── Auto-lookup name from existing entries ──
 async function autoLookupName(tracking){
   try{
@@ -1430,6 +1470,7 @@ async function autoLookupName(tracking){
         const match=r.entries.find(e=>e.tracking_number&&e.tracking_number.toLowerCase()===tracking.toLowerCase());
         if(match&&match.name){
           document.getElementById("sc-name").value=match.name;
+          updateNameDisplay(match.name);
           document.getElementById("sc-status").innerHTML='<span class="ok">Scanned: '+esc(tracking)+' — Name auto-filled: '+esc(match.name)+'</span>';
           document.getElementById("sc-name").focus();
           return;
@@ -1439,6 +1480,7 @@ async function autoLookupName(tracking){
   }catch(e){}
   if(lastSavedName&&!document.getElementById("sc-name").value){
     document.getElementById("sc-name").value=lastSavedName;
+    updateNameDisplay(lastSavedName);
     document.getElementById("sc-status").innerHTML='<span class="ok">Scanned: '+esc(tracking)+' — Using last name: '+esc(lastSavedName)+'</span>';
   } else {
     document.getElementById("sc-status").innerHTML='<span class="ok">Scanned: '+esc(tracking)+' — Enter recipient name</span>';
@@ -1446,6 +1488,65 @@ async function autoLookupName(tracking){
   document.getElementById("sc-name").focus();
 }
 
+// ── Post-scan confirm sheet ──
+function openConfirmSheet(tracking){
+  const sheet=document.getElementById("scan-confirm-sheet");
+  const inp=document.getElementById("sheet-name-input");
+  const big=document.getElementById("sheet-name-big");
+  document.getElementById("sheet-tk-display").textContent=tracking;
+  // Pre-fill with lastSavedName if set
+  const pre=lastSavedName||"";
+  inp.value=pre;
+  big.textContent=pre;
+  document.getElementById("sheet-name-ac").classList.remove("show");
+  document.getElementById("sheet-name-ac").innerHTML="";
+  sheet.classList.add("open");
+  setTimeout(()=>inp.focus(),350);
+}
+function closeConfirmSheet(){
+  document.getElementById("scan-confirm-sheet").classList.remove("open");
+  document.getElementById("sheet-name-ac").classList.remove("show");
+  // Sync whatever was typed back to main form
+  const v=document.getElementById("sheet-name-input").value.trim();
+  if(v){
+    document.getElementById("sc-name").value=v;
+    updateNameDisplay(v);
+    lastSavedName=v;
+  }
+}
+function sheetNameAC(val){
+  const big=document.getElementById("sheet-name-big");
+  big.textContent=val.trim();
+  const box=document.getElementById("sheet-name-ac");
+  if(!val||val.length<1){box.classList.remove("show");box.innerHTML="";return}
+  const q=val.toLowerCase();
+  const matches=knownPeople.filter(p=>p.name.toLowerCase().startsWith(q)||p.company.toLowerCase().startsWith(q)).slice(0,6);
+  if(!matches.length){box.classList.remove("show");box.innerHTML="";return}
+  box.innerHTML=matches.map(p=>{
+    const co=p.company?' <span style="color:#64748b;font-size:13px">— '+esc(p.company)+'</span>':"";
+    return '<div class="ac-item" onmousedown="sheetPickName(\''+esc(p.name).replace(/'/g,"\\'")+'\')">'+esc(p.name)+co+'</div>';
+  }).join("");
+  box.classList.add("show");
+}
+function sheetPickName(name){
+  document.getElementById("sheet-name-input").value=name;
+  document.getElementById("sheet-name-big").textContent=name;
+  document.getElementById("sheet-name-ac").classList.remove("show");
+  document.getElementById("sheet-name-ac").innerHTML="";
+}
+async function sheetConfirmSave(){
+  const name=document.getElementById("sheet-name-input").value.trim();
+  // Sync to main form fields then trigger doSave
+  document.getElementById("sc-name").value=name||lastSavedName||"";
+  updateNameDisplay(document.getElementById("sc-name").value);
+  lastSavedName=document.getElementById("sc-name").value;
+  closeConfirmSheet();
+  await doSave();
+}
+document.addEventListener("DOMContentLoaded",()=>{
+  const si=document.getElementById("sheet-name-input");
+  if(si) si.addEventListener("blur",()=>{setTimeout(()=>{document.getElementById("sheet-name-ac").classList.remove("show")},180)});
+});
 // ── Name autocomplete ──
 let knownPeople=[];
 async function loadKnownNames(){
@@ -1475,6 +1576,18 @@ async function loadKnownNames(){
     }
   }catch(e){}
 }
+function updateNameDisplay(val){
+  const disp=document.getElementById("name-big-display");
+  const txt=document.getElementById("name-big-text");
+  if(!disp||!txt) return;
+  if(val&&val.trim().length>0){
+    txt.textContent=val.trim();
+    disp.classList.add("visible");
+  } else {
+    disp.classList.remove("visible");
+    txt.textContent="";
+  }
+}
 function nameAutocomplete(val){
   const box=document.getElementById("name-suggestions");
   if(!val||val.length<1){box.classList.remove("show");box.innerHTML="";return}
@@ -1493,6 +1606,7 @@ function pickName(name){
   document.getElementById("name-suggestions").classList.remove("show");
   document.getElementById("name-suggestions").innerHTML="";
   lastSavedName=name;
+  updateNameDisplay(name);
 }
 document.addEventListener("DOMContentLoaded",()=>{
   const inp=document.getElementById("sc-name");
@@ -1559,6 +1673,7 @@ function clearForm(){
   document.getElementById("sc-notes").value="";
   ["sc-dim-l","sc-dim-b","sc-dim-h","sc-actual-wt"].forEach(id=>{const el=document.getElementById(id);if(el) el.value=""});
   const dwr=document.getElementById("sc-dim-wt-result");if(dwr) dwr.textContent="—";
+  updateNameDisplay(lastSavedName);
 }
 // ── Dims settings ──
 function getDimUnit(){return localStorage.getItem("dim_unit")||"kg"}
@@ -3755,6 +3870,22 @@ function viewerLogout(){
   }catch(e){localStorage.removeItem("adm_session")}
 })();
 </script>
+<!-- POST-SCAN NAME CONFIRMATION SHEET -->
+<div id="scan-confirm-sheet">
+  <div class="sheet-handle"></div>
+  <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:700">✅ Scanned</div>
+  <div class="sheet-tk" id="sheet-tk-display"></div>
+  <div style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;font-weight:700">Recipient Name</div>
+  <div style="position:relative">
+    <input class="sheet-name-input" id="sheet-name-input" placeholder="Type or search name…" autocapitalize="words" autocomplete="off" oninput="sheetNameAC(this.value)">
+    <div class="sheet-name-ac" id="sheet-name-ac"></div>
+  </div>
+  <div class="sheet-name-big" id="sheet-name-big"></div>
+  <div class="sheet-btns">
+    <button class="btn-skip" onclick="closeConfirmSheet()">Skip</button>
+    <button class="btn-confirm" id="sheet-confirm-btn" onclick="sheetConfirmSave()">✓ Save</button>
+  </div>
+</div>
 <div id="install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1e293b;border-top:2px solid #3b82f6;padding:14px 16px 18px;z-index:9999;text-align:center;box-shadow:0 -4px 20px rgba(0,0,0,0.5)">
   <span style="color:#94a3b8;font-size:13px" id="install-msg"></span>
   <button id="install-btn" onclick="installPWA()" style="display:none;background:#3b82f6;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Install App</button>
