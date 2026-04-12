@@ -63,7 +63,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .uc{display:inline-flex;align-items:center;gap:5px;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:6px 10px;margin:0 6px 5px 0;font-size:12px}
 .uc b{color:#f8fafc}.uc span{color:#64748b;font-size:10px}
 #scanner-camera,#del-scanner-camera{position:relative}
-#scanner-camera video,#del-scanner-camera video{border-radius:10px;width:100%;height:320px;object-fit:cover}
+#scanner-camera video,#del-scanner-camera video{border-radius:10px;width:100%;height:200px;object-fit:cover}
 .scan-line{position:absolute;left:10%;right:10%;top:50%;height:2px;background:#ef4444;box-shadow:0 0 8px #ef4444;z-index:10;pointer-events:none;animation:scanPulse 1.5s ease-in-out infinite}
 @keyframes scanPulse{0%,100%{opacity:.4}50%{opacity:1}}
 #html5-qrcode-button-camera-permission,#html5-qrcode-button-camera-start,#html5-qrcode-button-camera-stop{background:#3b82f6!important;color:#fff!important;border:none!important;padding:9px 14px!important;border-radius:8px!important;font-size:13px!important;margin:3px!important}
@@ -144,6 +144,16 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 </style>
 </head>
 <body>
+<script>
+(function(){
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&"ontouchend" in document);
+  if(isIOS){
+    const st=document.createElement("style");
+    st.textContent="#scanner-camera video,#del-scanner-camera video{height:320px!important}";
+    document.head.appendChild(st);
+  }
+})();
+</script>
 
 <!-- SPLASH SCREEN -->
 <div id="splash-screen" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#0f172a;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.4s">
@@ -1161,7 +1171,7 @@ let camStream=null;
 let nativeDetector=null;
 let nativeScanInterval=null;
 let scanConfirm={};
-const CONFIRM_NEEDED=1;
+const CONFIRM_NEEDED=2;
 let scanDone=false;
 
 function isValidTracking(s){
@@ -1192,14 +1202,19 @@ function cleanBarcode(raw){
   return s.trim();
 }
 
+let _lastBadRead=0;
 function onBarcodeDetected(raw){
   if(scanDone) return;
+  const now=Date.now();
   const decoded=cleanBarcode(raw);
   if(!decoded) return;
   if(!isValidTracking(decoded)){
+    scanConfirm={};
+    _lastBadRead=now;
     document.getElementById("sc-status").innerHTML='<span class="er">Bad read: "'+esc(decoded)+'" — keep scanning</span>';
     return;
   }
+  if(now-_lastBadRead<500){return;}
   scanConfirm[decoded]=(scanConfirm[decoded]||0)+1;
   if(scanConfirm[decoded]>=CONFIRM_NEEDED){
     scanDone=true;
@@ -1236,7 +1251,7 @@ async function startCam(){
       video.setAttribute("playsinline","true");
       video.setAttribute("autoplay","true");
       video.setAttribute("muted","true");
-      video.style.cssText="width:100%;display:block;background:#000";
+      video.style.cssText="width:100%;height:200px;object-fit:cover;display:block;background:#000";
       video.srcObject=camStream;
       const container=document.getElementById("scanner-camera");
       container.innerHTML="";
@@ -1271,7 +1286,7 @@ async function startCam(){
     video.setAttribute("playsinline","true");
     video.setAttribute("autoplay","true");
     video.setAttribute("muted","true");
-    video.style.cssText="width:100%;display:block;background:#000";
+    video.style.cssText="width:100%;height:200px;object-fit:cover;display:block;background:#000";
     video.srcObject=camStream;
     const container=document.getElementById("scanner-camera");
     container.innerHTML="";
@@ -1350,7 +1365,7 @@ async function startCam(){
     html5Sc=new Html5Qrcode("scanner-camera",{formatsToSupport:formats,verbose:false,experimentalFeatures:{useBarCodeDetectorIfSupported:false}});
     const w=Math.min(window.innerWidth-40,380);
     const camCfg=isIOS?
-      {fps:15,qrbox:function(vw,vh){const qw=Math.round(Math.min(vw*0.85,280));return{width:qw,height:Math.round(qw*0.5)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{exact:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080}}}:
+      {fps:10,qrbox:function(vw,vh){const qw=Math.round(Math.min(vw*0.85,280));return{width:qw,height:Math.round(qw*0.5)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{ideal:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080},advanced:[{focusMode:"continuous"},{exposureMode:"continuous"},{whiteBalanceMode:"continuous"}]}}:
       {fps:15,qrbox:{width:w,height:Math.round(w*0.5)},disableFlip:false};
     await html5Sc.start(
       {facingMode:"environment"},
@@ -1359,6 +1374,21 @@ async function startCam(){
       ()=>{}
     );
     st.innerHTML='<span class="ok">Camera ready — point at barcode</span>';
+    setTimeout(()=>{
+      try{
+        const vid=document.querySelector("#scanner-camera video");
+        if(vid&&vid.srcObject){
+          const track=vid.srcObject.getVideoTracks()[0];
+          if(track&&track.getCapabilities){
+            const caps=track.getCapabilities();
+            const constraints={};
+            if(caps.focusMode&&caps.focusMode.includes("continuous")) constraints.focusMode="continuous";
+            if(caps.exposureMode&&caps.exposureMode.includes("continuous")) constraints.exposureMode="continuous";
+            if(Object.keys(constraints).length) track.applyConstraints({advanced:[constraints]}).catch(()=>{});
+          }
+        }
+      }catch(ex){}
+    },1500);
   }catch(e){
     st.innerHTML='<span class="er">Camera error: '+esc(String(e))+'</span>';
     document.getElementById("btn-cam-start").style.display="block";
@@ -2236,7 +2266,7 @@ async function delStartCam(){
       const video=document.createElement("video");
       video.id="del-cam-video";
       video.setAttribute("playsinline","true");video.setAttribute("autoplay","true");video.setAttribute("muted","true");
-      video.style.cssText="width:100%;display:block;background:#000";
+      video.style.cssText="width:100%;height:200px;object-fit:cover;display:block;background:#000";
       video.srcObject=delCamStream;
       const container=document.getElementById("del-scanner-camera");
       container.innerHTML="";container.appendChild(video);
@@ -2261,7 +2291,7 @@ async function delStartCam(){
     const video=document.createElement("video");
     video.id="del-cam-video";
     video.setAttribute("playsinline","true");video.setAttribute("autoplay","true");video.setAttribute("muted","true");
-    video.style.cssText="width:100%;display:block;background:#000";
+    video.style.cssText="width:100%;height:200px;object-fit:cover;display:block;background:#000";
     video.srcObject=delCamStream;
     const container=document.getElementById("del-scanner-camera");
     container.innerHTML="";container.appendChild(video);
@@ -2297,7 +2327,7 @@ async function delStartCam(){
     const delWidget=new Html5Qrcode("del-scanner-camera",{verbose:false,experimentalFeatures:{useBarCodeDetectorIfSupported:false}});
     const dw=Math.min(window.innerWidth-40,380);
     const delCamCfg=isIOSDel?
-      {fps:15,qrbox:function(vw,vh){const qw=Math.round(Math.min(vw*0.85,280));return{width:qw,height:Math.round(qw*0.5)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{exact:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080}}}:
+      {fps:10,qrbox:function(vw,vh){const qw=Math.round(Math.min(vw*0.85,280));return{width:qw,height:Math.round(qw*0.5)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{ideal:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080},advanced:[{focusMode:"continuous"},{exposureMode:"continuous"},{whiteBalanceMode:"continuous"}]}}:
       {fps:15,qrbox:{width:dw,height:Math.round(dw*0.4)},disableFlip:false};
     await delWidget.start(
       {facingMode:"environment"},
