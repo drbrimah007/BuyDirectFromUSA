@@ -492,24 +492,24 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 
     <!-- Feature Toggles -->
     <div class="cd" style="padding:14px">
-      <label class="fl" style="margin-bottom:10px;font-size:12px">Features &amp; Modules</label>
-      <div style="font-size:11px;color:#64748b;margin-bottom:10px">Enable or disable features per device. Changes take effect immediately.</div>
+      <label class="fl" style="margin-bottom:10px;font-size:12px">Features &amp; Modules <span id="ft-save-indicator" style="color:#4ade80;font-size:10px;font-weight:400;display:none">Saved</span></label>
+      <div style="font-size:11px;color:#64748b;margin-bottom:10px">Enable or disable features per device. Changes auto-save instantly.</div>
 
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
-          <input type="checkbox" id="ft-dims" onchange="saveFeatureToggles()" checked>
+          <input type="checkbox" id="ft-dims" onchange="saveFeatureToggles()">
           <span style="font-size:12px;color:#f8fafc;font-weight:700">Dims</span>
         </label>
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
-          <input type="checkbox" id="ft-notes" onchange="saveFeatureToggles()" checked>
+          <input type="checkbox" id="ft-notes" onchange="saveFeatureToggles()">
           <span style="font-size:12px;color:#f8fafc;font-weight:700">Notes</span>
         </label>
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
-          <input type="checkbox" id="ft-internal-barcode" onchange="saveFeatureToggles()" checked>
+          <input type="checkbox" id="ft-internal-barcode" onchange="saveFeatureToggles()">
           <span style="font-size:12px;color:#f8fafc;font-weight:700">Internal Barcode</span>
         </label>
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
-          <input type="checkbox" id="ft-expand-on-scan" onchange="saveFeatureToggles()" checked>
+          <input type="checkbox" id="ft-expand-on-scan" onchange="saveFeatureToggles()">
           <span style="font-size:12px;color:#f8fafc;font-weight:700">Expand on Scan</span>
         </label>
       </div>
@@ -517,11 +517,11 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <label class="fl" style="margin-bottom:6px;font-size:11px;color:#64748b">Series Types</label>
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1">
-          <input type="checkbox" id="ft-mawb" onchange="saveFeatureToggles()" checked>
+          <input type="checkbox" id="ft-mawb" onchange="saveFeatureToggles()">
           <span style="font-size:12px;color:#60a5fa;font-weight:700">MAWB</span>
         </label>
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1">
-          <input type="checkbox" id="ft-bol" onchange="saveFeatureToggles()" checked>
+          <input type="checkbox" id="ft-bol" onchange="saveFeatureToggles()">
           <span style="font-size:12px;color:#34d399;font-weight:700">BOL</span>
         </label>
       </div>
@@ -619,16 +619,34 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div id="merge-msg" style="font-size:11px;margin-top:5px"></div>
     </div>
 
-    <!-- Super-admin: add more admins -->
+    <!-- Super-admin: manage admins -->
     <div class="cd" id="super-section" style="display:none">
-      <label class="fl" style="margin-bottom:8px">Add Scanner Accounts (Super Admin)</label>
+      <label class="fl" style="margin-bottom:8px">Manage Scanner Accounts (Super Admin)</label>
       <div class="ar">
         <input id="sa-name" placeholder="New admin name">
         <input id="sa-pw" type="password" placeholder="Password">
+        <input id="sa-email" type="email" placeholder="Email (optional)" style="font-size:12px;padding:7px;border:1px solid #334155;border-radius:6px;background:#0f172a;color:#f8fafc">
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#94a3b8;cursor:pointer"><input type="checkbox" id="sa-super"> Super</label>
         <button onclick="addAdmin()">Add</button>
       </div>
       <div id="sa-msg" style="font-size:11px;margin-top:5px"></div>
-      <div id="sa-list" style="margin-top:8px"></div>
+      <div id="sa-list" style="margin-top:10px"></div>
+    </div>
+    <!-- Edit admin modal -->
+    <div id="edit-admin-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;padding:20px">
+      <div style="background:#1e293b;border-radius:12px;padding:20px;max-width:360px;width:100%;border:1px solid #334155">
+        <div style="font-size:14px;font-weight:700;color:#f8fafc;margin-bottom:12px">Edit Admin</div>
+        <input type="hidden" id="ea-id">
+        <div style="margin-bottom:8px"><label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px">Name</label><input class="fi" id="ea-name" placeholder="Admin name" style="font-size:13px;padding:8px"></div>
+        <div style="margin-bottom:8px"><label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px">Email</label><input class="fi" id="ea-email" type="email" placeholder="Email" style="font-size:13px;padding:8px"></div>
+        <div style="margin-bottom:8px"><label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px">New Password (leave blank to keep)</label><input class="fi" id="ea-password" type="password" placeholder="New password" style="font-size:13px;padding:8px"></div>
+        <div style="margin-bottom:12px"><label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#94a3b8;cursor:pointer"><input type="checkbox" id="ea-super"> Super admin</label></div>
+        <div id="ea-msg" style="font-size:11px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <button class="bt bb" style="flex:1;font-size:13px;padding:10px" onclick="saveEditAdmin()">Save</button>
+          <button class="bt" style="flex:1;font-size:13px;padding:10px;border:1px solid #475569;background:none;color:#94a3b8" onclick="closeEditAdmin()">Cancel</button>
+        </div>
+      </div>
     </div>
 
     <!-- Install App -->
@@ -846,6 +864,7 @@ function switchAdmTab(tab){
     initSettingsProfile();
     initLogoPreview();
     loadNumberSeries();
+    initFeatureTogglesUI();
     const cnInp=document.getElementById("set-company-name");
     if(cnInp) cnInp.value=localStorage.getItem("company_name")||"BuyDirectFromUSA";
     loadViewers();
@@ -1000,6 +1019,8 @@ async function publicTrack(fromUrl){
 // Handle Enter key in public tracking input + clear on load + auto-refresh
 let ptAutoRefresh=null;
 document.addEventListener("DOMContentLoaded",()=>{
+  // Restore feature toggles from localStorage immediately (Android fix)
+  try{initFeatureTogglesUI()}catch(e){}
   const ptInput=document.getElementById("pt-input");
   if(ptInput){
     ptInput.value="";
@@ -1746,6 +1767,9 @@ function saveFeatureToggles(){
   localStorage.setItem("feature_toggles",JSON.stringify(ft));
   applyFeatureToggles();
   rebuildAllDynamicStatusButtons();
+  // Flash save indicator
+  const ind=document.getElementById("ft-save-indicator");
+  if(ind){ind.style.display="inline";clearTimeout(ind._t);ind._t=setTimeout(()=>{ind.style.display="none"},1500)}
 }
 function initFeatureTogglesUI(){
   const ft=loadFeatureToggles();
@@ -2105,17 +2129,57 @@ async function addViewer(){
 async function loadAdmins(){
   const r=await api({action:"list-admins",adminEmail:adm.email,adminPassword:adm.password});
   const d=document.getElementById("sa-list");
-  if(!r.ok||!r.admins||!r.admins.length){d.innerHTML="";return}
-  d.innerHTML=r.admins.map(a=>`<span class="uc"><b>${esc(a.name)}</b><span>${a.is_super?'super':'scanner'}</span></span>`).join("");
+  if(!r.ok||!r.admins||!r.admins.length){d.innerHTML='<div style="color:#475569;font-size:12px">No admins found.</div>';return}
+  d.innerHTML=r.admins.map(a=>{
+    const isSelf=adm&&(adm.email===a.email||adm.name===a.name);
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#0f172a;border-radius:8px;margin-bottom:6px">'+
+      '<div><span style="font-size:13px;font-weight:700;color:#f8fafc">'+esc(a.name)+'</span>'+
+      (a.email?' <span style="font-size:11px;color:#64748b">'+esc(a.email)+'</span>':'')+
+      ' <span style="font-size:10px;padding:2px 6px;border-radius:4px;'+(a.is_super?'background:#78350f;color:#fbbf24':'background:#1e3a5f;color:#60a5fa')+'">'+
+      (a.is_super?'super':'scanner')+'</span></div>'+
+      '<div style="display:flex;gap:4px">'+
+        '<button onclick="openEditAdmin('+a.id+',\''+esc(a.name).replace(/'/g,"\\'")+'\',\''+esc(a.email||'').replace(/'/g,"\\'")+'\','+a.is_super+')" style="padding:4px 8px;border:1px solid #334155;border-radius:6px;background:none;color:#60a5fa;font-size:11px;cursor:pointer">Edit</button>'+
+        (isSelf?'':'<button onclick="deleteAdmin('+a.id+',\''+esc(a.name).replace(/'/g,"\\'")+'\' )" style="padding:4px 8px;border:1px solid #7f1d1d;border-radius:6px;background:none;color:#f87171;font-size:11px;cursor:pointer">Delete</button>')+
+      '</div></div>';
+  }).join("");
 }
 async function addAdmin(){
   const n=document.getElementById("sa-name").value.trim();
   const p=document.getElementById("sa-pw").value.trim();
+  const e=document.getElementById("sa-email")?document.getElementById("sa-email").value.trim():"";
+  const s=document.getElementById("sa-super")?document.getElementById("sa-super").checked:false;
   const m=document.getElementById("sa-msg");
-  if(!n||!p){m.innerHTML='<span class="er">Both fields required.</span>';return}
-  const r=await api({action:"add-admin",adminEmail:adm.email,adminPassword:adm.password,newName:n,newPassword:p});
-  if(r.ok){m.innerHTML='<span class="ok">"'+esc(n)+'" added!</span>';document.getElementById("sa-name").value="";document.getElementById("sa-pw").value="";loadAdmins()}
+  if(!n||!p){m.innerHTML='<span class="er">Name and password required.</span>';return}
+  const r=await api({action:"add-admin",adminEmail:adm.email,adminPassword:adm.password,newName:n,newPassword:p,newEmail:e,isSuper:s});
+  if(r.ok){m.innerHTML='<span class="ok">"'+esc(n)+'" added!</span>';document.getElementById("sa-name").value="";document.getElementById("sa-pw").value="";if(document.getElementById("sa-email"))document.getElementById("sa-email").value="";if(document.getElementById("sa-super"))document.getElementById("sa-super").checked=false;loadAdmins()}
   else m.innerHTML='<span class="er">'+esc(r.error)+'</span>';
+}
+function openEditAdmin(id,name,email,isSuper){
+  document.getElementById("ea-id").value=id;
+  document.getElementById("ea-name").value=name;
+  document.getElementById("ea-email").value=email||"";
+  document.getElementById("ea-password").value="";
+  document.getElementById("ea-super").checked=isSuper;
+  document.getElementById("ea-msg").innerHTML="";
+  const modal=document.getElementById("edit-admin-modal");
+  modal.style.display="flex";
+}
+function closeEditAdmin(){
+  document.getElementById("edit-admin-modal").style.display="none";
+}
+async function saveEditAdmin(){
+  const id=document.getElementById("ea-id").value;
+  const msg=document.getElementById("ea-msg");
+  msg.innerHTML='<span style="color:#94a3b8">Saving...</span>';
+  const r=await api({action:"edit-admin",adminEmail:adm.email,adminPassword:adm.password,adminId:parseInt(id),newName:document.getElementById("ea-name").value.trim(),newEmail:document.getElementById("ea-email").value.trim(),newPassword:document.getElementById("ea-password").value.trim()||undefined,isSuper:document.getElementById("ea-super").checked});
+  if(r.ok){closeEditAdmin();loadAdmins();toast("Admin updated","ok")}
+  else{msg.innerHTML='<span class="er">'+esc(r.error||"Failed to save")+'</span>'}
+}
+async function deleteAdmin(id,name){
+  if(!confirm("Delete admin \""+name+"\"? This cannot be undone.")) return;
+  const r=await api({action:"delete-admin",adminEmail:adm.email,adminPassword:adm.password,adminId:id});
+  if(r.ok){loadAdmins();toast("Admin deleted","ok")}
+  else{toast(r.error||"Failed to delete","er")}
 }
 
 // ── All entries (with status display) ──
