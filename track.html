@@ -492,24 +492,24 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 
     <!-- Feature Toggles -->
     <div class="cd" style="padding:14px">
-      <label class="fl" style="margin-bottom:10px;font-size:12px">Features &amp; Modules <span id="ft-save-indicator" style="color:#4ade80;font-size:10px;font-weight:400;display:none">Saved</span></label>
-      <div style="font-size:11px;color:#64748b;margin-bottom:10px">Enable or disable features per device. Changes auto-save instantly.</div>
+      <label class="fl" style="margin-bottom:10px;font-size:12px">Features &amp; Modules</label>
+      <div style="font-size:11px;color:#64748b;margin-bottom:10px">Enable or disable features per device. Changes take effect immediately.</div>
 
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
-          <input type="checkbox" id="ft-dims" onchange="saveFeatureToggles()">
+          <input type="checkbox" id="ft-dims" onchange="saveFeatureToggles()" checked>
           <span style="font-size:12px;color:#f8fafc;font-weight:700">Dims</span>
         </label>
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
-          <input type="checkbox" id="ft-notes" onchange="saveFeatureToggles()">
+          <input type="checkbox" id="ft-notes" onchange="saveFeatureToggles()" checked>
           <span style="font-size:12px;color:#f8fafc;font-weight:700">Notes</span>
         </label>
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
-          <input type="checkbox" id="ft-internal-barcode" onchange="saveFeatureToggles()">
+          <input type="checkbox" id="ft-internal-barcode" onchange="saveFeatureToggles()" checked>
           <span style="font-size:12px;color:#f8fafc;font-weight:700">Internal Barcode</span>
         </label>
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
-          <input type="checkbox" id="ft-expand-on-scan" onchange="saveFeatureToggles()">
+          <input type="checkbox" id="ft-expand-on-scan" onchange="saveFeatureToggles()" checked>
           <span style="font-size:12px;color:#f8fafc;font-weight:700">Expand on Scan</span>
         </label>
       </div>
@@ -517,22 +517,23 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <label class="fl" style="margin-bottom:6px;font-size:11px;color:#64748b">Series Types</label>
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1">
-          <input type="checkbox" id="ft-mawb" onchange="saveFeatureToggles()">
+          <input type="checkbox" id="ft-mawb" onchange="saveFeatureToggles()" checked>
           <span style="font-size:12px;color:#60a5fa;font-weight:700">MAWB</span>
         </label>
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1">
-          <input type="checkbox" id="ft-bol" onchange="saveFeatureToggles()">
+          <input type="checkbox" id="ft-bol" onchange="saveFeatureToggles()" checked>
           <span style="font-size:12px;color:#34d399;font-weight:700">BOL</span>
         </label>
       </div>
 
       <label class="fl" style="margin-bottom:6px;font-size:11px;color:#64748b">Transit Statuses</label>
       <div id="ft-statuses" style="display:flex;flex-wrap:wrap;gap:6px"></div>
-      <div style="display:flex;gap:6px;margin-top:10px;align-items:center">
-        <input id="ft-custom-status-input" class="fi" placeholder="New custom status name..." style="flex:1;font-size:12px;padding:8px 10px">
+      <div style="display:flex;gap:6px;margin-top:10px;align-items:center;flex-wrap:wrap">
+        <input id="ft-custom-status-input" class="fi" placeholder="New custom status name..." style="flex:1;min-width:120px;font-size:12px;padding:8px 10px">
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#94a3b8"><input type="color" id="ft-custom-status-color" value="#3b82f6" style="width:32px;height:32px;border:1px solid #334155;border-radius:6px;background:none;cursor:pointer;padding:2px"> Color</label>
         <button onclick="addCustomStatus()" style="padding:8px 14px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Add Status</button>
       </div>
-      <div style="font-size:10px;color:#64748b;margin-top:4px">Custom statuses appear as bulk action buttons everywhere.</div>
+      <div style="font-size:10px;color:#64748b;margin-top:4px">Custom statuses appear as bulk action buttons everywhere. Pick a color before adding.</div>
     </div>
 
     <!-- Batch code prefix config -->
@@ -864,7 +865,6 @@ function switchAdmTab(tab){
     initSettingsProfile();
     initLogoPreview();
     loadNumberSeries();
-    initFeatureTogglesUI();
     const cnInp=document.getElementById("set-company-name");
     if(cnInp) cnInp.value=localStorage.getItem("company_name")||"BuyDirectFromUSA";
     loadViewers();
@@ -890,6 +890,7 @@ function generateTracking(){
     localStorage.setItem("gen_tracking_seq",s);
     document.getElementById("sc-tracking").value=s;
   }
+  syncSettingsToServer();
 }
 
 // ── Print tracking number barcode ──
@@ -1019,8 +1020,6 @@ async function publicTrack(fromUrl){
 // Handle Enter key in public tracking input + clear on load + auto-refresh
 let ptAutoRefresh=null;
 document.addEventListener("DOMContentLoaded",()=>{
-  // Restore feature toggles from localStorage immediately (Android fix)
-  try{initFeatureTogglesUI()}catch(e){}
   const ptInput=document.getElementById("pt-input");
   if(ptInput){
     ptInput.value="";
@@ -1051,6 +1050,10 @@ function stopPtAutoRefresh(){if(ptAutoRefresh){clearInterval(ptAutoRefresh);ptAu
 //  ADMIN / SCANNER
 // ══════════════════════════════
 let adm=null; // {name, password, is_super}
+// ── Cookie backup for session (Android localStorage reliability) ──
+function setCookieBak(k,v){try{document.cookie=k+"="+encodeURIComponent(v)+";max-age=31536000;path=/;SameSite=Strict"}catch(e){}}
+function getCookieBak(k){try{const m=document.cookie.match(new RegExp('(?:^|;\\s*)'+k+'=([^;]*)'));return m?decodeURIComponent(m[1]):null}catch(e){return null}}
+function delCookieBak(k){try{document.cookie=k+"=;max-age=0;path=/;SameSite=Strict"}catch(e){}}
 let selectedLoc="";
 let html5Sc=null;
 
@@ -1063,6 +1066,7 @@ async function adminDoLogin(){
   if(!r.ok){err.textContent=r.error||"Login failed.";err.style.display="block";return}
   adm={name:r.admin.name,email,password:pw,is_super:r.admin.is_super};
   localStorage.setItem("adm_session",JSON.stringify(adm));
+  setCookieBak("adm_session_bak",JSON.stringify(adm));
   enterScanner();
 }
 
@@ -1074,6 +1078,7 @@ async function enterScanner(){
   document.getElementById("adm-bnav").style.display="flex";
   restoreScanSettings();
   loadDimSettings();
+  await loadSettingsFromServer();
   initFeatureTogglesUI();
   rebuildAllDynamicStatusButtons();
   applyFeatureToggles();
@@ -1090,7 +1095,7 @@ async function enterScanner(){
 }
 
 function adminLogout(){
-  adm=null;selectedLoc="";localStorage.removeItem("adm_session");
+  adm=null;selectedLoc="";localStorage.removeItem("adm_session");delCookieBak("adm_session_bak");
   document.getElementById("adm-bnav").style.display="none";
   showTab("gate");
 }
@@ -1202,6 +1207,7 @@ function addDest(){
   }
   savedDests.push(n);
   localStorage.setItem("scan_dests",JSON.stringify(savedDests));
+  syncSettingsToServer();
   selectedDest=n;
   document.getElementById("new-dest-name").value="";
   renderDests();
@@ -1211,6 +1217,7 @@ function removeDest(name){
   if(!confirm("Remove destination: "+name+"?")) return;
   savedDests=savedDests.filter(d=>d!==name);
   localStorage.setItem("scan_dests",JSON.stringify(savedDests));
+  syncSettingsToServer();
   if(selectedDest===name) selectedDest="";
   renderDests();
 }
@@ -1725,6 +1732,7 @@ function saveDimSettings(){
   updateDimUnitLabels();
   const msg=document.getElementById("dim-save-msg");
   if(msg){msg.textContent="Saved!";msg.style.color="#34d399";setTimeout(()=>{msg.textContent=""},2000)}
+  syncSettingsToServer();
 }
 function loadDimSettings(){
   const u=document.getElementById("dim-unit");
@@ -1742,7 +1750,7 @@ const ALL_STATUSES=BASE_STATUSES; // kept for compat
 const FT_DEFAULTS={dims:true,notes:true,internalBarcode:true,mawb:true,bol:true,statuses:BASE_STATUSES.reduce((o,s)=>{o[s]=true;return o},{})};
 function loadFeatureToggles(){
   let ft;
-  try{ft=JSON.parse(localStorage.getItem("feature_toggles"))||{}}catch(e){ft={}}
+  try{ft=JSON.parse(localStorage.getItem("feature_toggles"))||JSON.parse(sessionStorage.getItem("feature_toggles_bak"))||{}}catch(e){try{ft=JSON.parse(sessionStorage.getItem("feature_toggles_bak"))||{}}catch(e2){ft={}}}
   const r={...FT_DEFAULTS,...ft};
   if(!r.statuses) r.statuses={...FT_DEFAULTS.statuses};
   else r.statuses={...FT_DEFAULTS.statuses,...r.statuses};
@@ -1765,11 +1773,59 @@ function saveFeatureToggles(){
     ft.statuses[s]=cb?cb.checked:true;
   });
   localStorage.setItem("feature_toggles",JSON.stringify(ft));
+  try{sessionStorage.setItem("feature_toggles_bak",JSON.stringify(ft))}catch(e){}
   applyFeatureToggles();
   rebuildAllDynamicStatusButtons();
-  // Flash save indicator
-  const ind=document.getElementById("ft-save-indicator");
-  if(ind){ind.style.display="inline";clearTimeout(ind._t);ind._t=setTimeout(()=>{ind.style.display="none"},1500)}
+  syncSettingsToServer();
+}
+// ── Server-side settings sync (Android reliability) ──
+let _syncTimer=null;
+function syncSettingsToServer(){
+  if(!adm) return;
+  clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(async()=>{
+    try{
+      const settings={
+        feature_toggles:JSON.parse(localStorage.getItem("feature_toggles")||"{}"),
+        custom_statuses:JSON.parse(localStorage.getItem("custom_statuses")||"[]"),
+        custom_status_colors:JSON.parse(localStorage.getItem("custom_status_colors")||"{}"),
+        dim_unit:localStorage.getItem("dim_unit")||"kg",
+        dim_divisor:localStorage.getItem("dim_divisor")||"",
+        batch_prefix:localStorage.getItem("batch_prefix")||"",
+        company_name:localStorage.getItem("company_name")||"",
+        company_logo:localStorage.getItem("company_logo")||"",
+        scan_dests:JSON.parse(localStorage.getItem("scan_dests")||"[]"),
+        gen_tracking_seq:localStorage.getItem("gen_tracking_seq")||"",
+        scan_loc:localStorage.getItem("scan_loc")||"",
+        scan_dest:localStorage.getItem("scan_dest")||"",
+        scan_eta:localStorage.getItem("scan_eta")||"",
+        scan_series:localStorage.getItem("scan_series")||""
+      };
+      await api({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings});
+    }catch(e){console.warn("Settings sync failed",e)}
+  },1500);
+}
+async function loadSettingsFromServer(){
+  if(!adm) return;
+  try{
+    const r=await api({action:"load-settings",adminEmail:adm.email,adminPassword:adm.password});
+    if(!r.ok||!r.settings) return;
+    const s=r.settings;
+    if(s.feature_toggles&&Object.keys(s.feature_toggles).length) localStorage.setItem("feature_toggles",JSON.stringify(s.feature_toggles));
+    if(s.custom_statuses&&s.custom_statuses.length) localStorage.setItem("custom_statuses",JSON.stringify(s.custom_statuses));
+    if(s.custom_status_colors&&Object.keys(s.custom_status_colors).length) localStorage.setItem("custom_status_colors",JSON.stringify(s.custom_status_colors));
+    if(s.dim_unit) localStorage.setItem("dim_unit",s.dim_unit);
+    if(s.dim_divisor) localStorage.setItem("dim_divisor",s.dim_divisor);
+    if(s.batch_prefix) localStorage.setItem("batch_prefix",s.batch_prefix);
+    if(s.company_name) localStorage.setItem("company_name",s.company_name);
+    if(s.company_logo) localStorage.setItem("company_logo",s.company_logo);
+    if(s.scan_dests&&s.scan_dests.length) localStorage.setItem("scan_dests",JSON.stringify(s.scan_dests));
+    if(s.gen_tracking_seq) localStorage.setItem("gen_tracking_seq",s.gen_tracking_seq);
+    if(s.scan_loc) localStorage.setItem("scan_loc",s.scan_loc);
+    if(s.scan_dest) localStorage.setItem("scan_dest",s.scan_dest);
+    if(s.scan_eta) localStorage.setItem("scan_eta",s.scan_eta);
+    if(s.scan_series) localStorage.setItem("scan_series",s.scan_series);
+  }catch(e){console.warn("Load settings failed",e)}
 }
 function initFeatureTogglesUI(){
   const ft=loadFeatureToggles();
@@ -1781,10 +1837,6 @@ function initFeatureTogglesUI(){
   document.getElementById("ft-bol").checked=ft.bol;
   buildStatusCheckboxes();
 }
-// ── Android: restore toggles on tab restore / wake ──
-window.addEventListener("pageshow",function(e){if(e.persisted)try{initFeatureTogglesUI()}catch(x){}});
-document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")try{initFeatureTogglesUI()}catch(x){}});
-window.addEventListener("focus",function(){try{initFeatureTogglesUI()}catch(x){}});
 function buildStatusCheckboxes(){
   const ft=loadFeatureToggles();
   const box=document.getElementById("ft-statuses");
@@ -1793,7 +1845,8 @@ function buildStatusCheckboxes(){
   const customs=getCustomStatuses();
   box.innerHTML=all.map(s=>{
     const id="ft-st-"+s.replace(/\s+/g,'-');
-    const col=STATUS_COLORS[s]||{bg:'#1e293b',border:'#475569',text:'#e2e8f0'};
+    let col=STATUS_COLORS[s];
+    if(!col){try{const customCols=JSON.parse(localStorage.getItem("custom_status_colors")||"{}");if(customCols[s]){const c=customCols[s];col={bg:c+'22',border:c,text:c}}else{col={bg:'#1e293b',border:'#475569',text:'#e2e8f0'}}}catch(e){col={bg:'#1e293b',border:'#475569',text:'#e2e8f0'}}}
     const chk=ft.statuses[s]!==false?' checked':'';
     const isCustom=customs.includes(s);
     return '<label style="display:flex;align-items:center;gap:5px;background:'+col.bg+';border:1px solid '+col.border+';padding:5px 10px;border-radius:6px;cursor:pointer">'+
@@ -1803,6 +1856,13 @@ function buildStatusCheckboxes(){
       '</label>';
   }).join("");
 }
+// ── Android: restore toggles on tab wake/restore + release cameras on tab hide ──
+window.addEventListener("pageshow",function(e){if(e.persisted){loadSettingsFromServer().then(()=>{try{initFeatureTogglesUI();applyFeatureToggles()}catch(x){}}).catch(()=>{try{initFeatureTogglesUI();applyFeatureToggles()}catch(x){}})}else{try{initFeatureTogglesUI();applyFeatureToggles()}catch(x){}}});
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState==="visible"){loadSettingsFromServer().then(()=>{try{initFeatureTogglesUI();applyFeatureToggles()}catch(x){}}).catch(()=>{try{initFeatureTogglesUI();applyFeatureToggles()}catch(x){}})}
+  else{try{if(camStream||nativeScanInterval||html5Sc)stopCam()}catch(x){}try{if(delCamStream||delScanInterval)delStopCam()}catch(x){}}
+});
+document.addEventListener("pagehide",function(){try{if(camStream)camStream.getTracks().forEach(t=>t.stop())}catch(x){}try{if(delCamStream)delCamStream.getTracks().forEach(t=>t.stop())}catch(x){}});
 function addCustomStatus(){
   const inp=document.getElementById("ft-custom-status-input");
   if(!inp) return;
@@ -1810,6 +1870,8 @@ function addCustomStatus(){
   if(!name){return}
   const all=getAllStatuses();
   if(all.map(s=>s.toLowerCase()).includes(name.toLowerCase())){alert("Status '"+name+"' already exists");return}
+  const colorInput=document.getElementById("ft-custom-status-color");
+  const color=colorInput?colorInput.value:"#3b82f6";
   const customs=getCustomStatuses();
   customs.push(name);
   saveCustomStatuses(customs);
@@ -1818,8 +1880,11 @@ function addCustomStatus(){
   const ft=loadFeatureToggles();
   ft.statuses[name]=true;
   localStorage.setItem("feature_toggles",JSON.stringify(ft));
+  // Save custom status color
+  try{const cols=JSON.parse(localStorage.getItem("custom_status_colors")||"{}");cols[name]=color;localStorage.setItem("custom_status_colors",JSON.stringify(cols))}catch(e){}
   buildStatusCheckboxes();
   rebuildAllDynamicStatusButtons();
+  syncSettingsToServer();
 }
 function removeCustomStatus(name){
   if(!confirm("Remove custom status '"+name+"'?")) return;
@@ -1829,8 +1894,10 @@ function removeCustomStatus(name){
   const ft=loadFeatureToggles();
   delete ft.statuses[name];
   localStorage.setItem("feature_toggles",JSON.stringify(ft));
+  try{const cols=JSON.parse(localStorage.getItem("custom_status_colors")||"{}");delete cols[name];localStorage.setItem("custom_status_colors",JSON.stringify(cols))}catch(e){}
   buildStatusCheckboxes();
   rebuildAllDynamicStatusButtons();
+  syncSettingsToServer();
 }
 function ftEnabled(key){const ft=loadFeatureToggles();return ft[key]!==false}
 function ftStatusEnabled(status){const ft=loadFeatureToggles();return ft.statuses&&ft.statuses[status]!==false}
@@ -1954,6 +2021,7 @@ function saveScanSettings(){
   localStorage.setItem("scan_eta",document.getElementById("sc-eta").value||"");
   const msel=document.getElementById("sc-mawb-series");
   if(msel) localStorage.setItem("scan_series",msel.value||"");
+  syncSettingsToServer();
 }
 function restoreScanSettings(){
   const loc=localStorage.getItem("scan_loc")||"";
@@ -2165,12 +2233,9 @@ function openEditAdmin(id,name,email,isSuper){
   document.getElementById("ea-password").value="";
   document.getElementById("ea-super").checked=isSuper;
   document.getElementById("ea-msg").innerHTML="";
-  const modal=document.getElementById("edit-admin-modal");
-  modal.style.display="flex";
+  document.getElementById("edit-admin-modal").style.display="flex";
 }
-function closeEditAdmin(){
-  document.getElementById("edit-admin-modal").style.display="none";
-}
+function closeEditAdmin(){document.getElementById("edit-admin-modal").style.display="none"}
 async function saveEditAdmin(){
   const id=document.getElementById("ea-id").value;
   const msg=document.getElementById("ea-msg");
@@ -3297,6 +3362,7 @@ function saveBatchPrefix(){
   if(!val){toast("Prefix cannot be empty","er");return}
   batchPrefix=val;
   localStorage.setItem("batch_prefix",val);
+  syncSettingsToServer();
   inp.value=val;
   const disp=document.getElementById("batch-prefix-display");
   if(disp) disp.textContent=val+" + YYYYMMDD = 18 chars";
@@ -3327,6 +3393,7 @@ async function saveAdminProfile(){
     adm.email=newEmail;
     if(newPw) adm.password=newPw;
     localStorage.setItem("adm_session",JSON.stringify(adm));
+    setCookieBak("adm_session_bak",JSON.stringify(adm));
     msg.innerHTML='<span class="ok">Profile updated</span>';
     initSettingsProfile();
     document.getElementById("sc-sub").textContent="Logged in as "+adm.name;
@@ -3360,6 +3427,7 @@ function handleLogoUpload(input){
     localStorage.setItem("company_logo",e.target.result);
     initLogoPreview();
     msg.innerHTML='<span class="ok">Logo saved</span>';
+    syncSettingsToServer();
   };
   reader.onerror=function(){msg.innerHTML='<span class="er">Failed to read file</span>'};
   reader.readAsDataURL(file);
@@ -3370,6 +3438,7 @@ function removeLogo(){
   initLogoPreview();
   applyCompanyBranding();
   document.getElementById("logo-msg").innerHTML='<span class="ok">Logo removed</span>';
+  syncSettingsToServer();
 }
 
 // ── Company name ──
@@ -3378,6 +3447,7 @@ function saveCompanyName(){
   const val=(inp.value||"").trim();
   if(!val){document.getElementById("company-name-msg").innerHTML='<span class="er">Name cannot be empty</span>';return}
   localStorage.setItem("company_name",val);
+  syncSettingsToServer();
   applyCompanyBranding();
   document.getElementById("company-name-msg").innerHTML='<span class="ok">Company name saved</span>';
 }
@@ -3948,7 +4018,7 @@ function viewerLogout(){
 // ── Auto-restore admin session ──
 (async()=>{
   try{
-    const s=JSON.parse(localStorage.getItem("adm_session")||"null");
+    const s=JSON.parse(localStorage.getItem("adm_session")||getCookieBak("adm_session_bak")||"null");
     if(s&&(s.email||s.name)&&s.password){
       const loginPayload=s.email?{action:"admin-login",email:s.email,password:s.password}:{action:"admin-login",name:s.name,password:s.password};
       const r=await api(loginPayload);
