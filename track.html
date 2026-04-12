@@ -1135,9 +1135,7 @@ async function enterScanner(){
   loadAllEntries();
   loadKnownNames();
   loadDashStats();
-  await loadNumberSeries();
-  try{restoreScanSettings()}catch(e){}
-  try{updateMawbPreview()}catch(e){}
+  loadNumberSeries();
   autoArchiveOldPackages();
 }
 
@@ -1769,13 +1767,13 @@ function clearForm(){
   updateNameDisplay(lastSavedName);
 }
 // ── Dims settings ──
-function getDimUnit(){try{return localStorage.getItem("dim_unit")||sessionStorage.getItem("dim_unit")||"kg"}catch(e){try{return sessionStorage.getItem("dim_unit")||"kg"}catch(x){return "kg"}}}
-function getDimDivisor(){let v=""; try{v=localStorage.getItem("dim_divisor")||sessionStorage.getItem("dim_divisor")||""}catch(e){try{v=sessionStorage.getItem("dim_divisor")||""}catch(x){v=""}} return parseFloat(v)||(getDimUnit()==="lbs"?139:5000)}
+function getDimUnit(){return localStorage.getItem("dim_unit")||"kg"}
+function getDimDivisor(){return parseFloat(localStorage.getItem("dim_divisor"))||(getDimUnit()==="lbs"?139:5000)}
 function saveDimSettings(){
   const u=document.getElementById("dim-unit");
   const d=document.getElementById("dim-divisor");
-  if(u){ try{localStorage.setItem("dim_unit",u.value)}catch(e){} try{sessionStorage.setItem("dim_unit",u.value)}catch(e){} }
-  if(d&&d.value){ try{localStorage.setItem("dim_divisor",d.value)}catch(e){} try{sessionStorage.setItem("dim_divisor",d.value)}catch(e){} }
+  if(u) localStorage.setItem("dim_unit",u.value);
+  if(d&&d.value) localStorage.setItem("dim_divisor",d.value);
   updateDimUnitLabels();
   const msg=document.getElementById("dim-save-msg");
   if(msg){msg.textContent="Saved!";msg.style.color="#34d399";setTimeout(()=>{msg.textContent=""},2000)}
@@ -1877,8 +1875,8 @@ function _buildSettingsPayload(){
   // Read other inputs from DOM where possible
   const bpInp=document.getElementById("batch-prefix-input");
   const cnInp=document.getElementById("set-company-name");
-  const duSel=document.getElementById("dim-unit");
-  const ddInp=document.getElementById("dim-divisor");
+  const duSel=document.getElementById("dim-unit-select");
+  const ddInp=document.getElementById("dim-divisor-input");
   return {
     feature_toggles:ft,
     custom_statuses:lj("custom_statuses","[]"),
@@ -1961,23 +1959,11 @@ async function loadSettingsFromServer(){
     if(s.company_name) safeSet("company_name",s.company_name);
     if(s.company_logo) safeSet("company_logo",s.company_logo);
     if(s.scan_dests&&Array.isArray(s.scan_dests)) safeSet("scan_dests",JSON.stringify(s.scan_dests));
-    if(s.gen_tracking_seq!==undefined&&s.gen_tracking_seq!==null) safeSet("gen_tracking_seq",s.gen_tracking_seq);
-    if(s.scan_loc!==undefined&&s.scan_loc!==null) safeSet("scan_loc",s.scan_loc);
-    if(s.scan_dest!==undefined&&s.scan_dest!==null) safeSet("scan_dest",s.scan_dest);
-    if(s.scan_eta!==undefined&&s.scan_eta!==null) safeSet("scan_eta",s.scan_eta);
-    if(s.scan_series!==undefined&&s.scan_series!==null) safeSet("scan_series",s.scan_series);
-
-    // Apply visible UI fields directly so mobile Safari/Android don't depend on storage roundtrips.
-    try{
-      const bp=document.getElementById("batch-prefix-input"); if(bp) bp.value=s.batch_prefix||localStorage.getItem("batch_prefix")||"";
-      const cn=document.getElementById("set-company-name"); if(cn) cn.value=s.company_name||localStorage.getItem("company_name")||"";
-      const du=document.getElementById("dim-unit"); if(du) du.value=s.dim_unit||localStorage.getItem("dim_unit")||"kg";
-      const dd=document.getElementById("dim-divisor"); if(dd) dd.value=s.dim_divisor||localStorage.getItem("dim_divisor")||'';
-      const eta=document.getElementById("sc-eta"); if(eta) eta.value=s.scan_eta||localStorage.getItem("scan_eta")||"";
-      updateDimUnitLabels();
-      initBatchPrefix();
-      applyCompanyBranding();
-    }catch(x){}
+    if(s.gen_tracking_seq) safeSet("gen_tracking_seq",s.gen_tracking_seq);
+    if(s.scan_loc) safeSet("scan_loc",s.scan_loc);
+    if(s.scan_dest) safeSet("scan_dest",s.scan_dest);
+    if(s.scan_eta) safeSet("scan_eta",s.scan_eta);
+    if(s.scan_series) safeSet("scan_series",s.scan_series);
   }catch(e){console.warn("Load settings failed",e)}
 }
 function initFeatureTogglesUI(){
@@ -2185,40 +2171,26 @@ function getScannedDims(){
 }
 // ── Persist scan settings ──
 function saveScanSettings(){
-  const etaVal=((document.getElementById("sc-eta")||{}).value)||"";
-  const msel=document.getElementById("sc-mawb-series");
-  const seriesVal=msel?msel.value||"":"";
   try{localStorage.setItem("scan_loc",selectedLoc||"")}catch(e){}
-  try{sessionStorage.setItem("scan_loc",selectedLoc||"")}catch(e){}
   try{localStorage.setItem("scan_dest",selectedDest||"")}catch(e){}
-  try{sessionStorage.setItem("scan_dest",selectedDest||"")}catch(e){}
-  try{localStorage.setItem("scan_eta",etaVal)}catch(e){}
-  try{sessionStorage.setItem("scan_eta",etaVal)}catch(e){}
-  try{localStorage.setItem("scan_series",seriesVal)}catch(e){}
-  try{sessionStorage.setItem("scan_series",seriesVal)}catch(e){}
+  try{localStorage.setItem("scan_eta",document.getElementById("sc-eta").value||"")}catch(e){}
+  const msel=document.getElementById("sc-mawb-series");
+  if(msel) try{localStorage.setItem("scan_series",msel.value||"")}catch(e){}
   syncSettingsToServer(true);
 }
 function restoreScanSettings(){
-  const gs=(k)=>{try{return localStorage.getItem(k)||sessionStorage.getItem(k)||""}catch(e){try{return sessionStorage.getItem(k)||""}catch(x){return ""}}};
-  const loc=gs("scan_loc");
-  const dest=gs("scan_dest");
-  const eta=gs("scan_eta");
+  const loc=localStorage.getItem("scan_loc")||"";
+  const dest=localStorage.getItem("scan_dest")||"";
+  const eta=localStorage.getItem("scan_eta")||"";
   if(loc) selectedLoc=loc;
   if(dest) selectedDest=dest;
-  const etaEl=document.getElementById("sc-eta");
-  if(etaEl) etaEl.value=eta||"";
-  const savedSeries=gs("scan_series");
-  const msel=document.getElementById("sc-mawb-series");
-  if(msel){
-    if(savedSeries){
-      let found=false;
-      for(let i=0;i<msel.options.length;i++){if(msel.options[i].value===savedSeries){msel.selectedIndex=i;found=true;break;}}
-      if(!found) msel.value="";
-    } else {
-      msel.value="";
-    }
+  if(eta) document.getElementById("sc-eta").value=eta;
+  const savedSeries=localStorage.getItem("scan_series")||"";
+  if(savedSeries){
+    const msel=document.getElementById("sc-mawb-series");
+    if(msel){for(let i=0;i<msel.options.length;i++){if(msel.options[i].value===savedSeries){msel.selectedIndex=i;break;}}}
+    updateMawbPreview();
   }
-  try{updateMawbPreview()}catch(e){}
 }
 
 // ── Viewers ──
@@ -3535,7 +3507,6 @@ async function bsClearEta(){
 function initBatchPrefix(){
   const inp=document.getElementById("batch-prefix-input");
   const disp=document.getElementById("batch-prefix-display");
-  try{batchPrefix=(localStorage.getItem("batch_prefix")||sessionStorage.getItem("batch_prefix")||batchPrefix||"").toUpperCase()}catch(e){try{batchPrefix=(sessionStorage.getItem("batch_prefix")||batchPrefix||"").toUpperCase()}catch(x){}}
   if(inp) inp.value=batchPrefix;
   if(disp) disp.textContent=batchPrefix+" + YYYYMMDD = 18 chars";
 }
@@ -3545,8 +3516,7 @@ function saveBatchPrefix(){
   if(val.length>10) val=val.slice(0,10);
   if(!val){toast("Prefix cannot be empty","er");return}
   batchPrefix=val;
-  try{localStorage.setItem("batch_prefix",val)}catch(e){}
-  try{sessionStorage.setItem("batch_prefix",val)}catch(e){}
+  localStorage.setItem("batch_prefix",val);
   syncSettingsToServer(true);
   inp.value=val;
   const disp=document.getElementById("batch-prefix-display");
@@ -3590,7 +3560,7 @@ async function saveAdminProfile(){
 // ── Logo upload ──
 function initLogoPreview(){
   const preview=document.getElementById("logo-preview");
-  let logo=""; try{logo=localStorage.getItem("company_logo")||sessionStorage.getItem("company_logo")||""}catch(e){try{logo=sessionStorage.getItem("company_logo")||""}catch(x){logo=""}}
+  const logo=localStorage.getItem("company_logo");
   if(logo&&/^data:image\/(png|jpeg|gif|webp|svg\+xml);base64,/.test(logo)){
     const img=document.createElement("img");
     img.src=logo;
@@ -3609,8 +3579,7 @@ function handleLogoUpload(input){
   if(!file.type.startsWith("image/")){msg.innerHTML='<span class="er">Please select an image file</span>';input.value="";return}
   const reader=new FileReader();
   reader.onload=function(e){
-    try{localStorage.setItem("company_logo",e.target.result)}catch(e){}
-    try{sessionStorage.setItem("company_logo",e.target.result)}catch(e){}
+    localStorage.setItem("company_logo",e.target.result);
     initLogoPreview();
     applyCompanyBranding();
     msg.innerHTML='<span class="ok">Logo saved</span>';
@@ -3621,8 +3590,7 @@ function handleLogoUpload(input){
   input.value="";
 }
 function removeLogo(){
-  try{localStorage.removeItem("company_logo")}catch(e){}
-  try{sessionStorage.removeItem("company_logo")}catch(e){}
+  localStorage.removeItem("company_logo");
   initLogoPreview();
   applyCompanyBranding();
   document.getElementById("logo-msg").innerHTML='<span class="ok">Logo removed</span>';
@@ -3634,15 +3602,14 @@ function saveCompanyName(){
   const inp=document.getElementById("set-company-name");
   const val=(inp.value||"").trim();
   if(!val){document.getElementById("company-name-msg").innerHTML='<span class="er">Name cannot be empty</span>';return}
-  try{localStorage.setItem("company_name",val)}catch(e){}
-  try{sessionStorage.setItem("company_name",val)}catch(e){}
+  localStorage.setItem("company_name",val);
   syncSettingsToServer(true);
   applyCompanyBranding();
   document.getElementById("company-name-msg").innerHTML='<span class="ok">Company name saved</span>';
 }
 function applyCompanyBranding(){
-  let name="BuyDirectFromUSA"; try{name=localStorage.getItem("company_name")||sessionStorage.getItem("company_name")||"BuyDirectFromUSA"}catch(e){try{name=sessionStorage.getItem("company_name")||"BuyDirectFromUSA"}catch(x){}}
-  let logo=""; try{logo=localStorage.getItem("company_logo")||sessionStorage.getItem("company_logo")||""}catch(e){try{logo=sessionStorage.getItem("company_logo")||""}catch(x){logo=""}}
+  const name=localStorage.getItem("company_name")||"BuyDirectFromUSA";
+  const logo=localStorage.getItem("company_logo");
   const validLogo=logo&&/^data:image\/(png|jpeg|gif|webp|svg\+xml);base64,/.test(logo);
   document.querySelectorAll(".company-name-el").forEach(el=>{
     if(validLogo){
@@ -3667,8 +3634,6 @@ async function loadNumberSeries(){
   if(r.ok) allSeries=r.series||[];
   renderNumberSeries();
   populateMawbSelector();
-  try{restoreScanSettings()}catch(e){}
-  try{updateMawbPreview()}catch(e){}
 }
 function renderNumberSeries(){
   const div=document.getElementById("ns-list");
@@ -3735,14 +3700,12 @@ function updateNsPreview(){
 function populateMawbSelector(){
   const sel=document.getElementById("sc-mawb-series");
   if(!sel) return;
-  const prevVal=sel.value||((()=>{try{return localStorage.getItem("scan_series")||sessionStorage.getItem("scan_series")||""}catch(e){return ""}})());
   const ft=loadFeatureToggles();
   const active=allSeries.filter(s=>s.active&&(s.type==='MAWB'?ft.mawb!==false:ft.bol!==false));
   sel.innerHTML='<option value="">— No batch —</option>'+active.map(s=>{
     const cur=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
     return '<option value="'+s.id+'">'+esc(s.type)+': '+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+' (current: '+cur+')</option>';
   }).join("");
-  if(prevVal) sel.value=String(prevVal);
 }
 async function updateMawbPreview(){
   const sel=document.getElementById("sc-mawb-series");
