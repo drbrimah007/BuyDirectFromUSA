@@ -1644,7 +1644,6 @@ async function doSave(){
   const notes=document.getElementById("sc-notes").value.trim();
   const eta=document.getElementById("sc-eta").value||null;
   const st=document.getElementById("sc-status");
-  if(!name||!tracking){st.innerHTML='<span class="er">Name and tracking number are required.</span>';return}
   if(!isValidTracking(tracking)){st.innerHTML='<span class="er">Bad tracking number: "'+esc(tracking)+'" — rescan or type manually.</span>';return}
   if(!selectedLoc){st.innerHTML='<span class="er">Please select a scan location.</span>';return}
   document.getElementById("btn-save").disabled=true;st.textContent="Saving...";
