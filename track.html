@@ -1781,6 +1781,10 @@ function initFeatureTogglesUI(){
   document.getElementById("ft-bol").checked=ft.bol;
   buildStatusCheckboxes();
 }
+// ── Android: restore toggles on tab restore / wake ──
+window.addEventListener("pageshow",function(e){if(e.persisted)try{initFeatureTogglesUI()}catch(x){}});
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")try{initFeatureTogglesUI()}catch(x){}});
+window.addEventListener("focus",function(){try{initFeatureTogglesUI()}catch(x){}});
 function buildStatusCheckboxes(){
   const ft=loadFeatureToggles();
   const box=document.getElementById("ft-statuses");
