@@ -1203,16 +1203,12 @@ const CONFIRM_NEEDED=2;
 let scanDone=false;
 
 function isValidTracking(s){
-  if(!s||s.length<6) return false;
-  // Reject hex-only strings (must contain a-f letters AND digits, not pure digits)
-  if(/^[0-9a-f]+$/.test(s) && /[a-f]/.test(s)) return false;
+  if(!s||s.length<4) return false;
   // Reject dimension-like strings (e.g. 13x8x5.5, 12x10x4)
-  if(/\d+x\d+/i.test(s)) return false;
-  // Reject strings with underscores (QR metadata)
-  if(s.indexOf("_")!==-1) return false;
+  if(/^\d+x\d+/i.test(s)) return false;
   // Must be mostly alphanumeric
   const alnum=(s.match(/[A-Za-z0-9]/g)||[]).length;
-  return (alnum/s.length)>=0.6;
+  return (alnum/s.length)>=0.5;
 }
 
 function cleanBarcode(raw){
@@ -1644,7 +1640,7 @@ async function doSave(){
   const notes=document.getElementById("sc-notes").value.trim();
   const eta=document.getElementById("sc-eta").value||null;
   const st=document.getElementById("sc-status");
-  if(!isValidTracking(tracking)){st.innerHTML='<span class="er">Bad tracking number: "'+esc(tracking)+'" — rescan or type manually.</span>';return}
+  if(!name||!tracking){st.innerHTML='<span class="er">Name and tracking number are required.</span>';return}
   if(!selectedLoc){st.innerHTML='<span class="er">Please select a scan location.</span>';return}
   document.getElementById("btn-save").disabled=true;st.textContent="Saving...";
   try{
