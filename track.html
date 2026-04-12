@@ -1801,30 +1801,41 @@ function loadFeatureToggles(){
   return r;
 }
 function saveFeatureToggles(){
-  const ft={
-    dims:!!document.getElementById("ft-dims").checked,
-    notes:!!document.getElementById("ft-notes").checked,
-    internalBarcode:!!document.getElementById("ft-internal-barcode").checked,
-    expandOnScan:!!document.getElementById("ft-expand-on-scan").checked,
-    mawb:!!document.getElementById("ft-mawb").checked,
-    bol:!!document.getElementById("ft-bol").checked,
-    statuses:{}
-  };
-  getAllStatuses().forEach(s=>{
-    const cb=document.getElementById("ft-st-"+s.replace(/\s+/g,'-'));
-    ft.statuses[s]=cb?cb.checked:true;
-  });
-  const j=JSON.stringify(ft);
-  localStorage.setItem("feature_toggles",j);
-  try{sessionStorage.setItem("feature_toggles_bak",j)}catch(e){}
-  applyFeatureToggles();
-  rebuildAllDynamicStatusButtons();
+  try{
+    const g=id=>{const el=document.getElementById(id);return el?!!el.checked:true};
+    const ft={
+      dims:g("ft-dims"),
+      notes:g("ft-notes"),
+      internalBarcode:g("ft-internal-barcode"),
+      expandOnScan:g("ft-expand-on-scan"),
+      mawb:g("ft-mawb"),
+      bol:g("ft-bol"),
+      statuses:{}
+    };
+    getAllStatuses().forEach(s=>{
+      const cb=document.getElementById("ft-st-"+s.replace(/\s+/g,'-'));
+      ft.statuses[s]=cb?cb.checked:true;
+    });
+    const j=JSON.stringify(ft);
+    localStorage.setItem("feature_toggles",j);
+    try{sessionStorage.setItem("feature_toggles_bak",j)}catch(e){}
+    applyFeatureToggles();
+    rebuildAllDynamicStatusButtons();
+  }catch(e){console.error("saveFeatureToggles error",e)}
 }
 function saveAllFeatures(){
-  saveFeatureToggles();
-  syncSettingsToServer(true);
   const msg=document.getElementById("ft-save-msg");
-  if(msg){msg.textContent="Saved!";msg.style.opacity="1";setTimeout(()=>{msg.style.opacity="0"},2000)}
+  try{saveFeatureToggles()}catch(e){console.error("saveAllFeatures toggle error",e)}
+  // Show ghost immediately
+  if(msg){msg.textContent="Saving...";msg.style.opacity="1"}
+  // Sync to server and confirm
+  if(!adm){if(msg){msg.textContent="Not logged in";setTimeout(()=>{msg.style.opacity="0"},2500)}return}
+  const payload={action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:_buildSettingsPayload()};
+  clearTimeout(_syncTimer);_lastSyncPayload=null;
+  api(payload).then(r=>{
+    if(r&&r.ok){if(msg){msg.textContent="Saved!";setTimeout(()=>{msg.style.opacity="0"},2000)}}
+    else{console.error("Save failed",r);if(msg){msg.textContent="Save error";setTimeout(()=>{msg.style.opacity="0"},3000)}}
+  }).catch(e=>{console.error("Save network error",e);if(msg){msg.textContent="Network error";setTimeout(()=>{msg.style.opacity="0"},3000)}});
 }
 // ── Server-side settings sync (Android/iOS reliability) ──
 let _syncTimer=null;
@@ -4123,14 +4134,17 @@ function viewerLogout(){
   }catch(e){console.warn("Auto-restore failed",e);localStorage.removeItem("adm_session")}
 })();
 // Safety net: rebuild statuses at multiple intervals to guarantee they appear
+let _safetyDone=false;
 function _safetyRebuild(){
   try{
     if(!adm) return;
+    if(_safetyDone) return;
+    _safetyDone=true;
     buildStatusCheckboxes();
     rebuildAllDynamicStatusButtons();
     initFeatureTogglesUI();
     applyFeatureToggles();
-  }catch(e){}
+  }catch(e){_safetyDone=false}
 }
 document.addEventListener("DOMContentLoaded",()=>{
   // Try immediately, then again at 1s, 3s, 5s
