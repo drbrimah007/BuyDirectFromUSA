@@ -1178,8 +1178,6 @@ let scanDone=false;
 
 function isValidTracking(s){
   if(!s||s.length<6) return false;
-  // Reject Amazon Swiship QR codes (SP + chars)
-  if(/^SP[A-Za-z0-9]/i.test(s)) return false;
   // Reject hex-only strings (must contain a-f letters AND digits, not pure digits)
   if(/^[0-9a-f]+$/.test(s) && /[a-f]/.test(s)) return false;
   // Reject dimension-like strings (e.g. 13x8x5.5, 12x10x4)
