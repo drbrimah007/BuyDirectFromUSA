@@ -78,6 +78,9 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .name-ac-item{padding:10px 12px;font-size:14px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid #0f172a}
 .name-ac-item:active,.name-ac-item:hover{background:#334155}
 .name-ac-item b{color:#3b82f6}
+.expand-scan-on .name-ac-item{padding:14px 16px;font-size:35px;line-height:1.08;font-weight:800}
+.expand-scan-on .name-ac-item span{font-size:.48em!important}
+.expand-scan-on #scan-confirm-sheet .sheet-name-ac .ac-item{padding:14px 16px;font-size:28px;line-height:1.08;font-weight:800}
 .usr-card{background:#0f172a;border-radius:8px;padding:10px 12px;margin-bottom:6px}
 .usr-card .usr-top{display:flex;justify-content:space-between;align-items:center}
 .usr-card .usr-name{font-size:14px;font-weight:700;color:#f8fafc}
@@ -1659,12 +1662,15 @@ async function loadKnownNames(){
     }
   }catch(e){}
 }
+function isExpandOnScanEnabled(){
+  try{return loadFeatureToggles().expandOnScan!==false}catch(e){return true}
+}
 function fitInlineBigText(el){
   if(!el) return;
   el.style.fontSize="34px";
   let size=34;
-  while(el.scrollWidth>el.clientWidth && size>9){
-    size-=0.5;
+  while(el.scrollWidth>el.clientWidth && size>10){
+    size-=0.35;
     el.style.fontSize=size+"px";
   }
 }
@@ -1677,6 +1683,11 @@ function updateNameDisplay(val){
   const txt=document.getElementById("name-big-text");
   if(!disp||!txt) return;
   const v=(val||"").trim();
+  if(!isExpandOnScanEnabled()){
+    disp.classList.remove("visible");
+    txt.textContent="";
+    return;
+  }
   if(v){
     txt.textContent=v;
     disp.classList.add("visible");
@@ -1691,6 +1702,11 @@ function updateTrackingDisplay(val){
   const txt=document.getElementById("tracking-big-text");
   if(!disp||!txt) return;
   const v=(val||"").trim();
+  if(!isExpandOnScanEnabled()){
+    txt.textContent="";
+    disp.classList.remove("visible");
+    return;
+  }
   if(v){
     txt.textContent=v;
     disp.classList.add("visible");
@@ -1827,7 +1843,11 @@ function loadFeatureToggles(){
   const r={...FT_DEFAULTS,...ft};
   if(!r.statuses||typeof r.statuses!=='object') r.statuses={...FT_DEFAULTS.statuses};
   else r.statuses={...FT_DEFAULTS.statuses,...r.statuses};
+  let disabled=[];
+  try{disabled=JSON.parse(localStorage.getItem("disabled_statuses")||sessionStorage.getItem("disabled_statuses_bak")||"[]")}catch(e){disabled=[]}
+  if(Array.isArray(disabled)){ disabled.forEach(s=>{ r.statuses[s]=false; }); }
   getCustomStatuses().forEach(s=>{if(r.statuses[s]===undefined) r.statuses[s]=true});
+  if(r.expandOnScan===undefined) r.expandOnScan=true;
   return r;
 }
 function saveFeatureToggles(){
@@ -1847,8 +1867,10 @@ function saveFeatureToggles(){
       ft.statuses[s]=cb?cb.checked:true;
     });
     const j=JSON.stringify(ft);
+    const disabled=Object.keys(ft.statuses).filter(s=>ft.statuses[s]===false);
     localStorage.setItem("feature_toggles",j);
-    try{sessionStorage.setItem("feature_toggles_bak",j)}catch(e){}
+    localStorage.setItem("disabled_statuses",JSON.stringify(disabled));
+    try{sessionStorage.setItem("feature_toggles_bak",j);sessionStorage.setItem("disabled_statuses_bak",JSON.stringify(disabled))}catch(e){}
     applyFeatureToggles();
     rebuildAllDynamicStatusButtons();
   }catch(e){console.error("saveFeatureToggles error",e)}
@@ -1863,9 +1885,10 @@ function saveAllFeatures(){
       expandOnScan:g("ft-expand-on-scan"),mawb:g("ft-mawb"),bol:g("ft-bol"),statuses:{}
     };
     try{getAllStatuses().forEach(s=>{const cb=document.getElementById("ft-st-"+s.replace(/\s+/g,'-'));ftFromDOM.statuses[s]=cb?cb.checked:true})}catch(e){}
-    try{const j=JSON.stringify(ftFromDOM);localStorage.setItem("feature_toggles",j);sessionStorage.setItem("feature_toggles_bak",j)}catch(e){}
+    const disabled=Object.keys(ftFromDOM.statuses).filter(s=>ftFromDOM.statuses[s]===false);
+    try{const j=JSON.stringify(ftFromDOM);localStorage.setItem("feature_toggles",j);localStorage.setItem("disabled_statuses",JSON.stringify(disabled));sessionStorage.setItem("feature_toggles_bak",j);sessionStorage.setItem("disabled_statuses_bak",JSON.stringify(disabled))}catch(e){}
     try{applyFeatureToggles();rebuildAllDynamicStatusButtons()}catch(e){}
-    const settings=_buildSettingsPayload(false); settings.feature_toggles=ftFromDOM; _doSave(settings,msg);
+    const settings=_buildSettingsPayload(false); settings.feature_toggles=ftFromDOM; settings.disabled_statuses=disabled; _doSave(settings,msg);
   }catch(e){
     if(msg){msg.textContent="Bug: "+e.message;msg.style.opacity="1";setTimeout(()=>{msg.style.opacity="0"},4000)}
   }
@@ -1920,6 +1943,7 @@ function _buildSettingsPayload(includeLogo){
   const ddInp=document.getElementById("dim-divisor");
   const p={
     feature_toggles:ft,
+    disabled_statuses:Object.keys(ft.statuses||{}).filter(s=>ft.statuses[s]===false),
     custom_statuses:lj("custom_statuses","[]"),
     custom_status_colors:lj("custom_status_colors","{}"),
     dim_unit:(duSel?duSel.value:null)||ls("dim_unit","kg"),
@@ -1970,6 +1994,7 @@ async function loadSettingsFromServer(){
       safeSet("feature_toggles",ftJson);
       try{sessionStorage.setItem("feature_toggles_bak",ftJson)}catch(e){}
     }
+    if(Array.isArray(s.disabled_statuses)){ safeSet("disabled_statuses",JSON.stringify(s.disabled_statuses)); }
     if(Array.isArray(s.custom_statuses)) safeSet("custom_statuses",JSON.stringify(s.custom_statuses));
     if(s.custom_status_colors&&typeof s.custom_status_colors==='object') safeSet("custom_status_colors",JSON.stringify(s.custom_status_colors));
     if(s.dim_unit){safeSet("dim_unit",s.dim_unit); const el=document.getElementById("dim-unit"); if(el) el.value=s.dim_unit;}
@@ -1983,7 +2008,11 @@ async function loadSettingsFromServer(){
     if(typeof s.scan_dest==="string") safeSet("scan_dest",s.scan_dest);
     if(typeof s.scan_eta==="string"){safeSet("scan_eta",s.scan_eta); const el=document.getElementById("sc-eta"); if(el) el.value=s.scan_eta;}
     if(typeof s.scan_series==="string") safeSet("scan_series",s.scan_series);
-    try{initFeatureTogglesUI();buildStatusCheckboxes();applyFeatureToggles();rebuildAllDynamicStatusButtons();}catch(e){}
+    try{initFeatureTogglesUI();buildStatusCheckboxes();
+      const ftNow=loadFeatureToggles();
+      getAllStatuses().forEach(st=>{const cb=document.getElementById("ft-st-"+st.replace(/\s+/g,'-')); if(cb) cb.checked=ftNow.statuses[st]!==false;});
+      applyFeatureToggles();rebuildAllDynamicStatusButtons();
+    }catch(e){}
     try{loadDimSettings();}catch(e){}
     try{initBatchPrefix();}catch(e){}
     try{restoreScanSettings();}catch(e){}
@@ -2148,6 +2177,14 @@ function rebuildAllDynamicStatusButtons(){
 
 function applyFeatureToggles(){
   const ft=loadFeatureToggles();
+  document.body.classList.toggle('expand-scan-on', ft.expandOnScan!==false);
+  if(ft.expandOnScan===false){
+    try{document.getElementById('name-big-display').classList.remove('visible');document.getElementById('name-big-text').textContent='';}catch(e){}
+    try{document.getElementById('tracking-big-display').classList.remove('visible');document.getElementById('tracking-big-text').textContent='';}catch(e){}
+  } else {
+    try{updateNameDisplay(document.getElementById('sc-name').value||'');}catch(e){}
+    try{updateTrackingDisplay(document.getElementById('sc-tracking').value||'');}catch(e){}
+  }
   // Dims
   document.querySelectorAll(".ft-dims").forEach(el=>el.style.display=ft.dims?'':'none');
   // Notes
