@@ -75,7 +75,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .loc-x{margin-left:6px;color:#ef4444;font-weight:700;font-size:14px;opacity:.6;padding:0 2px}.loc-x:hover,.loc-x:active{opacity:1}
 .name-ac{display:none;position:absolute;left:0;right:0;top:100%;background:#1e293b;border:1px solid #334155;border-radius:0 0 8px 8px;max-height:160px;overflow-y:auto;z-index:50}
 .name-ac.show{display:block}
-.name-ac-item{padding:14px 16px;font-size:18px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid #0f172a;line-height:1.25}
+.name-ac-item{padding:10px 12px;font-size:14px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid #0f172a}
 .name-ac-item:active,.name-ac-item:hover{background:#334155}
 .name-ac-item b{color:#3b82f6}
 .usr-card{background:#0f172a;border-radius:8px;padding:10px 12px;margin-bottom:6px}
@@ -113,7 +113,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 #scan-confirm-sheet .sheet-name-input:focus{border-color:#3b82f6}
 #scan-confirm-sheet .sheet-name-ac{background:#1e293b;border:1px solid #334155;border-radius:0 0 10px 10px;max-height:180px;overflow-y:auto;margin-bottom:8px;display:none}
 #scan-confirm-sheet .sheet-name-ac.show{display:block}
-#scan-confirm-sheet .sheet-name-ac .ac-item{padding:14px 16px;font-size:18px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid #0f172a;line-height:1.25}
+#scan-confirm-sheet .sheet-name-ac .ac-item{padding:13px 14px;font-size:16px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid #0f172a}
 #scan-confirm-sheet .sheet-name-ac .ac-item:active{background:#334155}
 #scan-confirm-sheet .sheet-name-ac .ac-item b{color:#3b82f6}
 #scan-confirm-sheet .sheet-name-big{font-size:32px;font-weight:900;color:#4ade80;text-align:center;padding:10px 0 4px;letter-spacing:.3px;word-break:break-word;min-height:50px}
@@ -123,11 +123,9 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 #scan-confirm-sheet .btn-confirm:disabled{opacity:.4}
 #scan-confirm-sheet .btn-skip{background:#334155;color:#94a3b8}
 /* Big name display for warehouse scanning */
-.name-big-display,.tracking-big-display{display:none;margin-top:10px;background:#1e3a5f;border:2px solid #3b82f6;border-radius:12px;padding:16px 18px;text-align:center;box-shadow:0 6px 18px rgba(30,58,95,.25)}
-.tracking-big-display{padding:8px 12px}
+.name-big-display,.tracking-big-display{display:none;margin-top:10px;background:#1e3a5f;border:2px solid #3b82f6;border-radius:12px;padding:12px 14px;text-align:center;box-shadow:0 6px 18px rgba(30,58,95,.25);overflow:hidden}
 .name-big-display.visible,.tracking-big-display.visible{display:block}
-.name-big-display .name-big-text{font-size:34px;font-weight:900;color:#f8fafc;letter-spacing:.5px;line-height:1.18;word-break:break-word;overflow-wrap:anywhere}
-.tracking-big-display .tracking-big-text{font-size:38px;font-weight:900;color:#f8fafc;letter-spacing:.35px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;word-break:normal;overflow-wrap:normal}
+.name-big-display .name-big-text,.tracking-big-display .tracking-big-text{display:block;width:100%;box-sizing:border-box;font-size:34px;font-weight:900;color:#f8fafc;letter-spacing:.3px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:clip;transform-origin:center center}
 .name-big-display .name-big-label,.tracking-big-display .tracking-big-label{font-size:11px;color:#60a5fa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:700}
 #sc-name:focus,#sc-name:not(:placeholder-shown){font-size:17px!important;font-weight:700!important;color:#f8fafc!important}
 /* Status badges */
@@ -233,7 +231,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <h2>Scanner Login</h2>
       <p>Log in to scan and manage packages</p>
       <form id="admin-login-form" onsubmit="event.preventDefault();adminDoLogin();" method="post" autocomplete="on">
-      <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="al-email" name="username" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="efficiency@buydirectfromusa.com" autocomplete="username"></div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" type="email" id="al-email" name="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="efficiency@buydirectfromusa.com" autocomplete="email"></div>
       <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="al-pw" name="password" placeholder="Enter password" autocomplete="current-password"></div>
       <button type="submit" class="bt bb g8">Log In</button>
       </form>
@@ -1120,8 +1118,6 @@ async function tryAutofillAdminLogin(){
   }catch(e){}
 }
 
-function prefillSavedAdminEmail(){try{const em=document.getElementById("al-email");if(em&&!em.value){const saved=localStorage.getItem("last_admin_email")||sessionStorage.getItem("last_admin_email")||"";if(saved) em.value=saved}}catch(e){}}
-
 async function adminDoLogin(){
   const email=document.getElementById("al-email").value.trim();
   const pw=document.getElementById("al-pw").value.trim();
@@ -1663,13 +1659,28 @@ async function loadKnownNames(){
     }
   }catch(e){}
 }
+function fitInlineBigText(el){
+  if(!el) return;
+  el.style.fontSize="34px";
+  let size=34;
+  while(el.scrollWidth>el.clientWidth && size>9){
+    size-=0.5;
+    el.style.fontSize=size+"px";
+  }
+}
+function refitInlineBigText(el){
+  if(!el) return;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>fitInlineBigText(el)));
+}
 function updateNameDisplay(val){
   const disp=document.getElementById("name-big-display");
   const txt=document.getElementById("name-big-text");
   if(!disp||!txt) return;
-  if(val&&val.trim().length>0){
-    txt.textContent=val.trim();
+  const v=(val||"").trim();
+  if(v){
+    txt.textContent=v;
     disp.classList.add("visible");
+    refitInlineBigText(txt);
   } else {
     disp.classList.remove("visible");
     txt.textContent="";
@@ -1680,9 +1691,19 @@ function updateTrackingDisplay(val){
   const txt=document.getElementById("tracking-big-text");
   if(!disp||!txt) return;
   const v=(val||"").trim();
-  if(v){ txt.textContent=v; disp.classList.add("visible"); }
-  else { txt.textContent=""; disp.classList.remove("visible"); }
+  if(v){
+    txt.textContent=v;
+    disp.classList.add("visible");
+    refitInlineBigText(txt);
+  } else {
+    txt.textContent="";
+    disp.classList.remove("visible");
+  }
 }
+window.addEventListener("resize",()=>{
+  try{refitInlineBigText(document.getElementById("name-big-text"));}catch(e){}
+  try{refitInlineBigText(document.getElementById("tracking-big-text"));}catch(e){}
+});
 function nameAutocomplete(val){
   const box=document.getElementById("name-suggestions");
   if(!val||val.length<1){box.classList.remove("show");box.innerHTML="";return}
@@ -1704,7 +1725,6 @@ function pickName(name){
   updateNameDisplay(name);
 }
 document.addEventListener("DOMContentLoaded",()=>{
-  prefillSavedAdminEmail();
   const inp=document.getElementById("sc-name");
   if(inp) inp.addEventListener("blur",()=>{setTimeout(()=>{document.getElementById("name-suggestions").classList.remove("show")},150)});
 });
@@ -1833,25 +1853,6 @@ function saveFeatureToggles(){
     rebuildAllDynamicStatusButtons();
   }catch(e){console.error("saveFeatureToggles error",e)}
 }
-function _persistSettingsLocally(s){
-  try{
-    if(!s||typeof s!=="object") return;
-    const safe=(k,v)=>{try{localStorage.setItem(k,v);sessionStorage.setItem(k,v)}catch(e){}};
-    if(s.feature_toggles){const j=JSON.stringify(s.feature_toggles);safe("feature_toggles",j);}
-    if(Array.isArray(s.custom_statuses)){const j=JSON.stringify(s.custom_statuses);safe("custom_statuses",j);}
-    if(s.custom_status_colors&&typeof s.custom_status_colors==="object"){const j=JSON.stringify(s.custom_status_colors);safe("custom_status_colors",j);}
-    ["dim_unit","dim_divisor","batch_prefix","company_name","company_logo","gen_tracking_seq","scan_loc","scan_dest","scan_eta","scan_series"].forEach(k=>{if(s[k]!==undefined&&s[k]!==null) safe(k,String(s[k]))});
-    if(Array.isArray(s.scan_dests)){const j=JSON.stringify(s.scan_dests);safe("scan_dests",j);}
-  }catch(e){}
-}
-
-function _applyStatusCheckboxState(){
-  try{
-    const ft=loadFeatureToggles();
-    getAllStatuses().forEach(st=>{const el=document.getElementById("ft-st-"+st.replace(/\s+/g,"-")); if(el) el.checked=ft.statuses[st]!==false;});
-  }catch(e){}
-}
-
 function saveAllFeatures(){
   const msg=document.getElementById("ft-save-msg");
   try{
@@ -1863,10 +1864,8 @@ function saveAllFeatures(){
     };
     try{getAllStatuses().forEach(s=>{const cb=document.getElementById("ft-st-"+s.replace(/\s+/g,'-'));ftFromDOM.statuses[s]=cb?cb.checked:true})}catch(e){}
     try{const j=JSON.stringify(ftFromDOM);localStorage.setItem("feature_toggles",j);sessionStorage.setItem("feature_toggles_bak",j)}catch(e){}
-    const settings=_buildSettingsPayload(false); settings.feature_toggles=ftFromDOM;
-    _persistSettingsLocally(settings);
-    try{buildStatusCheckboxes();_applyStatusCheckboxState();applyFeatureToggles();rebuildAllDynamicStatusButtons()}catch(e){}
-    _doSave(settings,msg);
+    try{applyFeatureToggles();rebuildAllDynamicStatusButtons()}catch(e){}
+    const settings=_buildSettingsPayload(false); settings.feature_toggles=ftFromDOM; _doSave(settings,msg);
   }catch(e){
     if(msg){msg.textContent="Bug: "+e.message;msg.style.opacity="1";setTimeout(()=>{msg.style.opacity="0"},4000)}
   }
@@ -1889,8 +1888,6 @@ async function _doSave(settings,msgEl){
     let data=null;
     try{data=await res.json()}catch(e){throw new Error("Invalid JSON")}
     if(!res.ok||!data||!data.ok) throw new Error("Server error");
-    _persistSettingsLocally((data&&data.settings)||settings);
-    try{buildStatusCheckboxes();_applyStatusCheckboxState();initFeatureTogglesUI();buildStatusCheckboxes();_applyStatusCheckboxState();applyFeatureToggles();rebuildAllDynamicStatusButtons();loadDimSettings();initBatchPrefix();restoreScanSettings();applyCompanyBranding();initLogoPreview()}catch(e){}
     if(msgEl){msgEl.textContent="Saved!";setTimeout(()=>{msgEl.style.opacity="0"},1500)}
   }catch(e){
     clearTimeout(timer);
@@ -1986,7 +1983,7 @@ async function loadSettingsFromServer(){
     if(typeof s.scan_dest==="string") safeSet("scan_dest",s.scan_dest);
     if(typeof s.scan_eta==="string"){safeSet("scan_eta",s.scan_eta); const el=document.getElementById("sc-eta"); if(el) el.value=s.scan_eta;}
     if(typeof s.scan_series==="string") safeSet("scan_series",s.scan_series);
-    try{initFeatureTogglesUI();buildStatusCheckboxes();_applyStatusCheckboxState();applyFeatureToggles();rebuildAllDynamicStatusButtons();}catch(e){}
+    try{initFeatureTogglesUI();buildStatusCheckboxes();applyFeatureToggles();rebuildAllDynamicStatusButtons();}catch(e){}
     try{loadDimSettings();}catch(e){}
     try{initBatchPrefix();}catch(e){}
     try{restoreScanSettings();}catch(e){}
@@ -2027,12 +2024,12 @@ function buildStatusCheckboxes(){
 // ── Android/iOS: restore toggles on tab wake + flush settings on tab hide + release cameras ──
 window.addEventListener("pageshow",function(e){
   if(e.persisted||adm){
-    loadSettingsFromServer().then(()=>{try{initFeatureTogglesUI();buildStatusCheckboxes();_applyStatusCheckboxState();applyFeatureToggles();rebuildAllDynamicStatusButtons();applyCompanyBranding()}catch(x){}}).catch(()=>{try{initFeatureTogglesUI();buildStatusCheckboxes();_applyStatusCheckboxState();applyFeatureToggles();rebuildAllDynamicStatusButtons();applyCompanyBranding()}catch(x){}});
+    loadSettingsFromServer().then(()=>{try{initFeatureTogglesUI();applyFeatureToggles();rebuildAllDynamicStatusButtons();applyCompanyBranding()}catch(x){}}).catch(()=>{try{initFeatureTogglesUI();applyFeatureToggles();rebuildAllDynamicStatusButtons();applyCompanyBranding()}catch(x){}});
   }
 });
 document.addEventListener("visibilitychange",function(){
   if(document.visibilityState==="visible"){
-    if(adm){loadSettingsFromServer().then(()=>{try{initFeatureTogglesUI();buildStatusCheckboxes();_applyStatusCheckboxState();applyFeatureToggles();rebuildAllDynamicStatusButtons();applyCompanyBranding()}catch(x){}}).catch(()=>{try{initFeatureTogglesUI();buildStatusCheckboxes();_applyStatusCheckboxState();applyFeatureToggles();rebuildAllDynamicStatusButtons()}catch(x){}});}
+    if(adm){loadSettingsFromServer().then(()=>{try{initFeatureTogglesUI();applyFeatureToggles();rebuildAllDynamicStatusButtons();applyCompanyBranding()}catch(x){}}).catch(()=>{try{initFeatureTogglesUI();applyFeatureToggles();rebuildAllDynamicStatusButtons()}catch(x){}});}
   } else {
     // Tab going hidden — flush pending settings immediately before Android/iOS kills tab
     try{_flushSettingsBeforeUnload()}catch(x){}
