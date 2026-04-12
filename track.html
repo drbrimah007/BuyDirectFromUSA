@@ -497,19 +497,19 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
-          <input type="checkbox" id="ft-dims" onchange="saveFeatureToggles()" checked>
+          <input type="checkbox" id="ft-dims" onchange="saveFeatureToggles()">
           <span style="font-size:12px;color:#f8fafc;font-weight:700">Dims</span>
         </label>
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
-          <input type="checkbox" id="ft-notes" onchange="saveFeatureToggles()" checked>
+          <input type="checkbox" id="ft-notes" onchange="saveFeatureToggles()">
           <span style="font-size:12px;color:#f8fafc;font-weight:700">Notes</span>
         </label>
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
-          <input type="checkbox" id="ft-internal-barcode" onchange="saveFeatureToggles()" checked>
+          <input type="checkbox" id="ft-internal-barcode" onchange="saveFeatureToggles()">
           <span style="font-size:12px;color:#f8fafc;font-weight:700">Internal Barcode</span>
         </label>
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1;min-width:130px">
-          <input type="checkbox" id="ft-expand-on-scan" onchange="saveFeatureToggles()" checked>
+          <input type="checkbox" id="ft-expand-on-scan" onchange="saveFeatureToggles()">
           <span style="font-size:12px;color:#f8fafc;font-weight:700">Expand on Scan</span>
         </label>
       </div>
@@ -517,11 +517,11 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <label class="fl" style="margin-bottom:6px;font-size:11px;color:#64748b">Series Types</label>
       <div style="display:flex;gap:8px;margin-bottom:12px">
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1">
-          <input type="checkbox" id="ft-mawb" onchange="saveFeatureToggles()" checked>
+          <input type="checkbox" id="ft-mawb" onchange="saveFeatureToggles()">
           <span style="font-size:12px;color:#60a5fa;font-weight:700">MAWB</span>
         </label>
         <label style="display:flex;align-items:center;gap:6px;background:#0f172a;padding:8px 12px;border-radius:8px;cursor:pointer;flex:1">
-          <input type="checkbox" id="ft-bol" onchange="saveFeatureToggles()" checked>
+          <input type="checkbox" id="ft-bol" onchange="saveFeatureToggles()">
           <span style="font-size:12px;color:#34d399;font-weight:700">BOL</span>
         </label>
       </div>
@@ -1078,12 +1078,13 @@ async function enterScanner(){
   document.getElementById("adm-bnav").style.display="flex";
   restoreScanSettings();
   loadDimSettings();
-  await loadSettingsFromServer();
-  initFeatureTogglesUI();
-  rebuildAllDynamicStatusButtons();
-  applyFeatureToggles();
-  applyCompanyBranding();
-  await Promise.all([loadLocations(),loadDests()]);
+  // Load server settings first, then initialize ALL UI from those settings
+  try{await loadSettingsFromServer()}catch(e){console.warn("loadSettingsFromServer error",e)}
+  try{initFeatureTogglesUI()}catch(e){console.warn("initFeatureTogglesUI error",e)}
+  try{rebuildAllDynamicStatusButtons()}catch(e){console.warn("rebuildAllDynamicStatusButtons error",e)}
+  try{applyFeatureToggles()}catch(e){console.warn("applyFeatureToggles error",e)}
+  try{applyCompanyBranding()}catch(e){console.warn("applyCompanyBranding error",e)}
+  await Promise.all([loadLocations(),loadDests()]).catch(()=>{});
   loadViewers();
   if(adm.is_super) loadAdmins();
   loadAllEntries();
@@ -1747,14 +1748,15 @@ function getCustomStatuses(){try{return JSON.parse(localStorage.getItem("custom_
 function saveCustomStatuses(arr){localStorage.setItem("custom_statuses",JSON.stringify(arr))}
 function getAllStatuses(){return BASE_STATUSES.concat(getCustomStatuses())}
 const ALL_STATUSES=BASE_STATUSES; // kept for compat
-const FT_DEFAULTS={dims:true,notes:true,internalBarcode:true,mawb:true,bol:true,statuses:BASE_STATUSES.reduce((o,s)=>{o[s]=true;return o},{})};
+const FT_DEFAULTS={dims:true,notes:true,internalBarcode:true,expandOnScan:true,mawb:true,bol:true,statuses:BASE_STATUSES.reduce((o,s)=>{o[s]=true;return o},{})};
 function loadFeatureToggles(){
   let ft;
-  try{ft=JSON.parse(localStorage.getItem("feature_toggles"))||JSON.parse(sessionStorage.getItem("feature_toggles_bak"))||{}}catch(e){try{ft=JSON.parse(sessionStorage.getItem("feature_toggles_bak"))||{}}catch(e2){ft={}}}
+  try{ft=JSON.parse(localStorage.getItem("feature_toggles"))}catch(e){ft=null}
+  if(!ft){try{ft=JSON.parse(sessionStorage.getItem("feature_toggles_bak"))}catch(e2){ft=null}}
+  if(!ft||typeof ft!=='object') ft={};
   const r={...FT_DEFAULTS,...ft};
-  if(!r.statuses) r.statuses={...FT_DEFAULTS.statuses};
+  if(!r.statuses||typeof r.statuses!=='object') r.statuses={...FT_DEFAULTS.statuses};
   else r.statuses={...FT_DEFAULTS.statuses,...r.statuses};
-  // Merge in custom statuses (default enabled)
   getCustomStatuses().forEach(s=>{if(r.statuses[s]===undefined) r.statuses[s]=true});
   return r;
 }
@@ -1772,38 +1774,68 @@ function saveFeatureToggles(){
     const cb=document.getElementById("ft-st-"+s.replace(/\s+/g,'-'));
     ft.statuses[s]=cb?cb.checked:true;
   });
-  localStorage.setItem("feature_toggles",JSON.stringify(ft));
-  try{sessionStorage.setItem("feature_toggles_bak",JSON.stringify(ft))}catch(e){}
+  const json=JSON.stringify(ft);
+  localStorage.setItem("feature_toggles",json);
+  try{sessionStorage.setItem("feature_toggles_bak",json)}catch(e){}
   applyFeatureToggles();
   rebuildAllDynamicStatusButtons();
-  syncSettingsToServer();
+  syncSettingsToServer(true);
 }
-// ── Server-side settings sync (Android reliability) ──
+// ── Server-side settings sync (Android/iOS reliability) ──
 let _syncTimer=null;
-function syncSettingsToServer(){
+let _lastSyncPayload=null;
+function _buildSettingsPayload(){
+  return {
+    feature_toggles:JSON.parse(localStorage.getItem("feature_toggles")||"{}"),
+    custom_statuses:JSON.parse(localStorage.getItem("custom_statuses")||"[]"),
+    custom_status_colors:JSON.parse(localStorage.getItem("custom_status_colors")||"{}"),
+    dim_unit:localStorage.getItem("dim_unit")||"kg",
+    dim_divisor:localStorage.getItem("dim_divisor")||"",
+    batch_prefix:localStorage.getItem("batch_prefix")||"",
+    company_name:localStorage.getItem("company_name")||"",
+    company_logo:localStorage.getItem("company_logo")||"",
+    scan_dests:JSON.parse(localStorage.getItem("scan_dests")||"[]"),
+    gen_tracking_seq:localStorage.getItem("gen_tracking_seq")||"",
+    scan_loc:localStorage.getItem("scan_loc")||"",
+    scan_dest:localStorage.getItem("scan_dest")||"",
+    scan_eta:localStorage.getItem("scan_eta")||"",
+    scan_series:localStorage.getItem("scan_series")||""
+  };
+}
+function syncSettingsToServer(immediate){
   if(!adm) return;
   clearTimeout(_syncTimer);
-  _syncTimer=setTimeout(async()=>{
-    try{
-      const settings={
-        feature_toggles:JSON.parse(localStorage.getItem("feature_toggles")||"{}"),
-        custom_statuses:JSON.parse(localStorage.getItem("custom_statuses")||"[]"),
-        custom_status_colors:JSON.parse(localStorage.getItem("custom_status_colors")||"{}"),
-        dim_unit:localStorage.getItem("dim_unit")||"kg",
-        dim_divisor:localStorage.getItem("dim_divisor")||"",
-        batch_prefix:localStorage.getItem("batch_prefix")||"",
-        company_name:localStorage.getItem("company_name")||"",
-        company_logo:localStorage.getItem("company_logo")||"",
-        scan_dests:JSON.parse(localStorage.getItem("scan_dests")||"[]"),
-        gen_tracking_seq:localStorage.getItem("gen_tracking_seq")||"",
-        scan_loc:localStorage.getItem("scan_loc")||"",
-        scan_dest:localStorage.getItem("scan_dest")||"",
-        scan_eta:localStorage.getItem("scan_eta")||"",
-        scan_series:localStorage.getItem("scan_series")||""
-      };
-      await api({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings});
-    }catch(e){console.warn("Settings sync failed",e)}
-  },1500);
+  _lastSyncPayload={action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:_buildSettingsPayload()};
+  if(immediate){
+    const payload=_lastSyncPayload;
+    _lastSyncPayload=null;
+    api(payload).catch(e=>console.warn("Settings sync failed",e));
+  } else {
+    _syncTimer=setTimeout(()=>{
+      if(!_lastSyncPayload) return;
+      const payload=_lastSyncPayload;
+      _lastSyncPayload=null;
+      api(payload).catch(e=>console.warn("Settings sync failed",e));
+    },1500);
+  }
+}
+function _flushSettingsBeforeUnload(){
+  if(!_lastSyncPayload&&!_syncTimer) return;
+  clearTimeout(_syncTimer);
+  if(!adm) return;
+  try{
+    const payload=JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:_buildSettingsPayload()});
+    const url=API;
+    if(navigator.sendBeacon){
+      navigator.sendBeacon(url,new Blob([payload],{type:'application/json'}));
+    } else {
+      const xhr=new XMLHttpRequest();
+      xhr.open('POST',url,false);
+      xhr.setRequestHeader('Content-Type','application/json');
+      xhr.send(payload);
+    }
+    _lastSyncPayload=null;
+  }catch(e){}
 }
 async function loadSettingsFromServer(){
   if(!adm) return;
@@ -1811,15 +1843,16 @@ async function loadSettingsFromServer(){
     const r=await api({action:"load-settings",adminEmail:adm.email,adminPassword:adm.password});
     if(!r.ok||!r.settings) return;
     const s=r.settings;
-    if(s.feature_toggles&&Object.keys(s.feature_toggles).length) localStorage.setItem("feature_toggles",JSON.stringify(s.feature_toggles));
-    if(s.custom_statuses&&s.custom_statuses.length) localStorage.setItem("custom_statuses",JSON.stringify(s.custom_statuses));
-    if(s.custom_status_colors&&Object.keys(s.custom_status_colors).length) localStorage.setItem("custom_status_colors",JSON.stringify(s.custom_status_colors));
+    // Always restore from server (server is source of truth for cross-device sync)
+    if(s.feature_toggles&&typeof s.feature_toggles==='object'&&Object.keys(s.feature_toggles).length) localStorage.setItem("feature_toggles",JSON.stringify(s.feature_toggles));
+    if(s.custom_statuses&&Array.isArray(s.custom_statuses)&&s.custom_statuses.length) localStorage.setItem("custom_statuses",JSON.stringify(s.custom_statuses));
+    if(s.custom_status_colors&&typeof s.custom_status_colors==='object'&&Object.keys(s.custom_status_colors).length) localStorage.setItem("custom_status_colors",JSON.stringify(s.custom_status_colors));
     if(s.dim_unit) localStorage.setItem("dim_unit",s.dim_unit);
     if(s.dim_divisor) localStorage.setItem("dim_divisor",s.dim_divisor);
     if(s.batch_prefix) localStorage.setItem("batch_prefix",s.batch_prefix);
     if(s.company_name) localStorage.setItem("company_name",s.company_name);
     if(s.company_logo) localStorage.setItem("company_logo",s.company_logo);
-    if(s.scan_dests&&s.scan_dests.length) localStorage.setItem("scan_dests",JSON.stringify(s.scan_dests));
+    if(s.scan_dests&&Array.isArray(s.scan_dests)&&s.scan_dests.length) localStorage.setItem("scan_dests",JSON.stringify(s.scan_dests));
     if(s.gen_tracking_seq) localStorage.setItem("gen_tracking_seq",s.gen_tracking_seq);
     if(s.scan_loc) localStorage.setItem("scan_loc",s.scan_loc);
     if(s.scan_dest) localStorage.setItem("scan_dest",s.scan_dest);
@@ -1828,14 +1861,16 @@ async function loadSettingsFromServer(){
   }catch(e){console.warn("Load settings failed",e)}
 }
 function initFeatureTogglesUI(){
-  const ft=loadFeatureToggles();
-  document.getElementById("ft-dims").checked=ft.dims;
-  document.getElementById("ft-notes").checked=ft.notes;
-  document.getElementById("ft-internal-barcode").checked=ft.internalBarcode;
-  document.getElementById("ft-expand-on-scan").checked=ft.expandOnScan!==false;
-  document.getElementById("ft-mawb").checked=ft.mawb;
-  document.getElementById("ft-bol").checked=ft.bol;
-  buildStatusCheckboxes();
+  try{
+    const ft=loadFeatureToggles();
+    const d=document.getElementById("ft-dims"); if(d) d.checked=!!ft.dims;
+    const n=document.getElementById("ft-notes"); if(n) n.checked=!!ft.notes;
+    const ib=document.getElementById("ft-internal-barcode"); if(ib) ib.checked=!!ft.internalBarcode;
+    const es=document.getElementById("ft-expand-on-scan"); if(es) es.checked=!!ft.expandOnScan;
+    const m=document.getElementById("ft-mawb"); if(m) m.checked=!!ft.mawb;
+    const b=document.getElementById("ft-bol"); if(b) b.checked=!!ft.bol;
+    buildStatusCheckboxes();
+  }catch(e){console.warn("initFeatureTogglesUI error",e)}
 }
 function buildStatusCheckboxes(){
   const ft=loadFeatureToggles();
@@ -1856,13 +1891,27 @@ function buildStatusCheckboxes(){
       '</label>';
   }).join("");
 }
-// ── Android: restore toggles on tab wake/restore + release cameras on tab hide ──
-window.addEventListener("pageshow",function(e){if(e.persisted){loadSettingsFromServer().then(()=>{try{initFeatureTogglesUI();applyFeatureToggles()}catch(x){}}).catch(()=>{try{initFeatureTogglesUI();applyFeatureToggles()}catch(x){}})}else{try{initFeatureTogglesUI();applyFeatureToggles()}catch(x){}}});
-document.addEventListener("visibilitychange",function(){
-  if(document.visibilityState==="visible"){loadSettingsFromServer().then(()=>{try{initFeatureTogglesUI();applyFeatureToggles()}catch(x){}}).catch(()=>{try{initFeatureTogglesUI();applyFeatureToggles()}catch(x){}})}
-  else{try{if(camStream||nativeScanInterval||html5Sc)stopCam()}catch(x){}try{if(delCamStream||delScanInterval)delStopCam()}catch(x){}}
+// ── Android/iOS: restore toggles on tab wake + flush settings on tab hide + release cameras ──
+window.addEventListener("pageshow",function(e){
+  if(e.persisted||adm){
+    loadSettingsFromServer().then(()=>{try{initFeatureTogglesUI();applyFeatureToggles();rebuildAllDynamicStatusButtons();applyCompanyBranding()}catch(x){}}).catch(()=>{try{initFeatureTogglesUI();applyFeatureToggles();rebuildAllDynamicStatusButtons();applyCompanyBranding()}catch(x){}});
+  }
 });
-document.addEventListener("pagehide",function(){try{if(camStream)camStream.getTracks().forEach(t=>t.stop())}catch(x){}try{if(delCamStream)delCamStream.getTracks().forEach(t=>t.stop())}catch(x){}});
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState==="visible"){
+    if(adm){loadSettingsFromServer().then(()=>{try{initFeatureTogglesUI();applyFeatureToggles();rebuildAllDynamicStatusButtons();applyCompanyBranding()}catch(x){}}).catch(()=>{try{initFeatureTogglesUI();applyFeatureToggles();rebuildAllDynamicStatusButtons()}catch(x){}});}
+  } else {
+    // Tab going hidden — flush pending settings immediately before Android/iOS kills tab
+    try{_flushSettingsBeforeUnload()}catch(x){}
+    try{if(camStream||nativeScanInterval||html5Sc)stopCam()}catch(x){}
+    try{if(delCamStream||delScanInterval)delStopCam()}catch(x){}
+  }
+});
+document.addEventListener("pagehide",function(){
+  try{_flushSettingsBeforeUnload()}catch(x){}
+  try{if(camStream)camStream.getTracks().forEach(t=>t.stop())}catch(x){}
+  try{if(delCamStream)delCamStream.getTracks().forEach(t=>t.stop())}catch(x){}
+});
 function addCustomStatus(){
   const inp=document.getElementById("ft-custom-status-input");
   if(!inp) return;
@@ -1884,7 +1933,7 @@ function addCustomStatus(){
   try{const cols=JSON.parse(localStorage.getItem("custom_status_colors")||"{}");cols[name]=color;localStorage.setItem("custom_status_colors",JSON.stringify(cols))}catch(e){}
   buildStatusCheckboxes();
   rebuildAllDynamicStatusButtons();
-  syncSettingsToServer();
+  syncSettingsToServer(true);
 }
 function removeCustomStatus(name){
   if(!confirm("Remove custom status '"+name+"'?")) return;
@@ -1897,7 +1946,7 @@ function removeCustomStatus(name){
   try{const cols=JSON.parse(localStorage.getItem("custom_status_colors")||"{}");delete cols[name];localStorage.setItem("custom_status_colors",JSON.stringify(cols))}catch(e){}
   buildStatusCheckboxes();
   rebuildAllDynamicStatusButtons();
-  syncSettingsToServer();
+  syncSettingsToServer(true);
 }
 function ftEnabled(key){const ft=loadFeatureToggles();return ft[key]!==false}
 function ftStatusEnabled(status){const ft=loadFeatureToggles();return ft.statuses&&ft.statuses[status]!==false}
@@ -3426,8 +3475,9 @@ function handleLogoUpload(input){
   reader.onload=function(e){
     localStorage.setItem("company_logo",e.target.result);
     initLogoPreview();
+    applyCompanyBranding();
     msg.innerHTML='<span class="ok">Logo saved</span>';
-    syncSettingsToServer();
+    syncSettingsToServer(true);
   };
   reader.onerror=function(){msg.innerHTML='<span class="er">Failed to read file</span>'};
   reader.readAsDataURL(file);
@@ -3438,7 +3488,7 @@ function removeLogo(){
   initLogoPreview();
   applyCompanyBranding();
   document.getElementById("logo-msg").innerHTML='<span class="ok">Logo removed</span>';
-  syncSettingsToServer();
+  syncSettingsToServer(true);
 }
 
 // ── Company name ──
@@ -3447,7 +3497,7 @@ function saveCompanyName(){
   const val=(inp.value||"").trim();
   if(!val){document.getElementById("company-name-msg").innerHTML='<span class="er">Name cannot be empty</span>';return}
   localStorage.setItem("company_name",val);
-  syncSettingsToServer();
+  syncSettingsToServer(true);
   applyCompanyBranding();
   document.getElementById("company-name-msg").innerHTML='<span class="ok">Company name saved</span>';
 }
@@ -4022,11 +4072,31 @@ function viewerLogout(){
     if(s&&(s.email||s.name)&&s.password){
       const loginPayload=s.email?{action:"admin-login",email:s.email,password:s.password}:{action:"admin-login",name:s.name,password:s.password};
       const r=await api(loginPayload);
-      if(r.ok){adm={name:r.admin.name,email:r.admin.email||s.email||"",password:s.password,is_super:r.admin.is_super};localStorage.setItem("adm_session",JSON.stringify(adm));enterScanner();return}
+      if(r.ok){adm={name:r.admin.name,email:r.admin.email||s.email||"",password:s.password,is_super:r.admin.is_super};localStorage.setItem("adm_session",JSON.stringify(adm));setCookieBak("adm_session_bak",JSON.stringify(adm));await enterScanner();return}
       else{localStorage.removeItem("adm_session")}
     }
-  }catch(e){localStorage.removeItem("adm_session")}
+  }catch(e){console.warn("Auto-restore failed",e);localStorage.removeItem("adm_session")}
 })();
+// Safety net: ensure feature toggles and status checkboxes are populated even if enterScanner had issues
+document.addEventListener("DOMContentLoaded",()=>{
+  setTimeout(()=>{
+    try{
+      // If logged in but ft-statuses is empty, rebuild
+      if(adm&&document.getElementById("ft-statuses")){
+        if(!document.getElementById("ft-statuses").innerHTML.trim()){
+          initFeatureTogglesUI();
+          applyFeatureToggles();
+          rebuildAllDynamicStatusButtons();
+        }
+      }
+      // Ensure dashboard stats are loaded
+      if(adm){
+        const today=document.getElementById("as-today");
+        if(today&&today.textContent==="-") loadDashStats();
+      }
+    }catch(e){}
+  },2000);
+});
 </script>
 <!-- POST-SCAN NAME CONFIRMATION SHEET -->
 <div id="scan-confirm-sheet">
