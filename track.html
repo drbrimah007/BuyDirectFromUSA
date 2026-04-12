@@ -49,10 +49,10 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .lbx h2{font-size:18px;color:#f8fafc;margin-bottom:3px}.lbx p{font-size:12px;color:#64748b;margin-bottom:16px}
 .ei{background:#1e293b;border-radius:10px;padding:12px 14px;margin:0 14px 7px}
 .ei .tk{font-size:13px;font-weight:700;color:#f8fafc;font-family:'SF Mono','Fira Code',monospace;word-break:break-all}
-.ei .nm{font-size:12px;color:#94a3b8;margin-top:2px}
-.ei .dt{font-size:11px;color:#475569;margin-top:2px}
+.ei .nm{font-size:12px;color:#cbd5e1;margin-top:2px}
+.ei .dt{font-size:11px;color:#94a3b8;margin-top:2px}
 .ei .rt{font-size:11px;color:#3b82f6;cursor:pointer;margin-top:3px;display:inline-block}
-.ei .rb{font-size:11px;color:#64748b;background:#0f172a;padding:6px;border-radius:6px;margin-top:4px;display:none;white-space:pre-wrap;max-height:80px;overflow:auto}
+.ei .rb{font-size:11px;color:#94a3b8;background:#0f172a;padding:6px;border-radius:6px;margin-top:4px;display:none;white-space:pre-wrap;max-height:80px;overflow:auto}
 .sr{display:flex;gap:7px;padding:10px 14px}
 .sx{flex:1;background:#1e293b;border-radius:10px;padding:10px;text-align:center}
 .sx .n{font-size:22px;font-weight:800;color:#f8fafc}.sx .l{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
@@ -82,8 +82,8 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .usr-card .usr-top{display:flex;justify-content:space-between;align-items:center}
 .usr-card .usr-name{font-size:14px;font-weight:700;color:#f8fafc}
 .usr-card .usr-co{font-size:12px;color:#3b82f6}
-.usr-card .usr-email{font-size:11px;color:#94a3b8}
-.usr-card .usr-date{font-size:10px;color:#475569}
+.usr-card .usr-email{font-size:11px;color:#cbd5e1}
+.usr-card .usr-date{font-size:10px;color:#94a3b8}
 .usr-card .usr-btns{display:flex;gap:5px}
 .usr-card .usr-btns button{padding:4px 8px;border:1px solid #334155;border-radius:6px;background:none;color:#94a3b8;font-size:10px;cursor:pointer}
 .usr-card .usr-btns button:active{background:#334155}
@@ -148,8 +148,8 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .bs-entry input[type=checkbox]{width:18px;height:18px;accent-color:#3b82f6;flex-shrink:0}
 .bs-entry .bs-info{flex:1;min-width:0}
 .bs-entry .bs-tk{font-size:12px;font-weight:700;color:#f8fafc;font-family:'SF Mono','Fira Code',monospace;word-break:break-all}
-.bs-entry .bs-nm{font-size:11px;color:#94a3b8}
-.bs-entry .bs-route{font-size:10px;color:#64748b}
+.bs-entry .bs-nm{font-size:11px;color:#cbd5e1}
+.bs-entry .bs-route{font-size:10px;color:#94a3b8}
 /* Admin tabs */
 .adm-tab{padding:6px 14px;border:1px solid #334155;border-radius:8px;background:none;color:#94a3b8;font-size:13px;font-weight:700;cursor:pointer}
 .adm-tab.on{background:#3b82f6;color:#fff;border-color:#3b82f6}
@@ -160,8 +160,8 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .del-entry input[type=checkbox]{width:18px;height:18px;accent-color:#3b82f6;flex-shrink:0}
 .del-entry .del-info{flex:1;min-width:0}
 .del-entry .del-tk{font-size:12px;font-weight:700;color:#f8fafc;font-family:'SF Mono','Fira Code',monospace;word-break:break-all}
-.del-entry .del-nm{font-size:11px;color:#94a3b8}
-.del-entry .del-route{font-size:10px;color:#64748b}
+.del-entry .del-nm{font-size:11px;color:#cbd5e1}
+.del-entry .del-route{font-size:10px;color:#94a3b8}
 /* Inline status update for scanned result */
 .del-single-status{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
 .del-single-status button{padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;border:none}
@@ -971,7 +971,7 @@ async function publicTrack(fromUrl){
           const isFirst=i===0;
           const col=STATUS_COLORS[h.status]||STATUS_COLORS["Scanned"];
           html+='<div style="padding:4px 0;display:flex;align-items:baseline;gap:8px">';
-          html+='<span style="font-size:10px;color:#475569;white-space:nowrap;min-width:90px">'+fmtShort(h.changed_at)+'</span>';
+          html+='<span style="font-size:10px;color:#94a3b8;white-space:nowrap;min-width:90px">'+fmtShort(h.changed_at)+'</span>';
           html+='<span style="font-size:12px;font-weight:'+(isFirst?'700':'400')+';color:'+(isFirst?col.text:'#64748b')+'">'+esc(h.status)+'</span>';
           html+='</div>';
         });
@@ -982,7 +982,7 @@ async function publicTrack(fromUrl){
         events.forEach((e,i)=>{
           html+='<div style="padding:4px 0;color:'+(i===0?'#e2e8f0':'#64748b')+'">';
           html+='<div style="font-size:12px">'+esc(e.status||"Scanned")+'</div>';
-          html+='<div style="font-size:11px;color:#475569">'+fmt(e.created_at)+'</div>';
+          html+='<div style="font-size:11px;color:#94a3b8">'+fmt(e.created_at)+'</div>';
           html+='</div>';
         });
         html+='</div>';
@@ -2049,7 +2049,7 @@ async function loadUserScans(uid,page){
     const etaLabel=e.eta?'<span style="color:#f59e0b"> · ETA '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric"})+'</span>':'';
     return '<div style="padding:5px 0;border-bottom:1px solid #1e293b">'+
       '<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:700;color:#f8fafc;font-family:monospace">'+esc(e.tracking_number)+'</span>'+statusBadge(e.status)+'</div>'+
-      '<div style="font-size:10px;color:#64748b">'+fmt(e.created_at)+(route?' · '+route:'')+etaLabel+'</div>'+
+      '<div style="font-size:10px;color:#94a3b8">'+fmt(e.created_at)+(route?' · '+route:'')+etaLabel+'</div>'+
       '</div>';
   }).join("");
   const totalPages=Math.ceil(total/USER_SCANS_PER_PAGE);
@@ -3839,8 +3839,8 @@ function renderViewer(){
         const isFirst=i===0;
         const col=STATUS_COLORS[h.status]||STATUS_COLORS["Scanned"];
         timelineHtml+='<div style="padding:3px 0;display:flex;align-items:baseline;gap:8px">';
-        timelineHtml+='<span style="font-size:10px;color:#475569;white-space:nowrap;min-width:85px">'+fmtShort(h.changed_at)+'</span>';
-        timelineHtml+='<span style="font-size:11px;font-weight:'+(isFirst?'700':'400')+';color:'+(isFirst?col.text:'#64748b')+'">'+esc(h.status)+'</span>';
+        timelineHtml+='<span style="font-size:10px;color:#94a3b8;white-space:nowrap;min-width:85px">'+fmtShort(h.changed_at)+'</span>';
+        timelineHtml+='<span style="font-size:11px;font-weight:'+(isFirst?'700':'400')+';color:'+(isFirst?col.text:'#94a3b8')+'">'+esc(h.status)+'</span>';
         timelineHtml+='</div>';
       });
       timelineHtml+='</div>';
