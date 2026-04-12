@@ -212,7 +212,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
         <div class="pt-title">Open Tracking</div>
         <div class="pt-input-row">
           <input type="text" id="pt-input" placeholder="Tracking # or last 5 digits" autocomplete="off">
-          <button onclick="publicTrack()">Track</button>
+          <button type="button" onclick="publicTrack()">Track</button>
         </div>
         <div id="pt-results" class="pt-results"></div>
         <div style="font-size:10px;color:#475569;margin-top:4px">Case-insensitive — partial numbers work too</div>
@@ -348,8 +348,8 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
     <div class="cd">
       <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:6px">
         <div style="flex:1"><label class="fl">Assign Batch</label><select id="del-sticky-series" class="fi" style="font-size:13px;padding:9px"></select></div>
-        <button onclick="delFilterByBatch()" style="padding:9px 12px;border:1px solid #1e3a5f;border-radius:8px;background:#1e3a5f;color:#60a5fa;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Filter</button>
-        <button onclick="document.getElementById('del-sticky-series').value='';delClearBatchFilter()" style="padding:9px 12px;border:1px solid #334155;border-radius:8px;background:none;color:#94a3b8;font-size:12px;cursor:pointer">Clear</button>
+        <button type="button" onclick="delFilterByBatch()" style="padding:9px 12px;border:1px solid #1e3a5f;border-radius:8px;background:#1e3a5f;color:#60a5fa;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Filter</button>
+        <button type="button" onclick="document.getElementById('del-sticky-series').value='';delClearBatchFilter()" style="padding:9px 12px;border:1px solid #334155;border-radius:8px;background:none;color:#94a3b8;font-size:12px;cursor:pointer">Clear</button>
       </div>
       <div id="del-batch-filter-msg" style="font-size:11px;color:#60a5fa;display:none"></div>
     </div>
@@ -377,13 +377,13 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <label class="fl">Search by Name or Tracking</label>
       <div style="display:flex;gap:6px;margin-bottom:6px">
         <input class="fi" id="del-name-search" placeholder="Name, tracking # or last 6 digits..." style="flex:1;font-size:13px;padding:9px" autocomplete="off">
-        <button onclick="delSearchAny()" style="padding:9px 14px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:13px;cursor:pointer">Search</button>
+        <button type="button" onclick="delSearchAny()" style="padding:9px 14px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:13px;cursor:pointer">Search</button>
       </div>
       <div style="display:flex;gap:6px">
         <input class="fi" id="del-mawb-search" placeholder="MAWB/BOL #..." style="flex:1;font-size:12px;padding:8px;font-family:monospace" autocomplete="off">
-        <button onclick="delSearchMawb()" style="padding:8px 12px;border:1px solid #1e3a5f;border-radius:8px;background:#1e3a5f;color:#60a5fa;font-weight:700;font-size:12px;cursor:pointer">Batch</button>
+        <button type="button" onclick="delSearchMawb()" style="padding:8px 12px;border:1px solid #1e3a5f;border-radius:8px;background:#1e3a5f;color:#60a5fa;font-weight:700;font-size:12px;cursor:pointer">Batch</button>
         <input class="fi" id="del-hawb-search" placeholder="Series (HAWB) #..." style="flex:1;font-size:12px;padding:8px;font-family:monospace" autocomplete="off">
-        <button onclick="delSearchHawb()" style="padding:8px 12px;border:1px solid #4c1d95;border-radius:8px;background:#4c1d95;color:#c4b5fd;font-weight:700;font-size:12px;cursor:pointer">Series</button>
+        <button type="button" onclick="delSearchHawb()" style="padding:8px 12px;border:1px solid #4c1d95;border-radius:8px;background:#4c1d95;color:#c4b5fd;font-weight:700;font-size:12px;cursor:pointer">Series</button>
       </div>
       <div id="del-name-results" style="margin-top:8px"></div>
       <div id="del-name-pager" style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px"></div>
@@ -400,7 +400,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <label class="fl" style="margin:0 0 6px 0;font-size:12px">Batch Code Lookup</label>
       <div style="display:flex;gap:6px">
         <input class="fi" id="batch-code-input" placeholder="Scan or enter last 6 digits" style="flex:1;font-size:13px;padding:9px;font-family:monospace" autocomplete="off">
-        <button onclick="batchCodeLookup()" style="padding:9px 14px;border:none;border-radius:8px;background:#f59e0b;color:#0f172a;font-weight:700;font-size:13px;cursor:pointer">Go</button>
+        <button type="button" onclick="batchCodeLookup()" style="padding:9px 14px;border:none;border-radius:8px;background:#f59e0b;color:#0f172a;font-weight:700;font-size:13px;cursor:pointer">Go</button>
       </div>
       <div id="batch-lookup-msg" style="font-size:12px;margin-top:4px"></div>
     </div>
@@ -426,7 +426,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       </div>
       <!-- Consolidate/Assign action bar -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #334155">
-        <button onclick="delConsolidateEtaSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>
+        <button type="button" onclick="delConsolidateEtaSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>
         <button class="ft-assign-batch" onclick="delAssignMawbEtaSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Batch</button>
       </div>
       <div id="del-eta-list" style="max-height:400px;overflow-y:auto"></div>
@@ -455,8 +455,8 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
         <label class="fl">Update ETA for Selected</label>
         <div style="display:flex;gap:6px;align-items:center">
           <input type="date" id="del-eta-date" class="fi" style="flex:1;font-size:15px;padding:12px;min-height:46px">
-          <button onclick="delSetEta()" style="padding:9px 16px;border:none;border-radius:8px;background:#f59e0b;color:#0f172a;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Set ETA</button>
-          <button onclick="delClearEta()" style="padding:9px 12px;border:1px solid #334155;border-radius:8px;background:none;color:#94a3b8;font-size:12px;cursor:pointer;white-space:nowrap">Clear ETA</button>
+          <button type="button" onclick="delSetEta()" style="padding:9px 16px;border:none;border-radius:8px;background:#f59e0b;color:#0f172a;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Set ETA</button>
+          <button type="button" onclick="delClearEta()" style="padding:9px 12px;border:1px solid #334155;border-radius:8px;background:none;color:#94a3b8;font-size:12px;cursor:pointer;white-space:nowrap">Clear ETA</button>
         </div>
         <div id="del-eta-msg" style="font-size:12px;margin-top:4px"></div>
       </div>
@@ -485,7 +485,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
         <label class="fl">Company Name</label>
         <div style="display:flex;gap:8px;align-items:center">
           <input class="fi" id="set-company-name" placeholder="e.g. BuyDirectFromUSA" style="flex:1;font-size:14px;padding:10px">
-          <button onclick="saveCompanyName()" style="padding:10px 16px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Save</button>
+          <button type="button" onclick="saveCompanyName()" style="padding:10px 16px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Save</button>
         </div>
         <div style="font-size:11px;color:#64748b;margin-top:4px">Shown in the header and on all pages</div>
         <div id="company-name-msg" style="font-size:12px;margin-top:4px"></div>
@@ -507,7 +507,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
         <label class="fl" style="margin:0;font-size:12px">Features &amp; Modules</label>
         <div style="display:flex;align-items:center;gap:8px">
           <span id="ft-save-msg" style="font-size:11px;color:#34d399;opacity:0;transition:opacity 0.3s"></span>
-          <button onclick="saveAllFeatures()" style="padding:6px 16px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Save</button>
+          <button type="button" onclick="saveAllFeatures()" style="padding:6px 16px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Save</button>
         </div>
       </div>
 
@@ -558,7 +558,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div style="display:flex;gap:6px;margin-top:10px;align-items:center;flex-wrap:wrap">
         <input id="ft-custom-status-input" class="fi" placeholder="New custom status name..." style="flex:1;min-width:120px;font-size:12px;padding:8px 10px">
         <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#94a3b8"><input type="color" id="ft-custom-status-color" value="#3b82f6" style="width:32px;height:32px;border:1px solid #334155;border-radius:6px;background:none;cursor:pointer;padding:2px"> Color</label>
-        <button onclick="addCustomStatus()" style="padding:8px 14px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Add Status</button>
+        <button type="button" onclick="addCustomStatus()" style="padding:8px 14px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Add Status</button>
       </div>
       <div style="font-size:10px;color:#64748b;margin-top:4px">Custom statuses appear as bulk action buttons everywhere. Pick a color before adding.</div>
     </div>
@@ -568,7 +568,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <label class="fl" style="margin-bottom:8px;font-size:12px">Batch Code Prefix</label>
       <div style="display:flex;align-items:center;gap:8px">
         <input class="fi" id="batch-prefix-input" style="flex:1;font-size:14px;padding:10px;font-family:monospace;text-transform:uppercase" maxlength="10" placeholder="e.g. BDUSA">
-        <button onclick="saveBatchPrefix()" style="padding:10px 16px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Save</button>
+        <button type="button" onclick="saveBatchPrefix()" style="padding:10px 16px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Save</button>
       </div>
       <div style="font-size:11px;color:#64748b;margin-top:6px">Prefix + date = 18-char batch barcode. Current: <span id="batch-prefix-display" style="font-family:monospace;color:#60a5fa"></span></div>
     </div>
@@ -586,7 +586,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <div style="display:flex;gap:8px;align-items:center">
         <span style="font-size:12px;color:#94a3b8;white-space:nowrap">Dim Wt = L×B×H ÷</span>
         <input id="dim-divisor" type="number" class="fi" style="width:80px;font-size:13px;padding:8px;font-family:monospace" value="5000" min="1">
-        <button onclick="saveDimSettings()" style="padding:8px 14px;border:none;border-radius:6px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer">Save</button>
+        <button type="button" onclick="saveDimSettings()" style="padding:8px 14px;border:none;border-radius:6px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer">Save</button>
         <span id="dim-save-msg" style="font-size:12px;font-weight:700"></span>
       </div>
       <div style="font-size:11px;color:#64748b;margin-top:6px">Kg/cm default divisor: 5000 · Lbs/in default divisor: 139</div>
@@ -608,7 +608,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
           <input id="ns-start" type="number" value="1" min="1" placeholder="Start #" style="width:70px;padding:8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#f8fafc;font-size:12px">
           <input id="ns-digits" type="number" value="4" min="1" max="10" placeholder="Digits" style="width:70px;padding:8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#f8fafc;font-size:12px">
-          <button onclick="addNumberSeries()" style="padding:8px 14px;border:none;border-radius:6px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Add Batch</button>
+          <button type="button" onclick="addNumberSeries()" style="padding:8px 14px;border:none;border-radius:6px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Add Batch</button>
         </div>
         <div style="font-size:11px;color:#64748b">Preview: <span id="ns-preview" style="font-family:monospace;color:#60a5fa">JFK0001</span></div>
       </div>
@@ -655,7 +655,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
         <input id="sa-pw" type="password" placeholder="Password">
         <input id="sa-email" type="email" placeholder="Email (optional)" style="font-size:12px;padding:7px;border:1px solid #334155;border-radius:6px;background:#0f172a;color:#f8fafc">
         <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#94a3b8;cursor:pointer"><input type="checkbox" id="sa-super"> Super</label>
-        <button onclick="addAdmin()">Add</button>
+        <button type="button" onclick="addAdmin()">Add</button>
       </div>
       <div id="sa-msg" style="font-size:11px;margin-top:5px"></div>
       <div id="sa-list" style="margin-top:10px"></div>
@@ -734,9 +734,9 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 
     <!-- Consolidate/Assign actions -->
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #334155">
-      <button onclick="bsConsolidateSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>
+      <button type="button" onclick="bsConsolidateSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>
       <button class="ft-assign-batch" onclick="bsAssignSeriesSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Batch</button>
-      <button onclick="bsSplitSelected()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer">Split</button>
+      <button type="button" onclick="bsSplitSelected()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer">Split</button>
     </div>
 
     <div id="bs-list" style="max-height:400px;overflow-y:auto"></div>
@@ -765,8 +765,8 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <label class="fl">Update ETA for Selected</label>
       <div style="display:flex;gap:6px;align-items:center">
         <input type="date" id="bs-eta-date" class="fi" style="flex:1;font-size:15px;padding:12px;min-height:46px">
-        <button onclick="bsSetEta()" style="padding:9px 16px;border:none;border-radius:8px;background:#f59e0b;color:#0f172a;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Set ETA</button>
-        <button onclick="bsClearEta()" style="padding:9px 12px;border:1px solid #334155;border-radius:8px;background:none;color:#94a3b8;font-size:12px;cursor:pointer;white-space:nowrap">Clear ETA</button>
+        <button type="button" onclick="bsSetEta()" style="padding:9px 16px;border:none;border-radius:8px;background:#f59e0b;color:#0f172a;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">Set ETA</button>
+        <button type="button" onclick="bsClearEta()" style="padding:9px 12px;border:1px solid #334155;border-radius:8px;background:none;color:#94a3b8;font-size:12px;cursor:pointer;white-space:nowrap">Clear ETA</button>
       </div>
       <div id="bs-eta-msg" style="font-size:12px;margin-top:4px"></div>
     </div>
@@ -930,7 +930,7 @@ function generateTracking(){
     localStorage.setItem("gen_tracking_seq",s);
     document.getElementById("sc-tracking").value=s;
   }
-  syncSettingsToServer();
+  syncSettingsToServer(true);
 }
 
 // ── Print tracking number barcode ──
@@ -951,8 +951,8 @@ function printTrackingBarcode(){
       '<div style="display:flex;justify-content:center"><svg id="track-barcode-svg" style="max-width:100%;height:auto"></svg></div>'+
       '<div style="margin-top:12px;font-family:\'SF Mono\',\'Courier New\',monospace;font-size:14px;font-weight:700;color:#0f172a;letter-spacing:2px;user-select:all;word-break:break-all">'+esc(code)+'</div>'+
       '<div class="no-print" style="margin-top:16px;display:flex;gap:8px;justify-content:center">'+
-        '<button onclick="window.print()" style="padding:10px 20px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button>'+
-        '<button onclick="this.closest(\'#barcode-modal\').remove()" style="padding:10px 20px;border:1px solid #cbd5e1;border-radius:8px;background:#f1f5f9;color:#334155;font-weight:600;font-size:14px;cursor:pointer">Close</button>'+
+        '<button type="button" onclick="window.print()" style="padding:10px 20px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button>'+
+        '<button type="button" onclick="this.closest(\'#barcode-modal\').remove()" style="padding:10px 20px;border:1px solid #cbd5e1;border-radius:8px;background:#f1f5f9;color:#334155;font-weight:600;font-size:14px;cursor:pointer">Close</button>'+
       '</div>'+
     '</div>';
   document.body.appendChild(modal);
@@ -1116,10 +1116,15 @@ async function enterScanner(){
   else document.getElementById("super-section").style.display="none";
   showTab("scanner");
   document.getElementById("adm-bnav").style.display="flex";
+  // Load from localStorage first (instant), then override with server data
   restoreScanSettings();
   loadDimSettings();
-  // Load server settings first, then initialize ALL UI from those settings
+  // Load server settings (source of truth), then re-apply ALL UI from server data
   try{await loadSettingsFromServer()}catch(e){console.warn("loadSettingsFromServer error",e)}
+  // Re-apply EVERYTHING after server load (server data now in localStorage + DOM)
+  try{restoreScanSettings()}catch(e){}
+  try{loadDimSettings()}catch(e){}
+  try{initBatchPrefix()}catch(e){}
   try{initFeatureTogglesUI()}catch(e){console.warn("initFeatureTogglesUI error",e)}
   try{rebuildAllDynamicStatusButtons()}catch(e){console.warn("rebuildAllDynamicStatusButtons error",e)}
   try{applyFeatureToggles()}catch(e){console.warn("applyFeatureToggles error",e)}
@@ -1130,8 +1135,9 @@ async function enterScanner(){
   loadAllEntries();
   loadKnownNames();
   loadDashStats();
-  initBatchPrefix();
-  loadNumberSeries();
+  await loadNumberSeries();
+  try{restoreScanSettings()}catch(e){}
+  try{updateMawbPreview()}catch(e){}
   autoArchiveOldPackages();
 }
 
@@ -1248,7 +1254,7 @@ function addDest(){
   }
   savedDests.push(n);
   localStorage.setItem("scan_dests",JSON.stringify(savedDests));
-  syncSettingsToServer();
+  syncSettingsToServer(true);
   selectedDest=n;
   document.getElementById("new-dest-name").value="";
   renderDests();
@@ -1258,7 +1264,7 @@ function removeDest(name){
   if(!confirm("Remove destination: "+name+"?")) return;
   savedDests=savedDests.filter(d=>d!==name);
   localStorage.setItem("scan_dests",JSON.stringify(savedDests));
-  syncSettingsToServer();
+  syncSettingsToServer(true);
   if(selectedDest===name) selectedDest="";
   renderDests();
 }
@@ -1763,17 +1769,17 @@ function clearForm(){
   updateNameDisplay(lastSavedName);
 }
 // ── Dims settings ──
-function getDimUnit(){return localStorage.getItem("dim_unit")||"kg"}
-function getDimDivisor(){return parseFloat(localStorage.getItem("dim_divisor"))||(getDimUnit()==="lbs"?139:5000)}
+function getDimUnit(){try{return localStorage.getItem("dim_unit")||sessionStorage.getItem("dim_unit")||"kg"}catch(e){try{return sessionStorage.getItem("dim_unit")||"kg"}catch(x){return "kg"}}}
+function getDimDivisor(){let v=""; try{v=localStorage.getItem("dim_divisor")||sessionStorage.getItem("dim_divisor")||""}catch(e){try{v=sessionStorage.getItem("dim_divisor")||""}catch(x){v=""}} return parseFloat(v)||(getDimUnit()==="lbs"?139:5000)}
 function saveDimSettings(){
   const u=document.getElementById("dim-unit");
   const d=document.getElementById("dim-divisor");
-  if(u) localStorage.setItem("dim_unit",u.value);
-  if(d&&d.value) localStorage.setItem("dim_divisor",d.value);
+  if(u){ try{localStorage.setItem("dim_unit",u.value)}catch(e){} try{sessionStorage.setItem("dim_unit",u.value)}catch(e){} }
+  if(d&&d.value){ try{localStorage.setItem("dim_divisor",d.value)}catch(e){} try{sessionStorage.setItem("dim_divisor",d.value)}catch(e){} }
   updateDimUnitLabels();
   const msg=document.getElementById("dim-save-msg");
   if(msg){msg.textContent="Saved!";msg.style.color="#34d399";setTimeout(()=>{msg.textContent=""},2000)}
-  syncSettingsToServer();
+  syncSettingsToServer(true);
 }
 function loadDimSettings(){
   const u=document.getElementById("dim-unit");
@@ -1825,37 +1831,69 @@ function saveFeatureToggles(){
 }
 function saveAllFeatures(){
   const msg=document.getElementById("ft-save-msg");
-  try{saveFeatureToggles()}catch(e){console.error("saveAllFeatures toggle error",e)}
-  // Show ghost immediately
   if(msg){msg.textContent="Saving...";msg.style.opacity="1"}
-  // Sync to server and confirm
   if(!adm){if(msg){msg.textContent="Not logged in";setTimeout(()=>{msg.style.opacity="0"},2500)}return}
-  const payload={action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:_buildSettingsPayload()};
+  // Build feature toggles DIRECTLY from DOM — never trust localStorage on mobile
+  const g=id=>{const el=document.getElementById(id);return el?!!el.checked:true};
+  const ftFromDOM={
+    dims:g("ft-dims"),notes:g("ft-notes"),internalBarcode:g("ft-internal-barcode"),
+    expandOnScan:g("ft-expand-on-scan"),mawb:g("ft-mawb"),bol:g("ft-bol"),statuses:{}
+  };
+  getAllStatuses().forEach(s=>{const cb=document.getElementById("ft-st-"+s.replace(/\s+/g,'-'));ftFromDOM.statuses[s]=cb?cb.checked:true});
+  // Try writing to localStorage (best-effort, may silently fail on mobile)
+  try{const j=JSON.stringify(ftFromDOM);localStorage.setItem("feature_toggles",j);sessionStorage.setItem("feature_toggles_bak",j)}catch(e){}
+  try{applyFeatureToggles();rebuildAllDynamicStatusButtons()}catch(e){}
+  // Build full payload from DOM + localStorage fallbacks
+  const settings=_buildSettingsPayload();
+  settings.feature_toggles=ftFromDOM; // override with DOM-read values
+  const payload={action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:settings};
   clearTimeout(_syncTimer);_lastSyncPayload=null;
   api(payload).then(r=>{
-    if(r&&r.ok){if(msg){msg.textContent="Saved!";setTimeout(()=>{msg.style.opacity="0"},2000)}}
-    else{console.error("Save failed",r);if(msg){msg.textContent="Save error";setTimeout(()=>{msg.style.opacity="0"},3000)}}
+    if(r&&r.ok){
+      if(msg){msg.textContent="Saved!";setTimeout(()=>{msg.style.opacity="0"},2000)}
+      // Verify: reload from server to confirm persistence
+      loadSettingsFromServer().then(()=>{initFeatureTogglesUI();applyFeatureToggles()}).catch(()=>{});
+    }
+    else{console.error("Save failed",r);if(msg){msg.textContent="Error: "+(r&&r.error||"unknown");setTimeout(()=>{msg.style.opacity="0"},4000)}}
   }).catch(e=>{console.error("Save network error",e);if(msg){msg.textContent="Network error";setTimeout(()=>{msg.style.opacity="0"},3000)}});
 }
 // ── Server-side settings sync (Android/iOS reliability) ──
 let _syncTimer=null;
 let _lastSyncPayload=null;
 function _buildSettingsPayload(){
+  // Read from DOM first, fall back to localStorage
+  const ls=(k,d)=>{try{return localStorage.getItem(k)||d}catch(e){return d}};
+  const lj=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||d)}catch(e){try{return JSON.parse(d)}catch(e2){return d}}};
+  // Read feature toggles from DOM if available
+  let ft;
+  try{
+    const g=id=>{const el=document.getElementById(id);return el?!!el.checked:undefined};
+    const d=g("ft-dims"),n=g("ft-notes"),ib=g("ft-internal-barcode"),es=g("ft-expand-on-scan"),mw=g("ft-mawb"),bl=g("ft-bol");
+    if(d!==undefined){
+      ft={dims:d,notes:n,internalBarcode:ib,expandOnScan:es,mawb:mw,bol:bl,statuses:{}};
+      getAllStatuses().forEach(s=>{const cb=document.getElementById("ft-st-"+s.replace(/\s+/g,'-'));ft.statuses[s]=cb?cb.checked:true});
+    }else{ft=lj("feature_toggles","{}")}
+  }catch(e){ft=lj("feature_toggles","{}")}
+  // Read other inputs from DOM where possible
+  const bpInp=document.getElementById("batch-prefix-input");
+  const cnInp=document.getElementById("set-company-name");
+  const duSel=document.getElementById("dim-unit");
+  const ddInp=document.getElementById("dim-divisor");
   return {
-    feature_toggles:JSON.parse(localStorage.getItem("feature_toggles")||"{}"),
-    custom_statuses:JSON.parse(localStorage.getItem("custom_statuses")||"[]"),
-    custom_status_colors:JSON.parse(localStorage.getItem("custom_status_colors")||"{}"),
-    dim_unit:localStorage.getItem("dim_unit")||"kg",
-    dim_divisor:localStorage.getItem("dim_divisor")||"",
-    batch_prefix:localStorage.getItem("batch_prefix")||"",
-    company_name:localStorage.getItem("company_name")||"",
-    company_logo:localStorage.getItem("company_logo")||"",
-    scan_dests:JSON.parse(localStorage.getItem("scan_dests")||"[]"),
-    gen_tracking_seq:localStorage.getItem("gen_tracking_seq")||"",
-    scan_loc:localStorage.getItem("scan_loc")||"",
-    scan_dest:localStorage.getItem("scan_dest")||"",
-    scan_eta:localStorage.getItem("scan_eta")||"",
-    scan_series:localStorage.getItem("scan_series")||""
+    feature_toggles:ft,
+    custom_statuses:lj("custom_statuses","[]"),
+    custom_status_colors:lj("custom_status_colors","{}"),
+    dim_unit:(duSel?duSel.value:null)||ls("dim_unit","kg"),
+    dim_divisor:(ddInp?ddInp.value:null)||ls("dim_divisor",""),
+    batch_prefix:(bpInp?bpInp.value:null)||ls("batch_prefix",""),
+    company_name:(cnInp?cnInp.value:null)||ls("company_name",""),
+    company_logo:ls("company_logo",""),
+    scan_dests:lj("scan_dests","[]"),
+    gen_tracking_seq:ls("gen_tracking_seq",""),
+    scan_loc:ls("scan_loc",""),
+    scan_dest:ls("scan_dest",""),
+    scan_eta:ls("scan_eta",""),
+    scan_series:ls("scan_series","")
   };
 }
 function syncSettingsToServer(immediate){
@@ -1899,21 +1937,47 @@ async function loadSettingsFromServer(){
     const r=await api({action:"load-settings",adminEmail:adm.email,adminPassword:adm.password});
     if(!r.ok||!r.settings) return;
     const s=r.settings;
-    // Always restore from server (server is source of truth for cross-device sync)
-    if(s.feature_toggles&&typeof s.feature_toggles==='object'&&Object.keys(s.feature_toggles).length) localStorage.setItem("feature_toggles",JSON.stringify(s.feature_toggles));
-    if(s.custom_statuses&&Array.isArray(s.custom_statuses)&&s.custom_statuses.length) localStorage.setItem("custom_statuses",JSON.stringify(s.custom_statuses));
-    if(s.custom_status_colors&&typeof s.custom_status_colors==='object'&&Object.keys(s.custom_status_colors).length) localStorage.setItem("custom_status_colors",JSON.stringify(s.custom_status_colors));
-    if(s.dim_unit) localStorage.setItem("dim_unit",s.dim_unit);
-    if(s.dim_divisor) localStorage.setItem("dim_divisor",s.dim_divisor);
-    if(s.batch_prefix) localStorage.setItem("batch_prefix",s.batch_prefix);
-    if(s.company_name) localStorage.setItem("company_name",s.company_name);
-    if(s.company_logo) localStorage.setItem("company_logo",s.company_logo);
-    if(s.scan_dests&&Array.isArray(s.scan_dests)&&s.scan_dests.length) localStorage.setItem("scan_dests",JSON.stringify(s.scan_dests));
-    if(s.gen_tracking_seq) localStorage.setItem("gen_tracking_seq",s.gen_tracking_seq);
-    if(s.scan_loc) localStorage.setItem("scan_loc",s.scan_loc);
-    if(s.scan_dest) localStorage.setItem("scan_dest",s.scan_dest);
-    if(s.scan_eta) localStorage.setItem("scan_eta",s.scan_eta);
-    if(s.scan_series) localStorage.setItem("scan_series",s.scan_series);
+    // Write ALL settings to localStorage (best-effort) AND apply to UI directly
+    const safeSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+    if(s.feature_toggles&&typeof s.feature_toggles==='object'&&Object.keys(s.feature_toggles).length){
+      safeSet("feature_toggles",JSON.stringify(s.feature_toggles));
+      // Apply directly to DOM checkboxes (don't rely on localStorage roundtrip)
+      try{
+        const ft=s.feature_toggles;
+        const sc=(id,val)=>{const el=document.getElementById(id);if(el)el.checked=!!val};
+        if(ft.dims!==undefined) sc("ft-dims",ft.dims);
+        if(ft.notes!==undefined) sc("ft-notes",ft.notes);
+        if(ft.internalBarcode!==undefined) sc("ft-internal-barcode",ft.internalBarcode);
+        if(ft.expandOnScan!==undefined) sc("ft-expand-on-scan",ft.expandOnScan);
+        if(ft.mawb!==undefined) sc("ft-mawb",ft.mawb);
+        if(ft.bol!==undefined) sc("ft-bol",ft.bol);
+      }catch(e){}
+    }
+    if(s.custom_statuses&&Array.isArray(s.custom_statuses)) safeSet("custom_statuses",JSON.stringify(s.custom_statuses));
+    if(s.custom_status_colors&&typeof s.custom_status_colors==='object') safeSet("custom_status_colors",JSON.stringify(s.custom_status_colors));
+    if(s.dim_unit) safeSet("dim_unit",s.dim_unit);
+    if(s.dim_divisor) safeSet("dim_divisor",s.dim_divisor);
+    if(s.batch_prefix){safeSet("batch_prefix",s.batch_prefix);batchPrefix=s.batch_prefix}
+    if(s.company_name) safeSet("company_name",s.company_name);
+    if(s.company_logo) safeSet("company_logo",s.company_logo);
+    if(s.scan_dests&&Array.isArray(s.scan_dests)) safeSet("scan_dests",JSON.stringify(s.scan_dests));
+    if(s.gen_tracking_seq!==undefined&&s.gen_tracking_seq!==null) safeSet("gen_tracking_seq",s.gen_tracking_seq);
+    if(s.scan_loc!==undefined&&s.scan_loc!==null) safeSet("scan_loc",s.scan_loc);
+    if(s.scan_dest!==undefined&&s.scan_dest!==null) safeSet("scan_dest",s.scan_dest);
+    if(s.scan_eta!==undefined&&s.scan_eta!==null) safeSet("scan_eta",s.scan_eta);
+    if(s.scan_series!==undefined&&s.scan_series!==null) safeSet("scan_series",s.scan_series);
+
+    // Apply visible UI fields directly so mobile Safari/Android don't depend on storage roundtrips.
+    try{
+      const bp=document.getElementById("batch-prefix-input"); if(bp) bp.value=s.batch_prefix||localStorage.getItem("batch_prefix")||"";
+      const cn=document.getElementById("set-company-name"); if(cn) cn.value=s.company_name||localStorage.getItem("company_name")||"";
+      const du=document.getElementById("dim-unit"); if(du) du.value=s.dim_unit||localStorage.getItem("dim_unit")||"kg";
+      const dd=document.getElementById("dim-divisor"); if(dd) dd.value=s.dim_divisor||localStorage.getItem("dim_divisor")||'';
+      const eta=document.getElementById("sc-eta"); if(eta) eta.value=s.scan_eta||localStorage.getItem("scan_eta")||"";
+      updateDimUnitLabels();
+      initBatchPrefix();
+      applyCompanyBranding();
+    }catch(x){}
   }catch(e){console.warn("Load settings failed",e)}
 }
 function initFeatureTogglesUI(){
@@ -2039,7 +2103,7 @@ function buildBulkStatusHTML(fnName,customInputId){
     html+='<button class="ft-status-btn" data-status="'+esc(s)+'" onclick="'+fnName+'(\''+esc(s).replace(/'/g,"\\'")+'\')" style="'+pad+'border:1px solid '+st.border+';border-radius:8px;background:'+st.bg+';color:'+st.color+';font-weight:700;cursor:pointer">'+esc(label)+'</button>';
   });
   // Custom input
-  html+='<div style="display:flex;gap:4px;margin-top:6px;width:100%"><input id="'+customInputId+'" placeholder="Custom status text..." style="flex:1;padding:7px 10px;border:1px solid #475569;border-radius:8px;background:#0f172a;color:#f8fafc;font-size:12px"><button onclick="const v=document.getElementById(\''+customInputId+'\').value.trim();if(v){'+fnName+'(v);document.getElementById(\''+customInputId+'\').value=\'\';}" style="padding:7px 12px;border:1px solid #475569;border-radius:8px;background:#1e293b;color:#e2e8f0;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Set</button></div>';
+  html+='<div style="display:flex;gap:4px;margin-top:6px;width:100%"><input id="'+customInputId+'" placeholder="Custom status text..." style="flex:1;padding:7px 10px;border:1px solid #475569;border-radius:8px;background:#0f172a;color:#f8fafc;font-size:12px"><button type="button" onclick="const v=document.getElementById(\''+customInputId+'\').value.trim();if(v){'+fnName+'(v);document.getElementById(\''+customInputId+'\').value=\'\';}" style="padding:7px 12px;border:1px solid #475569;border-radius:8px;background:#1e293b;color:#e2e8f0;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Set</button></div>';
   return html;
 }
 
@@ -2058,7 +2122,7 @@ function buildStatusButtonsForIds(ids,fnName){
   });
   // Custom input
   const uid='cs-'+Math.random().toString(36).slice(2,8);
-  html+='<div style="display:flex;gap:4px;margin-top:4px;width:100%"><input id="'+uid+'" placeholder="Custom..." style="flex:1;padding:5px 8px;border:1px solid #475569;border-radius:6px;background:#0f172a;color:#f8fafc;font-size:11px"><button onclick="const v=document.getElementById(\''+uid+'\').value.trim();if(v)'+fnName+'('+idsArg+',v)" style="padding:5px 10px;border:1px solid #475569;border-radius:6px;background:#1e293b;color:#e2e8f0;font-size:11px;font-weight:700;cursor:pointer">Set</button></div>';
+  html+='<div style="display:flex;gap:4px;margin-top:4px;width:100%"><input id="'+uid+'" placeholder="Custom..." style="flex:1;padding:5px 8px;border:1px solid #475569;border-radius:6px;background:#0f172a;color:#f8fafc;font-size:11px"><button type="button" onclick="const v=document.getElementById(\''+uid+'\').value.trim();if(v)'+fnName+'('+idsArg+',v)" style="padding:5px 10px;border:1px solid #475569;border-radius:6px;background:#1e293b;color:#e2e8f0;font-size:11px;font-weight:700;cursor:pointer">Set</button></div>';
   return html;
 }
 
@@ -2121,26 +2185,40 @@ function getScannedDims(){
 }
 // ── Persist scan settings ──
 function saveScanSettings(){
-  localStorage.setItem("scan_loc",selectedLoc||"");
-  localStorage.setItem("scan_dest",selectedDest||"");
-  localStorage.setItem("scan_eta",document.getElementById("sc-eta").value||"");
+  const etaVal=((document.getElementById("sc-eta")||{}).value)||"";
   const msel=document.getElementById("sc-mawb-series");
-  if(msel) localStorage.setItem("scan_series",msel.value||"");
-  syncSettingsToServer();
+  const seriesVal=msel?msel.value||"":"";
+  try{localStorage.setItem("scan_loc",selectedLoc||"")}catch(e){}
+  try{sessionStorage.setItem("scan_loc",selectedLoc||"")}catch(e){}
+  try{localStorage.setItem("scan_dest",selectedDest||"")}catch(e){}
+  try{sessionStorage.setItem("scan_dest",selectedDest||"")}catch(e){}
+  try{localStorage.setItem("scan_eta",etaVal)}catch(e){}
+  try{sessionStorage.setItem("scan_eta",etaVal)}catch(e){}
+  try{localStorage.setItem("scan_series",seriesVal)}catch(e){}
+  try{sessionStorage.setItem("scan_series",seriesVal)}catch(e){}
+  syncSettingsToServer(true);
 }
 function restoreScanSettings(){
-  const loc=localStorage.getItem("scan_loc")||"";
-  const dest=localStorage.getItem("scan_dest")||"";
-  const eta=localStorage.getItem("scan_eta")||"";
+  const gs=(k)=>{try{return localStorage.getItem(k)||sessionStorage.getItem(k)||""}catch(e){try{return sessionStorage.getItem(k)||""}catch(x){return ""}}};
+  const loc=gs("scan_loc");
+  const dest=gs("scan_dest");
+  const eta=gs("scan_eta");
   if(loc) selectedLoc=loc;
   if(dest) selectedDest=dest;
-  if(eta) document.getElementById("sc-eta").value=eta;
-  const savedSeries=localStorage.getItem("scan_series")||"";
-  if(savedSeries){
-    const msel=document.getElementById("sc-mawb-series");
-    if(msel){for(let i=0;i<msel.options.length;i++){if(msel.options[i].value===savedSeries){msel.selectedIndex=i;break;}}}
-    updateMawbPreview();
+  const etaEl=document.getElementById("sc-eta");
+  if(etaEl) etaEl.value=eta||"";
+  const savedSeries=gs("scan_series");
+  const msel=document.getElementById("sc-mawb-series");
+  if(msel){
+    if(savedSeries){
+      let found=false;
+      for(let i=0;i<msel.options.length;i++){if(msel.options[i].value===savedSeries){msel.selectedIndex=i;found=true;break;}}
+      if(!found) msel.value="";
+    } else {
+      msel.value="";
+    }
   }
+  try{updateMawbPreview()}catch(e){}
 }
 
 // ── Viewers ──
@@ -2186,7 +2264,7 @@ function renderUsers(){
         <div class="usr-date">Joined ${new Date(u.created_at).toLocaleDateString()}</div>
       </div>
       <div class="usr-btns">
-        <button onclick="toggleEditUser(${u.id})">Edit</button>
+        <button type="button" onclick="toggleEditUser(${u.id})">Edit</button>
         <button class="del" onclick="deleteUser(${u.id},'${esc(u.name).replace(/'/g,"\\'")}')">Delete</button>
       </div>
     </div>
@@ -2315,8 +2393,8 @@ async function loadAdmins(){
       ' <span style="font-size:10px;padding:2px 6px;border-radius:4px;'+(a.is_super?'background:#78350f;color:#fbbf24':'background:#1e3a5f;color:#60a5fa')+'">'+
       (a.is_super?'super':'scanner')+'</span></div>'+
       '<div style="display:flex;gap:4px">'+
-        '<button onclick="openEditAdmin('+a.id+',\''+esc(a.name).replace(/'/g,"\\'")+'\',\''+esc(a.email||'').replace(/'/g,"\\'")+'\','+a.is_super+')" style="padding:4px 8px;border:1px solid #334155;border-radius:6px;background:none;color:#60a5fa;font-size:11px;cursor:pointer">Edit</button>'+
-        (isSelf?'':'<button onclick="deleteAdmin('+a.id+',\''+esc(a.name).replace(/'/g,"\\'")+'\' )" style="padding:4px 8px;border:1px solid #7f1d1d;border-radius:6px;background:none;color:#f87171;font-size:11px;cursor:pointer">Delete</button>')+
+        '<button type="button" onclick="openEditAdmin('+a.id+',\''+esc(a.name).replace(/'/g,"\\'")+'\',\''+esc(a.email||'').replace(/'/g,"\\'")+'\','+a.is_super+')" style="padding:4px 8px;border:1px solid #334155;border-radius:6px;background:none;color:#60a5fa;font-size:11px;cursor:pointer">Edit</button>'+
+        (isSelf?'':'<button type="button" onclick="deleteAdmin('+a.id+',\''+esc(a.name).replace(/'/g,"\\'")+'\' )" style="padding:4px 8px;border:1px solid #7f1d1d;border-radius:6px;background:none;color:#f87171;font-size:11px;cursor:pointer">Delete</button>')+
       '</div></div>';
   }).join("");
 }
@@ -2372,7 +2450,7 @@ async function loadAllEntries(page){
     const etaStr=e.eta?'<span style="color:#f59e0b"> · ETA '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric"})+'</span>':'';
     return `<div class="ei" style="margin:0 0 6px">
     <div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">${esc(e.tracking_number)}</div>${statusBadge(e.status)}</div>
-    <div style="display:flex;justify-content:space-between;align-items:center"><div class="nm" style="margin:0">${esc(e.name)}</div><button onclick="confirmDeleteEntry(${e.id},'${esc(e.tracking_number).replace(/'/g,"\\'")}','${esc(e.name).replace(/'/g,"\\'")}')" style="padding:2px 8px;border:1px solid #7f1d1d;border-radius:5px;background:none;color:#f87171;font-size:10px;cursor:pointer;white-space:nowrap">Delete</button></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="nm" style="margin:0">${esc(e.name)}</div><button type="button" onclick="confirmDeleteEntry(${e.id},'${esc(e.tracking_number).replace(/'/g,"\\'")}','${esc(e.name).replace(/'/g,"\\'")}')" style="padding:2px 8px;border:1px solid #7f1d1d;border-radius:5px;background:none;color:#f87171;font-size:10px;cursor:pointer;white-space:nowrap">Delete</button></div>
     <div class="dt">${fmt(e.created_at)}${e.scanned_by?' · by '+esc(e.scanned_by):''}${route?' · '+route:''}${etaStr}</div>
   </div>`;
   }).join("");
@@ -2395,7 +2473,7 @@ function confirmDeleteEntry(id,tracking,name){
   bar.id="del-confirm-"+id;
   bar.className="del-confirm-bar";
   bar.style.cssText="background:#1c1917;border:1px solid #7f1d1d;border-radius:8px;padding:10px 12px;margin:0 14px 8px;display:flex;align-items:center;justify-content:space-between;gap:8px";
-  bar.innerHTML=`<span style="font-size:12px;color:#fca5a5">Delete <b>${tracking}</b> for <b>${name}</b>?</span><div style="display:flex;gap:6px"><button onclick="doDeleteEntry(${id})" style="padding:5px 12px;border:none;border-radius:6px;background:#dc2626;color:#fff;font-size:12px;font-weight:700;cursor:pointer">Yes, Delete</button><button onclick="document.getElementById('del-confirm-${id}').remove()" style="padding:5px 12px;border:1px solid #334155;border-radius:6px;background:none;color:#94a3b8;font-size:12px;cursor:pointer">Cancel</button></div>`;
+  bar.innerHTML=`<span style="font-size:12px;color:#fca5a5">Delete <b>${tracking}</b> for <b>${name}</b>?</span><div style="display:flex;gap:6px"><button type="button" onclick="doDeleteEntry(${id})" style="padding:5px 12px;border:none;border-radius:6px;background:#dc2626;color:#fff;font-size:12px;font-weight:700;cursor:pointer">Yes, Delete</button><button type="button" onclick="document.getElementById('del-confirm-${id}').remove()" style="padding:5px 12px;border:1px solid #334155;border-radius:6px;background:none;color:#94a3b8;font-size:12px;cursor:pointer">Cancel</button></div>`;
   const entriesDiv=document.getElementById("admin-entries");
   entriesDiv.parentNode.insertBefore(bar,entriesDiv);
 }
@@ -2789,9 +2867,9 @@ async function delLookupTracking(tracking){
         <div style="text-align:right;font-size:10px;font-family:monospace">${(e.mawb||e.bol)?'<div style="color:#60a5fa;cursor:pointer" onclick="printMawb(\''+esc(e.mawb||e.bol)+'\')">'+esc(e.mawb||e.bol)+' <span style="font-size:9px">🖨</span></div>':''}${e.hawb?'<div style="color:#a78bfa;cursor:pointer" onclick="printHawb(\''+esc(e.hawb)+'\')">'+esc(e.hawb)+' <span style="font-size:9px">🖨</span></div>':''}</div>
       </div>
       <div style="display:flex;gap:4px;margin:4px 0;flex-wrap:wrap">
-        <button onclick="viewDimsSingleEntry(${e.id})" style="padding:4px 8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:10px;cursor:pointer">Dims</button>
-        ${e.hawb?'<button onclick="viewDimsHawb(\''+esc(e.hawb)+'\')" style="padding:4px 8px;border:1px solid #4c1d95;border-radius:6px;background:#2e1065;color:#c4b5fd;font-size:10px;cursor:pointer">Series</button>':''}
-        ${(e.mawb||e.bol)?'<button onclick="viewDimsMawb(\''+esc(e.mawb||e.bol)+'\')" style="padding:4px 8px;border:1px solid #1e3a5f;border-radius:6px;background:#172554;color:#93c5fd;font-size:10px;cursor:pointer">Batch</button>':''}
+        <button type="button" onclick="viewDimsSingleEntry(${e.id})" style="padding:4px 8px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:10px;cursor:pointer">Dims</button>
+        ${e.hawb?'<button type="button" onclick="viewDimsHawb(\''+esc(e.hawb)+'\')" style="padding:4px 8px;border:1px solid #4c1d95;border-radius:6px;background:#2e1065;color:#c4b5fd;font-size:10px;cursor:pointer">Series</button>':''}
+        ${(e.mawb||e.bol)?'<button type="button" onclick="viewDimsMawb(\''+esc(e.mawb||e.bol)+'\')" style="padding:4px 8px;border:1px solid #1e3a5f;border-radius:6px;background:#172554;color:#93c5fd;font-size:10px;cursor:pointer">Batch</button>':''}
       </div>
       <div class="del-single-status" id="del-ss-${e.id}">${buildStatusButtonsForIds(idsByTk[e.tracking_number],'delBulkSingleStatus')}</div>
     </div>`;
@@ -2907,10 +2985,10 @@ function buildActionBar(){
   });
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center">'+
     '<label style="font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:4px"><input type="checkbox" id="del-select-all" onchange="delToggleSelectAll(this.checked)"> Select All</label>'+
-    '<button onclick="delConsolidateSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>'+
+    '<button type="button" onclick="delConsolidateSelected()" style="padding:5px 10px;border:1px solid #4c1d95;border-radius:6px;background:#4c1d95;color:#c4b5fd;font-size:11px;font-weight:700;cursor:pointer">Consolidate</button>'+
     (batchOn?'<button class="ft-assign-batch" onclick="delAssignSeriesSelected()" style="padding:5px 10px;border:1px solid #1e3a5f;border-radius:6px;background:#1e3a5f;color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer">Assign Batch</button>':'')+
-    '<button onclick="delSplitSelected()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer">Split</button>'+
-    '<button onclick="delClearResults()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:none;color:#64748b;font-size:11px;cursor:pointer">Clear</button>'+
+    '<button type="button" onclick="delSplitSelected()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#94a3b8;font-size:11px;font-weight:700;cursor:pointer">Split</button>'+
+    '<button type="button" onclick="delClearResults()" style="padding:5px 10px;border:1px solid #334155;border-radius:6px;background:none;color:#64748b;font-size:11px;cursor:pointer">Clear</button>'+
     '</div>'+
     '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">'+statusBtns+'</div>';
 }
@@ -3030,10 +3108,10 @@ function renderDelSearchResults(entries,total,showPager){
         <div style="text-align:right;font-size:10px;font-family:monospace">${(e.mawb||e.bol)?'<div style="color:#60a5fa;cursor:pointer" onclick="printMawb(\''+esc(e.mawb||e.bol)+'\')">'+esc(e.mawb||e.bol)+' <span style="font-size:9px">🖨</span></div>':''}${e.hawb?'<div style="color:#a78bfa;cursor:pointer" onclick="printHawb(\''+esc(e.hawb)+'\')">'+esc(e.hawb)+' <span style="font-size:9px">🖨</span></div>':''}</div>
       </div>
       <div style="display:flex;gap:4px;margin:4px 0;flex-wrap:wrap">
-        <button onclick="printEntryLabel(${e.id})" style="padding:3px 7px;border:1px solid #065f46;border-radius:5px;background:#064e3b;color:#6ee7b7;font-size:10px;cursor:pointer;font-weight:700">Label</button>
-        ${ftEnabled('dims')?'<button onclick="viewDimsSingleEntry('+e.id+')" style="padding:3px 7px;border:1px solid #334155;border-radius:5px;background:#1e293b;color:#94a3b8;font-size:10px;cursor:pointer">Dims</button>':''}
-        ${e.hawb?'<button onclick="viewDimsHawb(\''+esc(e.hawb)+'\')" style="padding:3px 7px;border:1px solid #4c1d95;border-radius:5px;background:#2e1065;color:#c4b5fd;font-size:10px;cursor:pointer">Series</button>':''}
-        ${(e.mawb||e.bol)?'<button onclick="viewDimsMawb(\''+esc(e.mawb||e.bol)+'\')" style="padding:3px 7px;border:1px solid #1e3a5f;border-radius:5px;background:#172554;color:#93c5fd;font-size:10px;cursor:pointer">Batch</button>':''}
+        <button type="button" onclick="printEntryLabel(${e.id})" style="padding:3px 7px;border:1px solid #065f46;border-radius:5px;background:#064e3b;color:#6ee7b7;font-size:10px;cursor:pointer;font-weight:700">Label</button>
+        ${ftEnabled('dims')?'<button type="button" onclick="viewDimsSingleEntry('+e.id+')" style="padding:3px 7px;border:1px solid #334155;border-radius:5px;background:#1e293b;color:#94a3b8;font-size:10px;cursor:pointer">Dims</button>':''}
+        ${e.hawb?'<button type="button" onclick="viewDimsHawb(\''+esc(e.hawb)+'\')" style="padding:3px 7px;border:1px solid #4c1d95;border-radius:5px;background:#2e1065;color:#c4b5fd;font-size:10px;cursor:pointer">Series</button>':''}
+        ${(e.mawb||e.bol)?'<button type="button" onclick="viewDimsMawb(\''+esc(e.mawb||e.bol)+'\')" style="padding:3px 7px;border:1px solid #1e3a5f;border-radius:5px;background:#172554;color:#93c5fd;font-size:10px;cursor:pointer">Batch</button>':''}
       </div>
       <div class="del-single-status">${buildStatusButtons(e.id,'delSingleStatusRefreshSearch')}</div>
     </div>`;
@@ -3110,8 +3188,8 @@ function showBatchBarcode(etaDate){
       '<div style="display:flex;justify-content:center"><svg id="batch-barcode-svg" style="max-width:100%;height:auto"></svg></div>'+
       '<div style="margin-top:12px;font-family:\'SF Mono\',\'Courier New\',monospace;font-size:17px;font-weight:700;color:#0f172a;letter-spacing:3px;user-select:all;word-break:break-all">'+esc(code)+'</div>'+
       '<div class="no-print" style="margin-top:16px;display:flex;gap:8px;justify-content:center">'+
-        '<button onclick="window.print()" style="padding:10px 20px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button>'+
-        '<button onclick="this.closest(\'#barcode-modal\').remove()" style="padding:10px 20px;border:1px solid #cbd5e1;border-radius:8px;background:#f1f5f9;color:#334155;font-weight:600;font-size:14px;cursor:pointer">Close</button>'+
+        '<button type="button" onclick="window.print()" style="padding:10px 20px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print</button>'+
+        '<button type="button" onclick="this.closest(\'#barcode-modal\').remove()" style="padding:10px 20px;border:1px solid #cbd5e1;border-radius:8px;background:#f1f5f9;color:#334155;font-weight:600;font-size:14px;cursor:pointer">Close</button>'+
       '</div>'+
     '</div>';
   document.body.appendChild(modal);
@@ -3267,8 +3345,8 @@ function printEntryLabel(entryId){
         '</div>':'')+
       '</div>'+
       '<div class="no-print" style="margin-top:10px;display:flex;gap:6px;justify-content:center">'+
-        '<button onclick="window.print()" style="padding:6px 16px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer">Print Label</button>'+
-        '<button onclick="this.closest(\'#label-modal\').remove()" style="padding:6px 16px;border:1px solid #cbd5e1;border-radius:8px;background:#f1f5f9;color:#334155;font-weight:600;font-size:12px;cursor:pointer">Close</button>'+
+        '<button type="button" onclick="window.print()" style="padding:6px 16px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-weight:700;font-size:12px;cursor:pointer">Print Label</button>'+
+        '<button type="button" onclick="this.closest(\'#label-modal\').remove()" style="padding:6px 16px;border:1px solid #cbd5e1;border-radius:8px;background:#f1f5f9;color:#334155;font-weight:600;font-size:12px;cursor:pointer">Close</button>'+
       '</div>'+
     '</div>';
   document.body.appendChild(modal);
@@ -3333,7 +3411,7 @@ function renderDelEtaEntries(){
           <div class="del-nm">${esc(e.name)} ${statusBadge(e.status)}</div>
           ${route?'<div class="del-route">'+route+'</div>':''}
           ${(e.mawb||e.bol)?'<div style="font-size:11px;color:#60a5fa;font-family:monospace;margin-top:3px">Batch: '+esc(e.mawb||e.bol)+'</div>':'<div style="font-size:11px;color:#64748b;margin-top:3px">No Batch</div>'}
-          <div style="display:flex;gap:4px;margin-top:4px"><button onclick="event.preventDefault();printEntryLabel(${e.id})" style="padding:3px 7px;border:1px solid #065f46;border-radius:5px;background:#064e3b;color:#6ee7b7;font-size:10px;cursor:pointer;font-weight:700">Label</button>${ftEnabled('dims')?'<button onclick="event.preventDefault();viewDimsSingleEntry('+e.id+')" style="padding:3px 7px;border:1px solid #334155;border-radius:5px;background:#1e293b;color:#94a3b8;font-size:10px;cursor:pointer">Dims</button>':''}${e.hawb?'<button onclick="event.preventDefault();viewDimsHawb(\''+esc(e.hawb)+'\')" style="padding:3px 7px;border:1px solid #4c1d95;border-radius:5px;background:#2e1065;color:#c4b5fd;font-size:10px;cursor:pointer">Series</button>':''}${(e.mawb||e.bol)?'<button onclick="event.preventDefault();viewDimsMawb(\''+esc(e.mawb||e.bol)+'\')" style="padding:3px 7px;border:1px solid #1e3a5f;border-radius:5px;background:#172554;color:#93c5fd;font-size:10px;cursor:pointer">Batch</button>':''}</div>
+          <div style="display:flex;gap:4px;margin-top:4px"><button type="button" onclick="event.preventDefault();printEntryLabel(${e.id})" style="padding:3px 7px;border:1px solid #065f46;border-radius:5px;background:#064e3b;color:#6ee7b7;font-size:10px;cursor:pointer;font-weight:700">Label</button>${ftEnabled('dims')?'<button type="button" onclick="event.preventDefault();viewDimsSingleEntry('+e.id+')" style="padding:3px 7px;border:1px solid #334155;border-radius:5px;background:#1e293b;color:#94a3b8;font-size:10px;cursor:pointer">Dims</button>':''}${e.hawb?'<button type="button" onclick="event.preventDefault();viewDimsHawb(\''+esc(e.hawb)+'\')" style="padding:3px 7px;border:1px solid #4c1d95;border-radius:5px;background:#2e1065;color:#c4b5fd;font-size:10px;cursor:pointer">Series</button>':''}${(e.mawb||e.bol)?'<button type="button" onclick="event.preventDefault();viewDimsMawb(\''+esc(e.mawb||e.bol)+'\')" style="padding:3px 7px;border:1px solid #1e3a5f;border-radius:5px;background:#172554;color:#93c5fd;font-size:10px;cursor:pointer">Batch</button>':''}</div>
         </div>
       </label>
     </div>`;
@@ -3457,6 +3535,7 @@ async function bsClearEta(){
 function initBatchPrefix(){
   const inp=document.getElementById("batch-prefix-input");
   const disp=document.getElementById("batch-prefix-display");
+  try{batchPrefix=(localStorage.getItem("batch_prefix")||sessionStorage.getItem("batch_prefix")||batchPrefix||"").toUpperCase()}catch(e){try{batchPrefix=(sessionStorage.getItem("batch_prefix")||batchPrefix||"").toUpperCase()}catch(x){}}
   if(inp) inp.value=batchPrefix;
   if(disp) disp.textContent=batchPrefix+" + YYYYMMDD = 18 chars";
 }
@@ -3466,8 +3545,9 @@ function saveBatchPrefix(){
   if(val.length>10) val=val.slice(0,10);
   if(!val){toast("Prefix cannot be empty","er");return}
   batchPrefix=val;
-  localStorage.setItem("batch_prefix",val);
-  syncSettingsToServer();
+  try{localStorage.setItem("batch_prefix",val)}catch(e){}
+  try{sessionStorage.setItem("batch_prefix",val)}catch(e){}
+  syncSettingsToServer(true);
   inp.value=val;
   const disp=document.getElementById("batch-prefix-display");
   if(disp) disp.textContent=val+" + YYYYMMDD = 18 chars";
@@ -3510,7 +3590,7 @@ async function saveAdminProfile(){
 // ── Logo upload ──
 function initLogoPreview(){
   const preview=document.getElementById("logo-preview");
-  const logo=localStorage.getItem("company_logo");
+  let logo=""; try{logo=localStorage.getItem("company_logo")||sessionStorage.getItem("company_logo")||""}catch(e){try{logo=sessionStorage.getItem("company_logo")||""}catch(x){logo=""}}
   if(logo&&/^data:image\/(png|jpeg|gif|webp|svg\+xml);base64,/.test(logo)){
     const img=document.createElement("img");
     img.src=logo;
@@ -3529,7 +3609,8 @@ function handleLogoUpload(input){
   if(!file.type.startsWith("image/")){msg.innerHTML='<span class="er">Please select an image file</span>';input.value="";return}
   const reader=new FileReader();
   reader.onload=function(e){
-    localStorage.setItem("company_logo",e.target.result);
+    try{localStorage.setItem("company_logo",e.target.result)}catch(e){}
+    try{sessionStorage.setItem("company_logo",e.target.result)}catch(e){}
     initLogoPreview();
     applyCompanyBranding();
     msg.innerHTML='<span class="ok">Logo saved</span>';
@@ -3540,7 +3621,8 @@ function handleLogoUpload(input){
   input.value="";
 }
 function removeLogo(){
-  localStorage.removeItem("company_logo");
+  try{localStorage.removeItem("company_logo")}catch(e){}
+  try{sessionStorage.removeItem("company_logo")}catch(e){}
   initLogoPreview();
   applyCompanyBranding();
   document.getElementById("logo-msg").innerHTML='<span class="ok">Logo removed</span>';
@@ -3552,14 +3634,15 @@ function saveCompanyName(){
   const inp=document.getElementById("set-company-name");
   const val=(inp.value||"").trim();
   if(!val){document.getElementById("company-name-msg").innerHTML='<span class="er">Name cannot be empty</span>';return}
-  localStorage.setItem("company_name",val);
+  try{localStorage.setItem("company_name",val)}catch(e){}
+  try{sessionStorage.setItem("company_name",val)}catch(e){}
   syncSettingsToServer(true);
   applyCompanyBranding();
   document.getElementById("company-name-msg").innerHTML='<span class="ok">Company name saved</span>';
 }
 function applyCompanyBranding(){
-  const name=localStorage.getItem("company_name")||"BuyDirectFromUSA";
-  const logo=localStorage.getItem("company_logo");
+  let name="BuyDirectFromUSA"; try{name=localStorage.getItem("company_name")||sessionStorage.getItem("company_name")||"BuyDirectFromUSA"}catch(e){try{name=sessionStorage.getItem("company_name")||"BuyDirectFromUSA"}catch(x){}}
+  let logo=""; try{logo=localStorage.getItem("company_logo")||sessionStorage.getItem("company_logo")||""}catch(e){try{logo=sessionStorage.getItem("company_logo")||""}catch(x){logo=""}}
   const validLogo=logo&&/^data:image\/(png|jpeg|gif|webp|svg\+xml);base64,/.test(logo);
   document.querySelectorAll(".company-name-el").forEach(el=>{
     if(validLogo){
@@ -3584,6 +3667,8 @@ async function loadNumberSeries(){
   if(r.ok) allSeries=r.series||[];
   renderNumberSeries();
   populateMawbSelector();
+  try{restoreScanSettings()}catch(e){}
+  try{updateMawbPreview()}catch(e){}
 }
 function renderNumberSeries(){
   const div=document.getElementById("ns-list");
@@ -3598,8 +3683,8 @@ function renderNumberSeries(){
       '<span style="font-size:11px;color:#94a3b8;margin-left:6px">'+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+'</span>'+
       '<div style="font-size:10px;color:#64748b;font-family:monospace">Next: '+next+'</div></div>'+
       '<div style="display:flex;gap:4px">'+
-      '<button onclick="toggleSeries('+s.id+','+!s.active+')" style="padding:3px 8px;border:1px solid #334155;border-radius:4px;background:none;color:'+(s.active?'#f59e0b':'#22c55e')+';font-size:10px;cursor:pointer">'+(s.active?'Disable':'Enable')+'</button>'+
-      '<button onclick="deleteSeries('+s.id+')" style="padding:3px 8px;border:1px solid #334155;border-radius:4px;background:none;color:#f87171;font-size:10px;cursor:pointer">Del</button>'+
+      '<button type="button" onclick="toggleSeries('+s.id+','+!s.active+')" style="padding:3px 8px;border:1px solid #334155;border-radius:4px;background:none;color:'+(s.active?'#f59e0b':'#22c55e')+';font-size:10px;cursor:pointer">'+(s.active?'Disable':'Enable')+'</button>'+
+      '<button type="button" onclick="deleteSeries('+s.id+')" style="padding:3px 8px;border:1px solid #334155;border-radius:4px;background:none;color:#f87171;font-size:10px;cursor:pointer">Del</button>'+
       '</div></div>';
   }
   let html=active.map(seriesCard).join("");
@@ -3650,12 +3735,14 @@ function updateNsPreview(){
 function populateMawbSelector(){
   const sel=document.getElementById("sc-mawb-series");
   if(!sel) return;
+  const prevVal=sel.value||((()=>{try{return localStorage.getItem("scan_series")||sessionStorage.getItem("scan_series")||""}catch(e){return ""}})());
   const ft=loadFeatureToggles();
   const active=allSeries.filter(s=>s.active&&(s.type==='MAWB'?ft.mawb!==false:ft.bol!==false));
   sel.innerHTML='<option value="">— No batch —</option>'+active.map(s=>{
     const cur=s.prefix+String(s.current_number).padStart(s.digit_length,"0");
     return '<option value="'+s.id+'">'+esc(s.type)+': '+esc(s.prefix)+(s.label?' — '+esc(s.label):'')+' (current: '+cur+')</option>';
   }).join("");
+  if(prevVal) sel.value=String(prevVal);
 }
 async function updateMawbPreview(){
   const sel=document.getElementById("sc-mawb-series");
@@ -3759,12 +3846,12 @@ function showDimsModal(title,entries){
       '<td style="padding:4px 1px"><input '+inp+' id="dh-'+i+'" value="'+(e.dim_height||'')+'" oninput="dimRowCalc('+i+')"></td>'+
       '<td style="padding:4px 1px"><input '+inp+' id="dw-'+i+'" value="'+(e.actual_weight||'')+'"></td>'+
       '<td style="padding:4px 1px;font-family:monospace;font-size:11px;color:#60a5fa;text-align:center" id="ddw-'+i+'">'+(e.dim_weight?parseFloat(e.dim_weight).toFixed(1):'—')+'</td>'+
-      '<td style="padding:4px 1px"><button onclick="saveDimRow('+i+','+id+')" style="padding:2px 6px;border:none;border-radius:4px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;font-weight:700" id="dsb-'+i+'">Save</button></td>'+
+      '<td style="padding:4px 1px"><button type="button" onclick="saveDimRow('+i+','+id+')" style="padding:2px 6px;border:none;border-radius:4px;background:#3b82f6;color:#fff;font-size:10px;cursor:pointer;font-weight:700" id="dsb-'+i+'">Save</button></td>'+
     '</tr>';
   }).join("");
   if(!entries.length) rows='<tr><td colspan="7" style="text-align:center;color:#64748b;padding:12px">No entries</td></tr>';
   modal.innerHTML='<div style="background:#1e293b;border-radius:12px;padding:16px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)" onclick="event.stopPropagation()">'+
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:15px;font-weight:800;color:#f8fafc">'+esc(title)+'</div><div style="display:flex;gap:6px;align-items:center"><button onclick="printFromDimsModal()" style="padding:4px 10px;border:none;border-radius:6px;background:#8b5cf6;color:#fff;font-size:11px;cursor:pointer;font-weight:700">Print</button><button onclick="this.closest(\'#dims-modal\').remove()" style="width:28px;height:28px;border:none;border-radius:50%;background:#334155;color:#94a3b8;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">&times;</button></div></div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:15px;font-weight:800;color:#f8fafc">'+esc(title)+'</div><div style="display:flex;gap:6px;align-items:center"><button type="button" onclick="printFromDimsModal()" style="padding:4px 10px;border:none;border-radius:6px;background:#8b5cf6;color:#fff;font-size:11px;cursor:pointer;font-weight:700">Print</button><button type="button" onclick="this.closest(\'#dims-modal\').remove()" style="width:28px;height:28px;border:none;border-radius:50%;background:#334155;color:#94a3b8;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center">&times;</button></div></div>'+
     '<div style="font-size:9px;color:#64748b;text-transform:uppercase;margin-bottom:3px;letter-spacing:1px">Computed</div>'+
     '<div style="display:flex;gap:10px;margin-bottom:8px">'+
       '<div style="flex:1;background:#0f172a;border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:#64748b;text-transform:uppercase">Dim Wt</div><div id="dims-total-dw" style="font-size:16px;font-weight:800;color:#60a5fa;font-family:monospace">'+totalDimWt.toFixed(2)+'<span style="font-size:10px;color:#64748b"> '+unit+'</span></div></div>'+
@@ -4205,7 +4292,7 @@ document.addEventListener("DOMContentLoaded",()=>{
     <div style="background:#0f172a;border-radius:12px;padding:20px;margin-bottom:20px">
       <div style="font-size:14px;color:#94a3b8;text-align:left"><b style="color:#3b82f6;font-size:20px">Step 3</b><br>Tap <b style="color:#f8fafc">Add</b> in the top right corner</div>
     </div>
-    <button onclick="document.getElementById('ios-guide-overlay').style.display='none'" style="background:#334155;color:#f8fafc;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;width:100%">Got it</button>
+    <button type="button" onclick="document.getElementById('ios-guide-overlay').style.display='none'" style="background:#334155;color:#f8fafc;border:none;padding:12px 32px;border-radius:8px;font-size:14px;cursor:pointer;width:100%">Got it</button>
   </div>
   <div style="text-align:center;position:fixed;bottom:20px;left:0;right:0">
     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" style="animation:bounce 1.5s infinite"><polyline points="6 9 12 15 18 9"/></svg>
