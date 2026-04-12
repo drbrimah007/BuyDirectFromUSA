@@ -1145,7 +1145,7 @@ async function enterScanner(){
   restoreScanSettings();
   loadDimSettings();
   // Load server settings (source of truth), then re-apply ALL UI from server data
-  try{await loadSettingsFromServer()}catch(e){console.warn("loadSettingsFromServer error",e)}
+  try{await loadSettingsFromServer(true)}catch(e){console.warn("loadSettingsFromServer error",e)}
   // Re-apply EVERYTHING after server load (server data now in localStorage + DOM)
   try{restoreScanSettings()}catch(e){}
   try{loadDimSettings()}catch(e){}
@@ -1895,9 +1895,11 @@ function saveAllFeatures(){
 }
 let _saving=false;
 let _pendingSettingsSave=null;
+let _lastSaveTime=0;
 async function _doSave(settings,msgEl){
   if(_saving){ _pendingSettingsSave={settings:settings,msgEl:msgEl}; return; }
   _saving=true;
+  _lastSaveTime=Date.now();
   if(msgEl){msgEl.textContent="Saving...";msgEl.style.opacity="1"}
   const ctrl=new AbortController();
   const timer=setTimeout(()=>ctrl.abort(),8000);
@@ -1969,9 +1971,31 @@ function syncSettingsToServer(){
 }
 function _flushSettingsBeforeUnload(){
   if(!adm) return;
+  // If we just saved (within 3s), don't flush — the save already has the correct data
+  if(Date.now()-_lastSaveTime<3000) return;
   clearTimeout(_syncTimer);
   try{
-    const payload=JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:_buildSettingsPayload(false)});
+    // Use localStorage for statuses (DOM may have been rebuilt with stale server data)
+    const lj=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||d)}catch(e){try{return JSON.parse(d)}catch(e2){return d}}};
+    const ls=(k,d)=>{try{return localStorage.getItem(k)||d}catch(e){return d}};
+    const ft=lj("feature_toggles","{}");
+    const settings={
+      feature_toggles:ft,
+      disabled_statuses:lj("disabled_statuses","[]"),
+      custom_statuses:lj("custom_statuses","[]"),
+      custom_status_colors:lj("custom_status_colors","{}"),
+      dim_unit:ls("dim_unit","kg"),
+      dim_divisor:ls("dim_divisor",""),
+      batch_prefix:ls("batch_prefix",""),
+      company_name:ls("company_name",""),
+      scan_dests:lj("scan_dests","[]"),
+      gen_tracking_seq:ls("gen_tracking_seq",""),
+      scan_loc:ls("scan_loc",""),
+      scan_dest:ls("scan_dest",""),
+      scan_eta:ls("scan_eta",""),
+      scan_series:ls("scan_series","")
+    };
+    const payload=JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:settings});
     if(navigator.sendBeacon){
       navigator.sendBeacon(API,new Blob([payload],{type:'application/json'}));
     } else {
@@ -1982,11 +2006,16 @@ function _flushSettingsBeforeUnload(){
     }
   }catch(e){}
 }
-async function loadSettingsFromServer(){
+async function loadSettingsFromServer(force){
   if(!adm) return;
+  // Skip if a save just completed — server data may be stale vs what we just sent
+  if(!force && _saving) return;
+  if(!force && Date.now()-_lastSaveTime<3000) return;
   try{
     const r=await api({action:"load-settings",adminEmail:adm.email,adminPassword:adm.password});
     if(!r.ok||!r.settings) return;
+    // Double-check: if a save started while we were fetching, don't overwrite
+    if(_saving || Date.now()-_lastSaveTime<2000) return;
     const s=r.settings;
     const safeSet=(k,v)=>{try{localStorage.setItem(k,v);sessionStorage.setItem(k+"_bak",v)}catch(e){}};
     if(s.feature_toggles&&typeof s.feature_toggles==='object'){
