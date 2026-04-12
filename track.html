@@ -854,7 +854,17 @@ function playChime(){
     o.stop(audioCtx.currentTime+0.25);
   }catch(e){}
 }
-async function api(b){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});return r.json()}
+async function api(body){
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),8000);
+  try{
+    const res=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),signal:ctrl.signal});
+    clearTimeout(timer);
+    const data=await res.json().catch(()=>null);
+    if(!res.ok) throw new Error("API error "+res.status);
+    return data;
+  }catch(e){clearTimeout(timer);console.error("API failed:",e);throw e}
+}
 
 // Status badge helper
 const STATUS_CLASSES={"Scanned":"st-scanned","In Transit":"st-in-transit","Delay":"st-delay","Return":"st-return","Arrived Destination":"st-arrived-destination","Out for Delivery":"st-out-for-delivery","Held":"st-held","Customs":"st-customs","Delivered":"st-delivered","Archived":"st-archived"};
@@ -1299,12 +1309,25 @@ function cleanBarcode(raw){
   return s.trim();
 }
 
+const SCAN_COOLDOWN_MS=2500;
+let _scanCamStarting=false;
+let _delCamStarting=false;
+let _recentScanHits={};
+let _recentDelHits={};
+let scanDecodeSc=null;
+let delDecodeSc=null;
+let delHtml5Sc=null;
+function _seenRecently(bucket,code){const now=Date.now();const last=bucket[code]||0;if(now-last<SCAN_COOLDOWN_MS)return true;bucket[code]=now;Object.keys(bucket).forEach(k=>{if(now-bucket[k]>SCAN_COOLDOWN_MS*4) delete bucket[k]});return false}
+function _rememberCameraFromStream(stream,key){try{const tr=stream&&stream.getVideoTracks&&stream.getVideoTracks()[0];const s=tr&&tr.getSettings?tr.getSettings():null;if(s&&s.deviceId)localStorage.setItem(key,s.deviceId)}catch(e){}}
+function _pickCameraConfig(key){try{const s=localStorage.getItem(key)||"";return s?s:{facingMode:"environment"}}catch(e){return {facingMode:"environment"}}}
+function _applyVideoEnhancements(sel,key,st){setTimeout(()=>{try{const vid=document.querySelector(sel);if(!(vid&&vid.srcObject))return;_rememberCameraFromStream(vid.srcObject,key);const tr=vid.srcObject.getVideoTracks&&vid.srcObject.getVideoTracks()[0];if(!(tr&&tr.getCapabilities))return;const caps=tr.getCapabilities(),adv={};if(caps.focusMode&&caps.focusMode.includes("continuous"))adv.focusMode="continuous";if(caps.exposureMode&&caps.exposureMode.includes("continuous"))adv.exposureMode="continuous";if(caps.whiteBalanceMode&&caps.whiteBalanceMode.includes("continuous"))adv.whiteBalanceMode="continuous";if(caps.torch){const id=key==="scanner_last_camera"?"btn-cam-torch":"btn-del-cam-torch";let btn=document.getElementById(id);if(!btn){btn=document.createElement("button");btn.id=id;btn.type="button";btn.className="bt bo";btn.textContent="Torch";btn.style.flex="1";btn.onclick=()=>{try{const on=btn.dataset.on==="1";tr.applyConstraints({advanced:[{torch:!on}]}).then(()=>{btn.dataset.on=on?"0":"1";btn.textContent=on?"Torch":"Torch On";if(st)st.innerHTML='<span class="ok">'+(on?'Torch off':'Torch on')+'</span>'}).catch(()=>{})}catch(e){}};const row=key==="scanner_last_camera"?document.getElementById("btn-save")?.parentElement:document.getElementById("btn-del-cam-stop")?.parentElement;if(row)row.appendChild(btn)}btn.style.display="block"}if(Object.keys(adv).length)tr.applyConstraints({advanced:[adv]}).catch(()=>{})}catch(e){}},900)}
 let _lastBadRead=0;
 function onBarcodeDetected(raw){
   if(scanDone) return;
   const now=Date.now();
   const decoded=cleanBarcode(raw);
   if(!decoded) return;
+  if(_seenRecently(_recentScanHits,decoded)) return;
   if(!isValidTracking(decoded)){
     scanConfirm={};
     _lastBadRead=now;
@@ -1329,6 +1352,8 @@ function onBarcodeDetected(raw){
 
 async function startCam(){
   const st=document.getElementById("sc-status");
+  if(_scanCamStarting) return;
+  _scanCamStarting=true;
   document.getElementById("btn-cam-start").style.display="none";
   document.getElementById("btn-cam-stop").style.display="block";
   st.textContent="Starting camera...";
@@ -1351,12 +1376,14 @@ async function startCam(){
       video.setAttribute("muted","true");
       video.style.cssText="width:100%;height:200px;object-fit:cover;display:block;background:#000";
       video.srcObject=camStream;
+      _rememberCameraFromStream(camStream,"scanner_last_camera");
       const container=document.getElementById("scanner-camera");
       container.innerHTML="";
       container.appendChild(video);
       const sl=document.createElement("div");sl.className="scan-line";container.appendChild(sl);
       await video.play();
       st.innerHTML='<span class="ok">Camera ready (native) — point at barcode</span>';
+      _applyVideoEnhancements("#scanner-camera video","scanner_last_camera",st);
       const cropCanvas=document.createElement("canvas");
       const cropCtx=cropCanvas.getContext("2d",{willReadFrequently:true});
       nativeScanInterval=setInterval(async()=>{
@@ -1394,6 +1421,7 @@ async function startCam(){
     video.setAttribute("muted","true");
     video.style.cssText="width:100%;height:200px;object-fit:cover;display:block;background:#000";
     video.srcObject=camStream;
+    _rememberCameraFromStream(camStream,"scanner_last_camera");
     const container=document.getElementById("scanner-camera");
     container.innerHTML="";
     container.appendChild(video);
@@ -1404,6 +1432,7 @@ async function startCam(){
     const ctx=canvas.getContext("2d",{willReadFrequently:true});
 
     st.innerHTML='<span class="ok">Camera ready — point at barcode</span>';
+    _applyVideoEnhancements("#scanner-camera video","scanner_last_camera",st);
 
     if(typeof Html5Qrcode==="undefined"){
       st.innerHTML='<span class="er">Scanner library not loaded. Type tracking # manually.</span>';
@@ -1422,7 +1451,8 @@ async function startCam(){
       if(namedFormats.length>0) formats.splice(0,formats.length,...namedFormats);
     }catch(e){}
 
-    const decoder=new Html5Qrcode("scanner-camera-decode",{formatsToSupport:formats,verbose:false});
+    scanDecodeSc=new Html5Qrcode("scanner-camera-decode",{formatsToSupport:formats,verbose:false});
+    const decoder=scanDecodeSc;
 
     let decodeDiv=document.getElementById("scanner-camera-decode");
     if(!decodeDiv){
@@ -1449,7 +1479,7 @@ async function startCam(){
           onBarcodeDetected(result.decodedText);
         }
       }catch(e){}
-    },250);
+    },400);
     return;
   }catch(e){
     st.textContent="Camera error: "+e;
@@ -1474,15 +1504,16 @@ async function startCam(){
     html5Sc=new Html5Qrcode("scanner-camera",{formatsToSupport:formats,verbose:false,experimentalFeatures:{useBarCodeDetectorIfSupported:false}});
     const w=Math.min(window.innerWidth-40,380);
     const camCfg=isIOS?
-      {fps:10,qrbox:function(vw,vh){const qw=Math.round(Math.min(vw*0.85,280));return{width:qw,height:Math.round(qw*0.5)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{ideal:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080},advanced:[{focusMode:"continuous"},{exposureMode:"continuous"},{whiteBalanceMode:"continuous"}]}}:
+      {fps:8,qrbox:function(vw,vh){const qw=Math.round(Math.min(vw*0.8,260));return{width:qw,height:Math.round(qw*0.48)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{ideal:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080},advanced:[{focusMode:"continuous"},{exposureMode:"continuous"},{whiteBalanceMode:"continuous"}]}}:
       {fps:15,qrbox:{width:w,height:Math.round(w*0.5)},disableFlip:false};
     await html5Sc.start(
-      {facingMode:"environment"},
+      _pickCameraConfig("scanner_last_camera"),
       camCfg,
       (decoded)=>{ onBarcodeDetected(decoded); },
       ()=>{}
     );
     st.innerHTML='<span class="ok">Camera ready — point at barcode</span>';
+    _applyVideoEnhancements("#scanner-camera video","scanner_last_camera",st);
     setTimeout(()=>{
       try{
         const vid=document.querySelector("#scanner-camera video");
@@ -1502,18 +1533,23 @@ async function startCam(){
     st.innerHTML='<span class="er">Camera error: '+esc(String(e))+'</span>';
     document.getElementById("btn-cam-start").style.display="block";
     document.getElementById("btn-cam-stop").style.display="none";
+  } finally {
+    _scanCamStarting=false;
   }
 }
 
 function stopCam(){
+  _scanCamStarting=false;
   scanDone=true;
   if(nativeScanInterval){clearInterval(nativeScanInterval);nativeScanInterval=null}
   if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}
   nativeDetector=null;
   const nv=document.getElementById("native-cam-video");
   if(nv) nv.remove();
-  if(html5Sc){try{html5Sc.stop().then(()=>html5Sc.clear()).catch(()=>{})}catch(e){}}
+  if(scanDecodeSc){try{scanDecodeSc.clear()}catch(e){} scanDecodeSc=null;}
+  if(html5Sc){try{html5Sc.stop().then(()=>html5Sc.clear()).catch(()=>{try{html5Sc.clear()}catch(x){}})}catch(e){}}
   html5Sc=null;
+  const torchBtn=document.getElementById("btn-cam-torch"); if(torchBtn) torchBtn.style.display="none";
   document.getElementById("btn-cam-start").style.display="block";
   document.getElementById("btn-cam-stop").style.display="none";
   scanConfirm={};
@@ -1829,35 +1865,44 @@ function saveFeatureToggles(){
 }
 function saveAllFeatures(){
   const msg=document.getElementById("ft-save-msg");
-  if(msg){msg.textContent="Saving...";msg.style.opacity="1"}
-  if(!adm){if(msg){msg.textContent="Not logged in";setTimeout(()=>{msg.style.opacity="0"},2500)}return}
-  // Build feature toggles DIRECTLY from DOM — never trust localStorage on mobile
-  const g=id=>{const el=document.getElementById(id);return el?!!el.checked:true};
-  const ftFromDOM={
-    dims:g("ft-dims"),notes:g("ft-notes"),internalBarcode:g("ft-internal-barcode"),
-    expandOnScan:g("ft-expand-on-scan"),mawb:g("ft-mawb"),bol:g("ft-bol"),statuses:{}
-  };
-  getAllStatuses().forEach(s=>{const cb=document.getElementById("ft-st-"+s.replace(/\s+/g,'-'));ftFromDOM.statuses[s]=cb?cb.checked:true});
-  // Try writing to localStorage (best-effort)
-  try{const j=JSON.stringify(ftFromDOM);localStorage.setItem("feature_toggles",j);sessionStorage.setItem("feature_toggles_bak",j)}catch(e){}
-  try{applyFeatureToggles();rebuildAllDynamicStatusButtons()}catch(e){}
-  // Build lightweight payload (no logo) with DOM-read feature toggles
-  const settings=_buildSettingsPayload(false);
-  settings.feature_toggles=ftFromDOM;
-  _doSave(settings,msg);
+  try{
+    if(!adm){if(msg){msg.textContent="Not logged in";msg.style.opacity="1";setTimeout(()=>{msg.style.opacity="0"},2500)}return}
+    const g=id=>{const el=document.getElementById(id);return el?!!el.checked:true};
+    const ftFromDOM={
+      dims:g("ft-dims"),notes:g("ft-notes"),internalBarcode:g("ft-internal-barcode"),
+      expandOnScan:g("ft-expand-on-scan"),mawb:g("ft-mawb"),bol:g("ft-bol"),statuses:{}
+    };
+    try{getAllStatuses().forEach(s=>{const cb=document.getElementById("ft-st-"+s.replace(/\s+/g,'-'));ftFromDOM.statuses[s]=cb?cb.checked:true})}catch(e){}
+    try{const j=JSON.stringify(ftFromDOM);localStorage.setItem("feature_toggles",j);sessionStorage.setItem("feature_toggles_bak",j)}catch(e){}
+    try{applyFeatureToggles();rebuildAllDynamicStatusButtons()}catch(e){}
+    _doSave({feature_toggles:ftFromDOM},msg);
+  }catch(e){
+    if(msg){msg.textContent="Bug: "+e.message;msg.style.opacity="1";setTimeout(()=>{msg.style.opacity="0"},4000)}
+  }
 }
-function _doSave(settings,msgEl){
+let _saving=false;
+async function _doSave(settings,msgEl){
+  if(_saving) return;
+  _saving=true;
+  if(msgEl){msgEl.textContent="Saving...";msgEl.style.opacity="1"}
   const ctrl=new AbortController();
   const timer=setTimeout(()=>ctrl.abort(),8000);
-  fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:settings}),signal:ctrl.signal})
-  .then(r=>r.json()).then(r=>{
+  try{
+    const res=await fetch(API,{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:settings}),
+      signal:ctrl.signal
+    });
     clearTimeout(timer);
-    if(r&&r.ok){if(msgEl){msgEl.textContent="Saved!";setTimeout(()=>{msgEl.style.opacity="0"},1500)}}
-    else{if(msgEl){msgEl.textContent="Error";setTimeout(()=>{msgEl.style.opacity="0"},3000)}}
-  }).catch(e=>{
+    let data=null;
+    try{data=await res.json()}catch(e){throw new Error("Invalid JSON")}
+    if(!res.ok||!data||!data.ok) throw new Error("Server error");
+    if(msgEl){msgEl.textContent="Saved!";setTimeout(()=>{msgEl.style.opacity="0"},1500)}
+  }catch(e){
     clearTimeout(timer);
-    if(msgEl){msgEl.textContent=e.name==="AbortError"?"Timeout":"Net err";setTimeout(()=>{msgEl.style.opacity="0"},3000)}
-  });
+    if(msgEl){msgEl.textContent=e.name==="AbortError"?"Timeout":"Error";setTimeout(()=>{msgEl.style.opacity="0"},3000)}
+    console.error("Save failed:",e);
+  }finally{_saving=false}
 }
 // ── Server-side settings sync (Android/iOS reliability) ──
 let _syncTimer=null;
@@ -2658,6 +2703,7 @@ function delOnBarcode(raw){
   if(delScanDone) return;
   const decoded=cleanBarcode(raw);
   if(!decoded) return;
+  if(_seenRecently(_recentDelHits,decoded)) return;
   if(!isValidTracking(decoded)){
     document.getElementById("del-scan-status").innerHTML='<span class="er">Bad read — keep scanning</span>';
     return;
@@ -2677,6 +2723,8 @@ function delOnBarcode(raw){
 
 async function delStartCam(){
   const st=document.getElementById("del-scan-status");
+  if(_delCamStarting) return;
+  _delCamStarting=true;
   document.getElementById("btn-del-cam-start").style.display="none";
   document.getElementById("btn-del-cam-stop").style.display="block";
   st.textContent="Starting camera...";
@@ -2695,11 +2743,13 @@ async function delStartCam(){
       video.setAttribute("playsinline","true");video.setAttribute("autoplay","true");video.setAttribute("muted","true");
       video.style.cssText="width:100%;height:200px;object-fit:cover;display:block;background:#000";
       video.srcObject=delCamStream;
+      _rememberCameraFromStream(delCamStream,"deliver_last_camera");
       const container=document.getElementById("del-scanner-camera");
       container.innerHTML="";container.appendChild(video);
       const dsl=document.createElement("div");dsl.className="scan-line";container.appendChild(dsl);
       await video.play();
       st.innerHTML='<span class="ok">Camera ready — point at barcode</span>';
+      _applyVideoEnhancements("#del-scanner-camera video","deliver_last_camera",st);
       const delCropCanvas=document.createElement("canvas");
       const delCropCtx=delCropCanvas.getContext("2d",{willReadFrequently:true});
       delScanInterval=setInterval(async()=>{
@@ -2722,6 +2772,7 @@ async function delStartCam(){
     video.setAttribute("playsinline","true");video.setAttribute("autoplay","true");video.setAttribute("muted","true");
     video.style.cssText="width:100%;height:200px;object-fit:cover;display:block;background:#000";
     video.srcObject=delCamStream;
+    _rememberCameraFromStream(delCamStream,"deliver_last_camera");
     const container=document.getElementById("del-scanner-camera");
     container.innerHTML="";container.appendChild(video);
     const dsl2=document.createElement("div");dsl2.className="scan-line";container.appendChild(dsl2);
@@ -2729,10 +2780,12 @@ async function delStartCam(){
     const canvas=document.createElement("canvas");
     const ctx=canvas.getContext("2d",{willReadFrequently:true});
     st.innerHTML='<span class="ok">Camera ready — point at barcode</span>';
+    _applyVideoEnhancements("#del-scanner-camera video","deliver_last_camera",st);
     if(typeof Html5Qrcode==="undefined"){st.innerHTML='<span class="er">Scanner lib not loaded</span>';return}
     let decodeDiv=document.getElementById("del-decode-div");
     if(!decodeDiv){decodeDiv=document.createElement("div");decodeDiv.id="del-decode-div";decodeDiv.style.display="none";document.body.appendChild(decodeDiv)}
-    const decoder=new Html5Qrcode("del-decode-div",{verbose:false});
+    delDecodeSc=new Html5Qrcode("del-decode-div",{verbose:false});
+    const decoder=delDecodeSc;
     delScanInterval=setInterval(async()=>{
       if(delScanDone||!video.videoWidth) return;
       const vw=video.videoWidth,vh=video.videoHeight;
@@ -2746,7 +2799,7 @@ async function delStartCam(){
         const result=await decoder.scanFileV2(file,false);
         if(result&&result.decodedText) delOnBarcode(result.decodedText);
       }catch(e){}
-    },250);
+    },400);
     return;
   }catch(e){
     if(delCamStream){delCamStream.getTracks().forEach(t=>t.stop());delCamStream=null}
@@ -2759,31 +2812,39 @@ async function delStartCam(){
     const delWidget=new Html5Qrcode("del-scanner-camera",{verbose:false,experimentalFeatures:{useBarCodeDetectorIfSupported:false}});
     const dw=Math.min(window.innerWidth-40,380);
     const delCamCfg=isIOSDel?
-      {fps:10,qrbox:function(vw,vh){const qw=Math.round(Math.min(vw*0.85,280));return{width:qw,height:Math.round(qw*0.5)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{ideal:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080},advanced:[{focusMode:"continuous"},{exposureMode:"continuous"},{whiteBalanceMode:"continuous"}]}}:
+      {fps:8,qrbox:function(vw,vh){const qw=Math.round(Math.min(vw*0.8,260));return{width:qw,height:Math.round(qw*0.48)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{ideal:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080},advanced:[{focusMode:"continuous"},{exposureMode:"continuous"},{whiteBalanceMode:"continuous"}]}}:
       {fps:15,qrbox:{width:dw,height:Math.round(dw*0.4)},disableFlip:false};
     await delWidget.start(
-      {facingMode:"environment"},
+      _pickCameraConfig("deliver_last_camera"),
       delCamCfg,
       (decoded)=>{ delOnBarcode(decoded); },
       ()=>{}
     );
     // Store ref so delStopCam can clean up
-    html5Sc=delWidget;
+    delHtml5Sc=delWidget;
     st.innerHTML='<span class="ok">Camera ready — point at barcode</span>';
+    _applyVideoEnhancements("#del-scanner-camera video","deliver_last_camera",st);
   }catch(e){
     st.innerHTML='<span class="er">Camera error: '+esc(String(e))+'</span>';
     document.getElementById("btn-del-cam-start").style.display="block";
     document.getElementById("btn-del-cam-stop").style.display="none";
+  } finally {
+    _delCamStarting=false;
   }
 }
 
 function delStopCam(){
+  _delCamStarting=false;
   delScanDone=true;
   if(delScanInterval){clearInterval(delScanInterval);delScanInterval=null}
   if(delCamStream){delCamStream.getTracks().forEach(t=>t.stop());delCamStream=null}
   delNativeDetector=null;
+  if(delDecodeSc){try{delDecodeSc.clear()}catch(e){} delDecodeSc=null;}
+  if(delHtml5Sc){try{delHtml5Sc.stop().then(()=>delHtml5Sc.clear()).catch(()=>{try{delHtml5Sc.clear()}catch(x){}})}catch(e){}}
+  delHtml5Sc=null;
   const nv=document.getElementById("del-cam-video");
   if(nv) nv.remove();
+  const torchBtn=document.getElementById("btn-del-cam-torch"); if(torchBtn) torchBtn.style.display="none";
   document.getElementById("btn-del-cam-start").style.display="block";
   document.getElementById("btn-del-cam-stop").style.display="none";
   delScanConfirm={};
