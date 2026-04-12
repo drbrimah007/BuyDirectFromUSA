@@ -149,7 +149,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
   const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&"ontouchend" in document);
   if(isIOS){
     const st=document.createElement("style");
-    st.textContent="#scanner-camera video,#del-scanner-camera video{height:240px!important}";
+    st.textContent="#scanner-camera video,#del-scanner-camera video{height:320px!important}";
     document.head.appendChild(st);
   }
 })();
