@@ -866,7 +866,7 @@ async function api(body){
     const res=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),signal:ctrl.signal});
     clearTimeout(timer);
     const data=await res.json().catch(()=>null);
-    if(!res.ok) throw new Error("API error "+res.status);
+    if(!res.ok){const msg=(data&&data.error)||"API error "+res.status;const err=new Error(msg);err.status=res.status;err.data=data;throw err}
     return data;
   }catch(e){clearTimeout(timer);console.error("API failed:",e);throw e}
 }
@@ -1972,11 +1972,11 @@ async function _doSave(settings,msgEl){
   _saving=true;
   if(msgEl){msgEl.textContent="Saving...";msgEl.style.opacity="1"}
   const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(),8000);
+  const timer=setTimeout(()=>ctrl.abort(),15000);
   try{
     const res=await fetch(API,{
       method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:settings}),
+      body:JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID,settings:settings}),
       signal:ctrl.signal
     });
     clearTimeout(timer);
