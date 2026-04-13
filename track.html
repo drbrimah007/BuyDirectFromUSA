@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" sizes="120x120" href="/icon-180.png">
 <link rel="apple-touch-icon" href="/icon-180.png">
 <link rel="manifest" href="/manifest.json">
-<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});</script>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});</script>a
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -886,13 +886,15 @@ const STATUS_COLORS={
   "Archived":{bg:"#1e1b4b",border:"#3730a3",text:"#a5b4fc"}
 };
 let batchPrefix=localStorage.getItem("batch_prefix")||"BDUSA";
+function _hashColor(str){let h=0;for(let i=0;i<str.length;i++){h=str.charCodeAt(i)+((h<<5)-h);h=h&h}const hue=((h%360)+360)%360;return 'hsl('+hue+',70%,65%)';}
 function statusBadge(s){
   const st=s||"Scanned";
   const cls=STATUS_CLASSES[st];
   if(cls) return '<span class="st-badge '+cls+'">'+esc(st)+'</span>';
-  // Custom status — use stored color
+  // Custom status — use stored color first, then generate from name
   try{const cols=JSON.parse(localStorage.getItem("custom_status_colors")||"{}");if(cols[st]){const c=cols[st];return '<span class="st-badge" style="background:'+c+'22;color:'+c+';border:1px solid '+c+'">'+esc(st)+'</span>';}}catch(e){}
-  return '<span class="st-badge st-scanned">'+esc(st)+'</span>';
+  const gc=_hashColor(st);
+  return '<span class="st-badge" style="background:'+gc.replace('65%','20%')+';color:'+gc+';border:1px solid '+gc+'">'+esc(st)+'</span>';
 }
 
 // ── Navigation ──
@@ -1035,33 +1037,35 @@ async function publicTrack(fromUrl){
       });
       // Sort by date descending (latest first)
       allHistory.sort((a,b)=>new Date(b.changed_at)-new Date(a.changed_at));
+      // Internal statuses hidden from client view
+      const _internalStatuses=["Assigned","Consolidated","Split","Archived"];
+      // Find the latest CLIENT-visible status for the header badge
+      const clientHistory=allHistory.filter(h=>!_internalStatuses.includes(h.status));
+      const clientStatus=clientHistory.length?clientHistory[0].status:latestStatus;
+      const displayStatus=_internalStatuses.includes(clientStatus)?"In Transit":clientStatus;
       html+='<div class="ei" style="margin-bottom:10px">';
-      html+='<div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">'+esc(tk)+'</div>'+statusBadge(latestStatus)+'</div>';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">'+esc(tk)+'</div>'+statusBadge(displayStatus)+'</div>';
       let route=latest.scan_location?esc(latest.scan_location):'';
       if(latest.destination) route+=(route?' &rarr; ':'')+esc(latest.destination);
-      if(route) html+='<div style="font-size:11px;color:#94a3b8;margin-top:2px">'+route+'</div>';
-      if(latestEta) html+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(latestEta.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
-      if(latest.mawb) html+='<div style="font-size:10px;color:#60a5fa;margin-top:2px;font-family:monospace">MAWB: '+esc(latest.mawb)+'</div>';
-      if(latest.hawb) html+='<div style="font-size:10px;color:#a78bfa;font-family:monospace">Series: '+esc(latest.hawb)+'</div>';
-      // Status timeline
-      if(allHistory.length){
-        html+='<div style="margin-top:8px;padding-left:12px;border-left:2px solid #334155">';
-        allHistory.forEach((h,i)=>{
-          const isFirst=i===0;
-          const col=STATUS_COLORS[h.status]||STATUS_COLORS["Scanned"];
-          html+='<div style="padding:4px 0;display:flex;align-items:baseline;gap:8px">';
-          html+='<span style="font-size:10px;color:#94a3b8;white-space:nowrap;min-width:90px">'+fmtShort(h.changed_at)+'</span>';
-          html+='<span style="font-size:12px;font-weight:'+(isFirst?'700':'400')+';color:'+(isFirst?col.text:'#64748b')+'">'+esc(h.status)+'</span>';
+      if(route) html+='<div style="font-size:11px;color:#cbd5e1;margin-top:2px">'+route+'</div>';
+      if(latestEta) html+='<div style="font-size:11px;color:#fbbf24;margin-top:2px">ETA: '+new Date(latestEta.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
+      // Status timeline — only show client-relevant statuses
+      if(clientHistory.length){
+        html+='<div style="margin-top:8px;padding-left:12px;border-left:2px solid #475569">';
+        clientHistory.forEach((h,i)=>{
+          html+='<div style="padding:5px 0;display:flex;align-items:center;gap:8px">';
+          html+='<span style="font-size:11px;color:#e2e8f0;white-space:nowrap;min-width:90px">'+fmtShort(h.changed_at)+'</span>';
+          html+=statusBadge(h.status);
           html+='</div>';
         });
         html+='</div>';
       } else {
         // Fallback if no history yet
-        html+='<div style="margin-top:6px;padding-left:12px;border-left:2px solid #334155">';
+        html+='<div style="margin-top:6px;padding-left:12px;border-left:2px solid #475569">';
         events.forEach((e,i)=>{
-          html+='<div style="padding:4px 0;color:'+(i===0?'#e2e8f0':'#64748b')+'">';
-          html+='<div style="font-size:12px">'+esc(e.status||"Scanned")+'</div>';
-          html+='<div style="font-size:11px;color:#94a3b8">'+fmt(e.created_at)+'</div>';
+          html+='<div style="padding:5px 0;display:flex;align-items:center;gap:8px">';
+          html+='<span style="font-size:11px;color:#e2e8f0">'+fmt(e.created_at)+'</span>';
+          html+=statusBadge(e.status||"Scanned");
           html+='</div>';
         });
         html+='</div>';
@@ -1433,11 +1437,9 @@ async function startCam(){
     }
   }
 
-  // METHOD 2: Direct camera + html5-qrcode decode (skip on iOS — canvas frame-grab unreliable)
+  // METHOD 2: Direct camera + html5-qrcode frame decode (non-iOS only — blob pipeline too slow on iOS)
   if(!isIOS) try{
-    camStream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}
-    });
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}});
     const video=document.createElement("video");
     video.id="native-cam-video";
     video.setAttribute("playsinline","true");
@@ -1470,7 +1472,8 @@ async function startCam(){
         Html5QrcodeSupportedFormats.CODE_39,
         Html5QrcodeSupportedFormats.EAN_13,
         Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.DATA_MATRIX
+        Html5QrcodeSupportedFormats.DATA_MATRIX,
+        Html5QrcodeSupportedFormats.ITF
       ].filter(f=>f!==undefined);
       if(namedFormats.length>0) formats.splice(0,formats.length,...namedFormats);
     }catch(e){}
@@ -1491,26 +1494,24 @@ async function startCam(){
       const vw=video.videoWidth,vh=video.videoHeight;
       const cropH=Math.round(vh*0.5);
       const cropY=Math.round((vh-cropH)/2);
-      canvas.width=vw;
-      canvas.height=cropH;
+      canvas.width=vw;canvas.height=cropH;
       ctx.drawImage(video,0,cropY,vw,cropH,0,0,vw,cropH);
       try{
-        const imageData=canvas.toDataURL("image/jpeg",0.8);
+        const imageData=canvas.toDataURL("image/jpeg",0.85);
         const blob=await(await fetch(imageData)).blob();
         const file=new File([blob],"frame.jpg",{type:"image/jpeg"});
         const result=await decoder.scanFileV2(file,false);
-        if(result&&result.decodedText){
-          onBarcodeDetected(result.decodedText);
-        }
+        if(result&&result.decodedText) onBarcodeDetected(result.decodedText);
       }catch(e){}
-    },250);
+    },200);
     return;
   }catch(e){
-    st.textContent="Camera error: "+e;
+    st.textContent="Camera error, trying fallback...";
     if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}
   }
 
-  // METHOD 3: html5-qrcode built-in UI (primary on iOS)
+  // METHOD 3: html5-qrcode real-time scanning (primary on iOS, fallback elsewhere)
+  // Uses html5-qrcode's internal frame loop which is MUCH faster than scanFileV2 on iOS
   try{
     if(typeof Html5Qrcode==="undefined"){
       st.innerHTML='<span class="er">Scanner not available. Please type the tracking number manually.</span>';
@@ -1519,25 +1520,24 @@ async function startCam(){
       return;
     }
     st.textContent="Starting scanner...";
-    // Correct format IDs: QR=0, CODE_39=3, CODE_128=5, DATA_MATRIX=6, ITF=8, EAN_13=9, EAN_8=10, UPC_A=14
     let formats=[0,3,5,6,8,9,10,14];
     try{
       const named=[Html5QrcodeSupportedFormats.QR_CODE,Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.ITF,Html5QrcodeSupportedFormats.DATA_MATRIX,Html5QrcodeSupportedFormats.CODABAR].filter(f=>f!==undefined);
       if(named.length>0) formats=named;
     }catch(e){}
     html5Sc=new Html5Qrcode("scanner-camera",{formatsToSupport:formats,verbose:false,experimentalFeatures:{useBarCodeDetectorIfSupported:false}});
-    const w=Math.min(window.innerWidth-40,380);
     const camCfg=isIOS?
-      {fps:10,qrbox:function(vw,vh){const qw=Math.round(Math.min(vw*0.92,340));return{width:qw,height:Math.round(qw*0.58)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{ideal:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080},advanced:[{focusMode:"continuous"},{exposureMode:"continuous"},{whiteBalanceMode:"continuous"}]}}:
-      {fps:12,qrbox:{width:w,height:Math.round(w*0.62)},disableFlip:false};
+      {fps:15,qrbox:function(vw,vh){return{width:Math.round(vw*0.95),height:Math.round(vh*0.75)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:"environment",width:{min:640,ideal:1920},height:{min:480,ideal:1080}}}:
+      {fps:12,qrbox:function(vw,vh){const w2=Math.min(vw-20,380);return{width:w2,height:Math.round(w2*0.62)};},disableFlip:false};
     await html5Sc.start(
-      _pickCameraConfig("scanner_last_camera"),
+      isIOS?{facingMode:"environment"}:_pickCameraConfig("scanner_last_camera"),
       camCfg,
       (decoded)=>{ onBarcodeDetected(decoded); },
       ()=>{}
     );
     st.innerHTML='<span class="ok">Camera ready — point at barcode</span>';
     _applyVideoEnhancements("#scanner-camera video","scanner_last_camera",st);
+    // Apply continuous focus/exposure after camera settles
     setTimeout(()=>{
       try{
         const vid=document.querySelector("#scanner-camera video");
@@ -1545,10 +1545,14 @@ async function startCam(){
           const track=vid.srcObject.getVideoTracks()[0];
           if(track&&track.getCapabilities){
             const caps=track.getCapabilities();
-            const constraints={};
-            if(caps.focusMode&&caps.focusMode.includes("continuous")) constraints.focusMode="continuous";
-            if(caps.exposureMode&&caps.exposureMode.includes("continuous")) constraints.exposureMode="continuous";
-            if(Object.keys(constraints).length) track.applyConstraints({advanced:[constraints]}).catch(()=>{});
+            const c={};
+            if(caps.focusMode&&caps.focusMode.includes("continuous")) c.focusMode="continuous";
+            if(caps.exposureMode&&caps.exposureMode.includes("continuous")) c.exposureMode="continuous";
+            if(caps.whiteBalanceMode&&caps.whiteBalanceMode.includes("continuous")) c.whiteBalanceMode="continuous";
+            if(Object.keys(c).length){
+              if(isIOS){track.applyConstraints(c).catch(()=>track.applyConstraints({advanced:[c]}).catch(()=>{}))}
+              else{track.applyConstraints({advanced:[c]}).catch(()=>{})}
+            }
           }
         }
       }catch(ex){}
@@ -2909,7 +2913,7 @@ async function delStartCam(){
     }
   }
 
-  // METHOD 2: Direct camera + frame decode (skip on iOS)
+  // METHOD 2: Direct camera + frame decode (non-iOS only)
   if(!isIOSDel) try{
     delCamStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}});
     const video=document.createElement("video");
@@ -2939,36 +2943,55 @@ async function delStartCam(){
       canvas.width=vw;canvas.height=cropH;
       ctx.drawImage(video,0,cropY,vw,cropH,0,0,vw,cropH);
       try{
-        const blob=await(await fetch(canvas.toDataURL("image/jpeg",0.8))).blob();
+        const blob=await(await fetch(canvas.toDataURL("image/jpeg",0.85))).blob();
         const file=new File([blob],"frame.jpg",{type:"image/jpeg"});
         const result=await decoder.scanFileV2(file,false);
         if(result&&result.decodedText) delOnBarcode(result.decodedText);
       }catch(e){}
-    },250);
+    },200);
     return;
   }catch(e){
     if(delCamStream){delCamStream.getTracks().forEach(t=>t.stop());delCamStream=null}
   }
 
-  // METHOD 3: html5-qrcode widget (primary on iOS)
+  // METHOD 3: html5-qrcode real-time scanning (primary on iOS, fallback elsewhere)
   try{
     if(typeof Html5Qrcode==="undefined"){st.innerHTML='<span class="er">Scanner not available. Type tracking # manually.</span>';return}
     st.textContent="Starting scanner...";
-    const delWidget=new Html5Qrcode("del-scanner-camera",{verbose:false,experimentalFeatures:{useBarCodeDetectorIfSupported:false}});
-    const dw=Math.min(window.innerWidth-40,380);
+    let delFormats=[0,3,5,6,8,9,10,14];
+    try{const named=[Html5QrcodeSupportedFormats.QR_CODE,Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.ITF,Html5QrcodeSupportedFormats.DATA_MATRIX,Html5QrcodeSupportedFormats.CODABAR].filter(f=>f!==undefined);if(named.length>0) delFormats=named}catch(e){}
+    const delWidget=new Html5Qrcode("del-scanner-camera",{formatsToSupport:delFormats,verbose:false,experimentalFeatures:{useBarCodeDetectorIfSupported:false}});
     const delCamCfg=isIOSDel?
-      {fps:10,qrbox:function(vw,vh){const qw=Math.round(Math.min(vw*0.92,340));return{width:qw,height:Math.round(qw*0.58)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:{ideal:"environment"},width:{min:640,ideal:1280,max:1920},height:{min:480,ideal:720,max:1080},advanced:[{focusMode:"continuous"},{exposureMode:"continuous"},{whiteBalanceMode:"continuous"}]}}:
-      {fps:12,qrbox:{width:dw,height:Math.round(dw*0.62)},disableFlip:false};
+      {fps:15,qrbox:function(vw,vh){return{width:Math.round(vw*0.95),height:Math.round(vh*0.75)};},aspectRatio:1.777,disableFlip:false,videoConstraints:{facingMode:"environment",width:{min:640,ideal:1920},height:{min:480,ideal:1080}}}:
+      {fps:12,qrbox:function(vw,vh){const dw2=Math.min(vw-20,380);return{width:dw2,height:Math.round(dw2*0.62)};},disableFlip:false};
     await delWidget.start(
-      _pickCameraConfig("deliver_last_camera"),
+      isIOSDel?{facingMode:"environment"}:_pickCameraConfig("deliver_last_camera"),
       delCamCfg,
       (decoded)=>{ delOnBarcode(decoded); },
       ()=>{}
     );
-    // Store ref so delStopCam can clean up
     delHtml5Sc=delWidget;
     st.innerHTML='<span class="ok">Camera ready — point at barcode</span>';
     _applyVideoEnhancements("#del-scanner-camera video","deliver_last_camera",st);
+    setTimeout(()=>{
+      try{
+        const vid=document.querySelector("#del-scanner-camera video");
+        if(vid&&vid.srcObject){
+          const track=vid.srcObject.getVideoTracks()[0];
+          if(track&&track.getCapabilities){
+            const caps=track.getCapabilities();
+            const c={};
+            if(caps.focusMode&&caps.focusMode.includes("continuous")) c.focusMode="continuous";
+            if(caps.exposureMode&&caps.exposureMode.includes("continuous")) c.exposureMode="continuous";
+            if(caps.whiteBalanceMode&&caps.whiteBalanceMode.includes("continuous")) c.whiteBalanceMode="continuous";
+            if(Object.keys(c).length){
+              if(isIOSDel){track.applyConstraints(c).catch(()=>track.applyConstraints({advanced:[c]}).catch(()=>{}))}
+              else{track.applyConstraints({advanced:[c]}).catch(()=>{})}
+            }
+          }
+        }
+      }catch(ex){}
+    },1500);
   }catch(e){
     st.innerHTML='<span class="er">Camera error: '+esc(String(e))+'</span>';
     document.getElementById("btn-del-cam-start").style.display="block";
