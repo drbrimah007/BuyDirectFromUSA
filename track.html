@@ -49,8 +49,8 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .lbx h2{font-size:18px;color:#f8fafc;margin-bottom:3px}.lbx p{font-size:12px;color:#64748b;margin-bottom:16px}
 .ei{background:#1e293b;border-radius:10px;padding:12px 14px;margin:0 14px 7px}
 .ei .tk{font-size:13px;font-weight:700;color:#f8fafc;font-family:'SF Mono','Fira Code',monospace;word-break:break-all}
-.ei .nm{font-size:12px;color:#cbd5e1;margin-top:2px}
-.ei .dt{font-size:11px;color:#94a3b8;margin-top:2px}
+.ei .nm{font-size:12px;color:#e2e8f0;margin-top:2px}
+.ei .dt{font-size:11px;color:#cbd5e1;margin-top:2px}
 .ei .rt{font-size:11px;color:#3b82f6;cursor:pointer;margin-top:3px;display:inline-block}
 .ei .rb{font-size:11px;color:#94a3b8;background:#0f172a;padding:6px;border-radius:6px;margin-top:4px;display:none;white-space:pre-wrap;max-height:80px;overflow:auto}
 .sr{display:flex;gap:7px;padding:10px 14px}
@@ -861,7 +861,7 @@ const ORG_ID=1;
 async function api(body){
   body.org_id=ORG_ID;
   const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(),15000);
+  const timer=setTimeout(()=>ctrl.abort(),25000);
   try{
     const res=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),signal:ctrl.signal});
     clearTimeout(timer);
@@ -888,8 +888,11 @@ const STATUS_COLORS={
 let batchPrefix=localStorage.getItem("batch_prefix")||"BDUSA";
 function statusBadge(s){
   const st=s||"Scanned";
-  const cls=STATUS_CLASSES[st]||"st-scanned";
-  return '<span class="st-badge '+cls+'">'+esc(st)+'</span>';
+  const cls=STATUS_CLASSES[st];
+  if(cls) return '<span class="st-badge '+cls+'">'+esc(st)+'</span>';
+  // Custom status — use stored color
+  try{const cols=JSON.parse(localStorage.getItem("custom_status_colors")||"{}");if(cols[st]){const c=cols[st];return '<span class="st-badge" style="background:'+c+'22;color:'+c+';border:1px solid '+c+'">'+esc(st)+'</span>';}}catch(e){}
+  return '<span class="st-badge st-scanned">'+esc(st)+'</span>';
 }
 
 // ── Navigation ──
@@ -1340,7 +1343,7 @@ let delHtml5Sc=null;
 function _seenRecently(bucket,code){const now=Date.now();const last=bucket[code]||0;if(now-last<SCAN_COOLDOWN_MS)return true;bucket[code]=now;Object.keys(bucket).forEach(k=>{if(now-bucket[k]>SCAN_COOLDOWN_MS*4) delete bucket[k]});return false}
 function _rememberCameraFromStream(stream,key){try{const tr=stream&&stream.getVideoTracks&&stream.getVideoTracks()[0];const s=tr&&tr.getSettings?tr.getSettings():null;if(s&&s.deviceId)localStorage.setItem(key,s.deviceId)}catch(e){}}
 function _pickCameraConfig(key){try{const s=localStorage.getItem(key)||"";return s?s:{facingMode:"environment"}}catch(e){return {facingMode:"environment"}}}
-function _applyVideoEnhancements(sel,key,st){setTimeout(()=>{try{const vid=document.querySelector(sel);if(!(vid&&vid.srcObject))return;_rememberCameraFromStream(vid.srcObject,key);const tr=vid.srcObject.getVideoTracks&&vid.srcObject.getVideoTracks()[0];if(!(tr&&tr.getCapabilities))return;const caps=tr.getCapabilities(),adv={};if(caps.focusMode&&caps.focusMode.includes("continuous"))adv.focusMode="continuous";if(caps.exposureMode&&caps.exposureMode.includes("continuous"))adv.exposureMode="continuous";if(caps.whiteBalanceMode&&caps.whiteBalanceMode.includes("continuous"))adv.whiteBalanceMode="continuous";if(caps.torch){const id=key==="scanner_last_camera"?"btn-cam-torch":"btn-del-cam-torch";let btn=document.getElementById(id);if(!btn){btn=document.createElement("button");btn.id=id;btn.type="button";btn.className="bt bo";btn.textContent="Torch";btn.style.flex="1";btn.onclick=()=>{try{const on=btn.dataset.on==="1";tr.applyConstraints({advanced:[{torch:!on}]}).then(()=>{btn.dataset.on=on?"0":"1";btn.textContent=on?"Torch":"Torch On";if(st)st.innerHTML='<span class="ok">'+(on?'Torch off':'Torch on')+'</span>'}).catch(()=>{})}catch(e){}};const row=key==="scanner_last_camera"?document.getElementById("btn-save")?.parentElement:document.getElementById("btn-del-cam-stop")?.parentElement;if(row)row.appendChild(btn)}btn.style.display="block"}if(Object.keys(adv).length)tr.applyConstraints({advanced:[adv]}).catch(()=>{})}catch(e){}},900)}
+function _applyVideoEnhancements(sel,key,st){const _isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&"ontouchend" in document);const delay=_isIOS?1800:900;setTimeout(()=>{try{const vid=document.querySelector(sel);if(!(vid&&vid.srcObject))return;_rememberCameraFromStream(vid.srcObject,key);const tr=vid.srcObject.getVideoTracks&&vid.srcObject.getVideoTracks()[0];if(!(tr&&tr.getCapabilities))return;const caps=tr.getCapabilities(),adv={};if(caps.focusMode&&caps.focusMode.includes("continuous"))adv.focusMode="continuous";if(caps.exposureMode&&caps.exposureMode.includes("continuous"))adv.exposureMode="continuous";if(caps.whiteBalanceMode&&caps.whiteBalanceMode.includes("continuous"))adv.whiteBalanceMode="continuous";function _setTorch(track,on){if(_isIOS){return track.applyConstraints({torch:on}).catch(()=>track.applyConstraints({advanced:[{torch:on}]}))}return track.applyConstraints({advanced:[{torch:on}]}).catch(()=>track.applyConstraints({torch:on}))}if(caps.torch){const id=key==="scanner_last_camera"?"btn-cam-torch":"btn-del-cam-torch";let btn=document.getElementById(id);if(!btn){btn=document.createElement("button");btn.id=id;btn.type="button";btn.className="bt bo";btn.textContent="Torch";btn.style.flex="1";btn.onclick=()=>{try{const on=btn.dataset.on==="1";_setTorch(tr,!on).then(()=>{btn.dataset.on=on?"0":"1";btn.textContent=on?"Torch":"Torch On";if(st)st.innerHTML='<span class="ok">'+(on?'Torch off':'Torch on')+'</span>'}).catch(()=>{if(st)st.innerHTML='<span class="er">Torch not available on this device</span>'})}catch(e){}};const row=key==="scanner_last_camera"?document.getElementById("btn-save")?.parentElement:document.getElementById("btn-del-cam-stop")?.parentElement;if(row)row.appendChild(btn)}btn.style.display="block"}if(Object.keys(adv).length){if(_isIOS){tr.applyConstraints(adv).catch(()=>tr.applyConstraints({advanced:[adv]}).catch(()=>{}))}else{tr.applyConstraints({advanced:[adv]}).catch(()=>{})}}}catch(e){}},delay)}
 let _lastBadRead=0;
 function onBarcodeDetected(raw){
   if(scanDone) return;
@@ -1972,7 +1975,7 @@ async function _doSave(settings,msgEl){
   _saving=true;
   if(msgEl){msgEl.textContent="Saving...";msgEl.style.opacity="1"}
   const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(),15000);
+  const timer=setTimeout(()=>ctrl.abort(),25000);
   try{
     const res=await fetch(API,{
       method:"POST",headers:{"Content-Type":"application/json"},
@@ -2627,6 +2630,7 @@ function confirmDeleteEntry(id,tracking,name){
   bar.innerHTML=`<span style="font-size:12px;color:#fca5a5">Delete <b>${tracking}</b> for <b>${name}</b>?</span><div style="display:flex;gap:6px"><button type="button" onclick="doDeleteEntry(${id})" style="padding:5px 12px;border:none;border-radius:6px;background:#dc2626;color:#fff;font-size:12px;font-weight:700;cursor:pointer">Yes, Delete</button><button type="button" onclick="document.getElementById('del-confirm-${id}').remove()" style="padding:5px 12px;border:1px solid #334155;border-radius:6px;background:none;color:#94a3b8;font-size:12px;cursor:pointer">Cancel</button></div>`;
   const entriesDiv=document.getElementById("admin-entries");
   entriesDiv.parentNode.insertBefore(bar,entriesDiv);
+  bar.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 async function doDeleteEntry(id){
   const bar=document.getElementById("del-confirm-"+id);
@@ -2727,7 +2731,7 @@ function renderBsEntries(){
     const etaLabel=e.eta?'<span style="color:#f59e0b;font-size:10px"> · ETA '+new Date(e.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric"})+'</span>':'';
     return `<div class="bs-entry">
       <label>
-        <input type="checkbox" value="${e.id}" class="bs-cb" checked>
+        <input type="checkbox" value="${e.id}" class="bs-cb">
         <div class="bs-info">
           <div class="bs-tk">${esc(e.tracking_number)}</div>
           <div class="bs-nm">${esc(e.name)} ${statusBadge(e.status)}${etaLabel}</div>
@@ -3572,7 +3576,7 @@ function renderDelEtaEntries(){
     if(e.destination) route+=(route?' &rarr; ':'')+esc(e.destination);
     return `<div class="del-entry">
       <label>
-        <input type="checkbox" value="${e.id}" class="del-cb" checked data-mawb="${e.mawb||''}">
+        <input type="checkbox" value="${e.id}" class="del-cb" data-mawb="${e.mawb||''}">
         <div class="del-info">
           <div class="del-tk">${esc(e.tracking_number)}</div>
           <div class="del-nm">${esc(e.name)} ${statusBadge(e.status)}</div>
