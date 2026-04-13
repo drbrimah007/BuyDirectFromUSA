@@ -857,7 +857,9 @@ function playChime(){
     o.stop(audioCtx.currentTime+0.25);
   }catch(e){}
 }
+const ORG_ID=1;
 async function api(body){
+  body.org_id=ORG_ID;
   const ctrl=new AbortController();
   const timer=setTimeout(()=>ctrl.abort(),8000);
   try{
@@ -1128,10 +1130,10 @@ async function adminDoLogin(){
   if(!email||!pw){err.textContent="Enter email and password.";err.style.display="block";return}
   const r=await api({action:"admin-login",email,password:pw});
   if(!r.ok){err.textContent=r.error||"Login failed.";err.style.display="block";return}
-  adm={name:r.admin.name,email,password:pw,is_super:r.admin.is_super};
+  adm={name:r.admin.name,email,password:pw,is_super:r.admin.is_super,org_id:r.admin.org_id||ORG_ID};
   try{if(window.PasswordCredential&&navigator.credentials){const form=document.getElementById("admin-login-form"); if(form){const cred=new PasswordCredential(form); navigator.credentials.store(cred).catch(()=>{});}}}catch(e){}
-  localStorage.setItem("adm_session",JSON.stringify(adm));
-  setCookieBak("adm_session_bak",JSON.stringify(adm));
+  localStorage.setItem("adm_session_org1",JSON.stringify(adm));
+  setCookieBak("adm_session_org1_bak",JSON.stringify(adm));
   enterScanner();
 }
 
@@ -1160,13 +1162,13 @@ async function enterScanner(){
   loadAllEntries();
   loadKnownNames();
   loadDashStats();
-  loadNumberSeries();
+  await loadNumberSeries();
   try{restoreScanSettings()}catch(e){}
   autoArchiveOldPackages();
 }
 
 function adminLogout(){
-  adm=null;selectedLoc="";localStorage.removeItem("adm_session");delCookieBak("adm_session_bak");
+  adm=null;selectedLoc="";localStorage.removeItem("adm_session_org1");delCookieBak("adm_session_org1_bak");
   document.getElementById("adm-bnav").style.display="none";
   showTab("gate");
 }
@@ -2524,6 +2526,7 @@ async function addViewer(){
 
 // ── Super: admins ──
 async function loadAdmins(){
+  if(!adm||!adm.is_super) return;
   const r=await api({action:"list-admins",adminEmail:adm.email,adminPassword:adm.password});
   const d=document.getElementById("sa-list");
   if(!r.ok||!r.admins||!r.admins.length){d.innerHTML='<div style="color:#475569;font-size:12px">No admins found.</div>';return}
@@ -2541,6 +2544,7 @@ async function loadAdmins(){
   }).join("");
 }
 async function addAdmin(){
+  if(!adm||!adm.is_super){toast("Unauthorized","er");return}
   const n=document.getElementById("sa-name").value.trim();
   const p=document.getElementById("sa-pw").value.trim();
   const e=document.getElementById("sa-email")?document.getElementById("sa-email").value.trim():"";
@@ -2552,6 +2556,7 @@ async function addAdmin(){
   else m.innerHTML='<span class="er">'+esc(r.error)+'</span>';
 }
 function openEditAdmin(id,name,email,isSuper){
+  if(!adm||!adm.is_super){toast("Unauthorized","er");return}
   document.getElementById("ea-id").value=id;
   document.getElementById("ea-name").value=name;
   document.getElementById("ea-email").value=email||"";
@@ -2562,6 +2567,7 @@ function openEditAdmin(id,name,email,isSuper){
 }
 function closeEditAdmin(){document.getElementById("edit-admin-modal").style.display="none"}
 async function saveEditAdmin(){
+  if(!adm||!adm.is_super){toast("Unauthorized","er");return}
   const id=document.getElementById("ea-id").value;
   const msg=document.getElementById("ea-msg");
   msg.innerHTML='<span style="color:#94a3b8">Saving...</span>';
@@ -2570,6 +2576,7 @@ async function saveEditAdmin(){
   else{msg.innerHTML='<span class="er">'+esc(r.error||"Failed to save")+'</span>'}
 }
 async function deleteAdmin(id,name){
+  if(!adm||!adm.is_super){toast("Unauthorized","er");return}
   if(!confirm("Delete admin \""+name+"\"? This cannot be undone.")) return;
   const r=await api({action:"delete-admin",adminEmail:adm.email,adminPassword:adm.password,adminId:id});
   if(r.ok){loadAdmins();toast("Admin deleted","ok")}
@@ -3733,8 +3740,8 @@ async function saveAdminProfile(){
     adm.name=newName;
     adm.email=newEmail;
     if(newPw) adm.password=newPw;
-    localStorage.setItem("adm_session",JSON.stringify(adm));
-    setCookieBak("adm_session_bak",JSON.stringify(adm));
+    localStorage.setItem("adm_session_org1",JSON.stringify(adm));
+    setCookieBak("adm_session_org1_bak",JSON.stringify(adm));
     msg.innerHTML='<span class="ok">Profile updated</span>';
     initSettingsProfile();
     document.getElementById("sc-sub").textContent="Logged in as "+adm.name;
@@ -4365,14 +4372,14 @@ function viewerLogout(){
 // ── Auto-restore admin session ──
 (async()=>{
   try{
-    const s=JSON.parse(localStorage.getItem("adm_session")||getCookieBak("adm_session_bak")||"null");
+    const s=JSON.parse(localStorage.getItem("adm_session_org1")||getCookieBak("adm_session_org1_bak")||"null");
     if(s&&(s.email||s.name)&&s.password){
       const loginPayload=s.email?{action:"admin-login",email:s.email,password:s.password}:{action:"admin-login",name:s.name,password:s.password};
       const r=await api(loginPayload);
-      if(r.ok){adm={name:r.admin.name,email:r.admin.email||s.email||"",password:s.password,is_super:r.admin.is_super};localStorage.setItem("adm_session",JSON.stringify(adm));setCookieBak("adm_session_bak",JSON.stringify(adm));await enterScanner();return}
-      else{localStorage.removeItem("adm_session")}
+      if(r.ok){adm={name:r.admin.name,email:r.admin.email||s.email||"",password:s.password,is_super:r.admin.is_super,org_id:r.admin.org_id||ORG_ID};localStorage.setItem("adm_session_org1",JSON.stringify(adm));setCookieBak("adm_session_org1_bak",JSON.stringify(adm));await enterScanner();return}
+      else{localStorage.removeItem("adm_session_org1")}
     }
-  }catch(e){console.warn("Auto-restore failed",e);localStorage.removeItem("adm_session")}
+  }catch(e){console.warn("Auto-restore failed",e);localStorage.removeItem("adm_session_org1")}
 })();
 // Safety net: rebuild statuses at multiple intervals to guarantee they appear
 let _safetyDone=false;
