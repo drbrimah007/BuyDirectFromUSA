@@ -1128,13 +1128,15 @@ async function adminDoLogin(){
   const pw=document.getElementById("al-pw").value.trim();
   const err=document.getElementById("al-err");err.style.display="none";
   if(!email||!pw){err.textContent="Enter email and password.";err.style.display="block";return}
-  const r=await api({action:"admin-login",email,password:pw});
-  if(!r.ok){err.textContent=r.error||"Login failed.";err.style.display="block";return}
-  adm={name:r.admin.name,email,password:pw,is_super:r.admin.is_super,org_id:r.admin.org_id||ORG_ID};
-  try{if(window.PasswordCredential&&navigator.credentials){const form=document.getElementById("admin-login-form"); if(form){const cred=new PasswordCredential(form); navigator.credentials.store(cred).catch(()=>{});}}}catch(e){}
-  localStorage.setItem("adm_session_org1",JSON.stringify(adm));
-  setCookieBak("adm_session_org1_bak",JSON.stringify(adm));
-  enterScanner();
+  try{
+    const r=await api({action:"admin-login",email,password:pw});
+    if(!r.ok){err.textContent=r.error||"Login failed.";err.style.display="block";return}
+    adm={name:r.admin.name,email,password:pw,is_super:r.admin.is_super,org_id:r.admin.org_id||ORG_ID};
+    try{if(window.PasswordCredential&&navigator.credentials){const form=document.getElementById("admin-login-form"); if(form){const cred=new PasswordCredential(form); navigator.credentials.store(cred).catch(()=>{});}}}catch(e){}
+    localStorage.setItem("adm_session_org1",JSON.stringify(adm));
+    setCookieBak("adm_session_org1_bak",JSON.stringify(adm));
+    enterScanner();
+  }catch(e){err.textContent="Connection error: "+e.message;err.style.display="block";console.error("Login failed:",e)}
 }
 
 async function enterScanner(){
