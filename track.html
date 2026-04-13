@@ -861,7 +861,7 @@ const ORG_ID=1;
 async function api(body){
   body.org_id=ORG_ID;
   const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(),8000);
+  const timer=setTimeout(()=>ctrl.abort(),15000);
   try{
     const res=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),signal:ctrl.signal});
     clearTimeout(timer);
