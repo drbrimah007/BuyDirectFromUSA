@@ -3099,8 +3099,8 @@ async function delSearchAny(page){
   if(page) delNamePage=page; else delNamePage=1;
   const query=document.getElementById("del-name-search").value.trim();
   const div=document.getElementById("del-name-results");
-  if(!query){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">Type a name or tracking number to search</div>';return}
-  div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">Searching...</div>';
+  if(!query){div.innerHTML='<div style="color:#64748b;font-size:12px;padding:4px">Type a name or tracking number to search</div>';return}
+  div.innerHTML='<div style="color:#64748b;font-size:12px;padding:4px">Searching...</div>';
   // Detect if input looks like a tracking number (all digits, or 6+ alphanumeric)
   const isTracking=/^[A-Z0-9]{6,}$/i.test(query)||/^\d{6,}$/.test(query);
   let r;
@@ -3121,7 +3121,7 @@ async function delSearchAny(page){
     r=await api({action:"search-by-name",adminEmail:adm.email,adminPassword:adm.password,name:query,page:delNamePage,perPage:DEL_PER_PAGE});
   }
   if(!r.ok||!r.entries||!r.entries.length){
-    div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No results for "'+esc(query)+'"</div>';
+    div.innerHTML='<div style="color:#64748b;font-size:12px;padding:4px">No results for "'+esc(query)+'"</div>';
     document.getElementById("del-name-pager").innerHTML="";
     return;
   }
