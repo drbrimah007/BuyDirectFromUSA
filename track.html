@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" sizes="120x120" href="/icon-180.png">
 <link rel="apple-touch-icon" href="/icon-180.png">
 <link rel="manifest" href="/manifest.json">
-<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});</script>a
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -49,8 +49,8 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .lbx h2{font-size:18px;color:#f8fafc;margin-bottom:3px}.lbx p{font-size:12px;color:#64748b;margin-bottom:16px}
 .ei{background:#1e293b;border-radius:10px;padding:12px 14px;margin:0 14px 7px}
 .ei .tk{font-size:13px;font-weight:700;color:#f8fafc;font-family:'SF Mono','Fira Code',monospace;word-break:break-all}
-.ei .nm{font-size:12px;color:#e2e8f0;margin-top:2px}
-.ei .dt{font-size:11px;color:#cbd5e1;margin-top:2px}
+.ei .nm{font-size:12px;color:#d6dee8;margin-top:2px}
+.ei .dt{font-size:11px;color:#adb5c0;margin-top:2px}
 .ei .rt{font-size:11px;color:#3b82f6;cursor:pointer;margin-top:3px;display:inline-block}
 .ei .rb{font-size:11px;color:#94a3b8;background:#0f172a;padding:6px;border-radius:6px;margin-top:4px;display:none;white-space:pre-wrap;max-height:80px;overflow:auto}
 .sr{display:flex;gap:7px;padding:10px 14px}
@@ -106,7 +106,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .pt-input-row button:active{transform:scale(.98)}
 .pt-results{margin-top:12px}
 .pt-note{font-size:11px;color:#64748b;margin-top:8px;padding:8px;background:#0f172a;border-radius:6px;border-left:2px solid #3b82f6}
-.pt-empty{text-align:center;padding:16px;color:#475569;font-size:12px}
+.pt-empty{text-align:center;padding:16px;color:#94a3b8;font-size:12px}
 /* Post-scan name confirmation bottom sheet */
 #scan-confirm-sheet{display:none!important;position:fixed;left:0;right:0;bottom:0;z-index:500;background:#1e293b;border-top:2px solid #3b82f6;border-radius:18px 18px 0 0;padding:18px 16px 32px;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:0 -8px 40px rgba(0,0,0,.6)}
 #scan-confirm-sheet.open{transform:translateY(0)}
@@ -886,15 +886,16 @@ const STATUS_COLORS={
   "Archived":{bg:"#1e1b4b",border:"#3730a3",text:"#a5b4fc"}
 };
 let batchPrefix=localStorage.getItem("batch_prefix")||"BDUSA";
-function _hashColor(str){let h=0;for(let i=0;i<str.length;i++){h=str.charCodeAt(i)+((h<<5)-h);h=h&h}const hue=((h%360)+360)%360;return 'hsl('+hue+',70%,65%)';}
+const _BADGE_PALETTE=[{bg:"#1e3a5f",border:"#2563eb",text:"#60a5fa"},{bg:"#064e3b",border:"#065f46",text:"#6ee7b7"},{bg:"#4c1d95",border:"#5b21b6",text:"#c4b5fd"},{bg:"#1e1b4b",border:"#3730a3",text:"#a5b4fc"},{bg:"#134e4a",border:"#115e59",text:"#5eead4"},{bg:"#3b0764",border:"#6b21a8",text:"#d8b4fe"},{bg:"#052e16",border:"#166534",text:"#86efac"},{bg:"#172554",border:"#1e40af",text:"#93c5fd"},{bg:"#0c4a6e",border:"#0369a1",text:"#7dd3fc"},{bg:"#164e63",border:"#155e75",text:"#67e8f9"},{bg:"#1a2e05",border:"#365314",text:"#a3e635"},{bg:"#1e1b4b",border:"#4338ca",text:"#818cf8"}];
+function _pickPaletteColor(str){let h=0;for(let i=0;i<str.length;i++){h=str.charCodeAt(i)+((h<<5)-h);h=h&h}return _BADGE_PALETTE[((h%_BADGE_PALETTE.length)+_BADGE_PALETTE.length)%_BADGE_PALETTE.length]}
 function statusBadge(s){
   const st=s||"Scanned";
   const cls=STATUS_CLASSES[st];
   if(cls) return '<span class="st-badge '+cls+'">'+esc(st)+'</span>';
-  // Custom status — use stored color first, then generate from name
+  // Custom status — use stored color first, then pick from palette
   try{const cols=JSON.parse(localStorage.getItem("custom_status_colors")||"{}");if(cols[st]){const c=cols[st];return '<span class="st-badge" style="background:'+c+'22;color:'+c+';border:1px solid '+c+'">'+esc(st)+'</span>';}}catch(e){}
-  const gc=_hashColor(st);
-  return '<span class="st-badge" style="background:'+gc.replace('65%','20%')+';color:'+gc+';border:1px solid '+gc+'">'+esc(st)+'</span>';
+  const p=_pickPaletteColor(st);
+  return '<span class="st-badge" style="background:'+p.bg+';color:'+p.text+';border:1px solid '+p.border+'">'+esc(st)+'</span>';
 }
 
 // ── Navigation ──
@@ -1014,6 +1015,11 @@ async function publicTrack(fromUrl){
       return;
     }
 
+    // Store server-provided custom status colors for statusBadge() to use
+    if(r.custom_status_colors&&typeof r.custom_status_colors==='object'){
+      try{localStorage.setItem("custom_status_colors",JSON.stringify(r.custom_status_colors))}catch(e){}
+    }
+
     // Group by tracking number
     const groups={};
     r.entries.forEach(e=>{
@@ -1047,24 +1053,24 @@ async function publicTrack(fromUrl){
       html+='<div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">'+esc(tk)+'</div>'+statusBadge(displayStatus)+'</div>';
       let route=latest.scan_location?esc(latest.scan_location):'';
       if(latest.destination) route+=(route?' &rarr; ':'')+esc(latest.destination);
-      if(route) html+='<div style="font-size:11px;color:#cbd5e1;margin-top:2px">'+route+'</div>';
-      if(latestEta) html+='<div style="font-size:11px;color:#fbbf24;margin-top:2px">ETA: '+new Date(latestEta.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
+      if(route) html+='<div style="font-size:11px;color:#94a3b8;margin-top:2px">'+route+'</div>';
+      if(latestEta) html+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(latestEta.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
       // Status timeline — only show client-relevant statuses
       if(clientHistory.length){
-        html+='<div style="margin-top:8px;padding-left:12px;border-left:2px solid #475569">';
+        html+='<div style="margin-top:8px;padding-left:12px;border-left:2px solid #334155">';
         clientHistory.forEach((h,i)=>{
           html+='<div style="padding:5px 0;display:flex;align-items:center;gap:8px">';
-          html+='<span style="font-size:11px;color:#e2e8f0;white-space:nowrap;min-width:90px">'+fmtShort(h.changed_at)+'</span>';
+          html+='<span style="font-size:10px;color:#94a3b8;white-space:nowrap;min-width:90px">'+fmtShort(h.changed_at)+'</span>';
           html+=statusBadge(h.status);
           html+='</div>';
         });
         html+='</div>';
       } else {
         // Fallback if no history yet
-        html+='<div style="margin-top:6px;padding-left:12px;border-left:2px solid #475569">';
+        html+='<div style="margin-top:6px;padding-left:12px;border-left:2px solid #334155">';
         events.forEach((e,i)=>{
           html+='<div style="padding:5px 0;display:flex;align-items:center;gap:8px">';
-          html+='<span style="font-size:11px;color:#e2e8f0">'+fmt(e.created_at)+'</span>';
+          html+='<span style="font-size:11px;color:#94a3b8">'+fmt(e.created_at)+'</span>';
           html+=statusBadge(e.status||"Scanned");
           html+='</div>';
         });
@@ -3099,8 +3105,8 @@ async function delSearchAny(page){
   if(page) delNamePage=page; else delNamePage=1;
   const query=document.getElementById("del-name-search").value.trim();
   const div=document.getElementById("del-name-results");
-  if(!query){div.innerHTML='<div style="color:#64748b;font-size:12px;padding:4px">Type a name or tracking number to search</div>';return}
-  div.innerHTML='<div style="color:#64748b;font-size:12px;padding:4px">Searching...</div>';
+  if(!query){div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">Type a name or tracking number to search</div>';return}
+  div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">Searching...</div>';
   // Detect if input looks like a tracking number (all digits, or 6+ alphanumeric)
   const isTracking=/^[A-Z0-9]{6,}$/i.test(query)||/^\d{6,}$/.test(query);
   let r;
@@ -3121,7 +3127,7 @@ async function delSearchAny(page){
     r=await api({action:"search-by-name",adminEmail:adm.email,adminPassword:adm.password,name:query,page:delNamePage,perPage:DEL_PER_PAGE});
   }
   if(!r.ok||!r.entries||!r.entries.length){
-    div.innerHTML='<div style="color:#64748b;font-size:12px;padding:4px">No results for "'+esc(query)+'"</div>';
+    div.innerHTML='<div style="color:#475569;font-size:12px;padding:4px">No results for "'+esc(query)+'"</div>';
     document.getElementById("del-name-pager").innerHTML="";
     return;
   }
