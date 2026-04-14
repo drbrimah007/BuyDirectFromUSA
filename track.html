@@ -218,6 +218,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
           <button type="button" onclick="publicTrack()">Track</button>
         </div>
         <div id="pt-results" class="pt-results"></div>
+        <div id="pt-history" style="margin-top:8px"></div>
         <div style="font-size:10px;color:#475569;margin-top:4px">Case-insensitive — partial numbers work too</div>
       </div>
 
@@ -469,6 +470,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
   <!-- Settings content -->
   <div id="settings-content" style="display:none">
     <div class="hdr"><h1>Settings</h1><p>Configure system preferences</p></div>
+    <div id="settings-save-bar" style="display:none;padding:8px 14px;margin:0 0 10px;border-radius:8px;font-size:12px;font-weight:600;text-align:center;transition:all 0.3s"></div>
 
     <!-- Admin profile edit -->
     <div class="cd" style="padding:14px">
@@ -858,6 +860,7 @@ function playChime(){
   }catch(e){}
 }
 const ORG_ID=1;
+const APP_ID="buydirectfromusa";
 async function api(body){
   body.org_id=ORG_ID;
   const ctrl=new AbortController();
@@ -985,6 +988,30 @@ function printTrackingBarcode(){
 //  PUBLIC TRACKING (No login required)
 // ══════════════════════════════
 let lastTracked="";
+// --- Recent search history ---
+function _getPtHistory(){try{return JSON.parse(localStorage.getItem("pt_history")||"[]")}catch(e){return[]}}
+function _savePtHistory(input,trackingNumbers){
+  let h=_getPtHistory();
+  // Remove duplicate of same input
+  h=h.filter(x=>x.input!==input);
+  h.unshift({input,tracks:trackingNumbers,ts:Date.now()});
+  if(h.length>10) h=h.slice(0,10);
+  try{localStorage.setItem("pt_history",JSON.stringify(h))}catch(e){}
+}
+function _renderPtHistory(){
+  const el=document.getElementById("pt-history");
+  if(!el) return;
+  const h=_getPtHistory();
+  if(!h.length){el.innerHTML="";return;}
+  let html='<div style="font-size:11px;color:#64748b;margin-bottom:4px">Recent searches</div><div style="display:flex;flex-wrap:wrap;gap:6px">';
+  h.slice(0,8).forEach(item=>{
+    const label=item.tracks&&item.tracks.length?item.tracks[0]:(item.input||"?");
+    const display=label.length>16?"…"+label.slice(-14):label;
+    html+='<button onclick="publicTrack(\''+esc(item.input).replace(/'/g,"\\'")+'\')" style="padding:4px 10px;font-size:11px;background:#1e293b;color:#93c5fd;border:1px solid #334155;border-radius:6px;cursor:pointer;white-space:nowrap">'+esc(display)+'</button>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
 async function publicTrack(fromUrl){
   const ptEl=document.getElementById("pt-input");
   const input=(fromUrl||ptEl.value).trim();
@@ -1080,9 +1107,13 @@ async function publicTrack(fromUrl){
     }
 
     resultsDiv.innerHTML=html+'<div class="pt-note">Auto-refreshes every 60s · Tap "Track My Package" below to sign in for full history</div>';
+    // Save successful search to history with the tracking numbers found
+    const foundTracks=Object.keys(groups);
+    _savePtHistory(input,foundTracks);
+    _renderPtHistory();
     startPtAutoRefresh();
   }catch(e){
-    resultsDiv.innerHTML='<div class="pt-empty er">Error loading tracking</div>';
+    resultsDiv.innerHTML='<div class="pt-empty er">Connection error — <a href="#" onclick="publicTrack(\''+esc(lastTracked).replace(/'/g,"\\'")+'\');return false" style="color:#3b82f6;text-decoration:underline">tap to retry</a></div>';
   }
 }
 
@@ -1096,6 +1127,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
   const ptResults=document.getElementById("pt-results");
   if(ptResults) ptResults.innerHTML="";
+  _renderPtHistory();
   applyCompanyBranding();
   // Auto-search if ?track= is in URL
   const urlTrack=new URLSearchParams(window.location.search).get("t");
@@ -1980,25 +2012,65 @@ function saveAllFeatures(){
 }
 let _saving=false;
 let _pendingSettingsSave=null;
+let _settingsDirty=false;
+function _showSaveBar(text,type){
+  const bar=document.getElementById("settings-save-bar");
+  if(!bar) return;
+  bar.style.display="block";
+  bar.textContent="";
+  if(type==="unsaved"){bar.style.background="#92400e";bar.style.color="#fde68a";bar.textContent=text}
+  else if(type==="saving"){bar.style.background="#1e3a5f";bar.style.color="#93c5fd";bar.textContent=text}
+  else if(type==="saved"){bar.style.background="#064e3b";bar.style.color="#6ee7b7";bar.textContent=text;setTimeout(()=>{if(bar.textContent===text){bar.style.display="none"}},4000)}
+  else if(type==="failed"){bar.style.background="#7f1d1d";bar.style.color="#fca5a5";
+    const span=document.createElement("span");span.textContent=text+" ";
+    const btn=document.createElement("button");
+    btn.textContent="Retry Save";btn.style.cssText="margin-left:8px;padding:4px 10px;border:1px solid #fca5a5;border-radius:5px;background:none;color:#fca5a5;font-size:11px;font-weight:700;cursor:pointer";
+    btn.onclick=()=>{_retrySave()};
+    bar.appendChild(span);bar.appendChild(btn);
+  }
+}
+function _markSettingsDirty(){
+  _settingsDirty=true;
+  _showSaveBar("Unsaved changes","unsaved");
+}
+function _retrySave(){
+  try{
+    const pending=localStorage.getItem("_pendingSavePayload");
+    if(pending){
+      const p=JSON.parse(pending);
+      _doSave(p,null);
+    }else{
+      const settings=_buildSettingsPayload(false);
+      _doSave(settings,null);
+    }
+  }catch(e){_showSaveBar("Retry failed","failed")}
+}
 async function _doSave(settings,msgEl){
   if(_saving){ _pendingSettingsSave={settings:settings,msgEl:msgEl}; return; }
   _saving=true;
+  _showSaveBar("Saving...","saving");
   if(msgEl){msgEl.textContent="Saving...";msgEl.style.opacity="1"}
   const ctrl=new AbortController();
   const timer=setTimeout(()=>ctrl.abort(),25000);
   try{
     const res=await fetch(API,{
       method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID,settings:settings}),
+      body:JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID,app_id:APP_ID,settings:settings}),
       signal:ctrl.signal
     });
     clearTimeout(timer);
     let data=null;
     try{data=await res.json()}catch(e){throw new Error("Invalid JSON")}
     if(!res.ok||!data||!data.ok) throw new Error("Server error");
+    _settingsDirty=false;
+    try{localStorage.removeItem("_pendingSavePayload")}catch(e){}
+    const now=new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZone:"America/New_York"})+" ET";
+    _showSaveBar("Saved at "+now,"saved");
     if(msgEl){msgEl.textContent="Saved!";setTimeout(()=>{msgEl.style.opacity="0"},1500)}
   }catch(e){
     clearTimeout(timer);
+    try{localStorage.setItem("_pendingSavePayload",JSON.stringify(settings))}catch(e2){}
+    _showSaveBar("Save failed","failed");
     if(msgEl){msgEl.textContent=e.name==="AbortError"?"Timeout":"Error";setTimeout(()=>{msgEl.style.opacity="0"},3000)}
     console.error("Save failed:",e);
   }finally{
@@ -2051,15 +2123,16 @@ function _buildSettingsPayload(includeLogo){
 }
 function syncSettingsToServer(){
   if(!adm) return;
+  _markSettingsDirty();
   clearTimeout(_syncTimer);
   const settings=_buildSettingsPayload(false);
   _syncTimer=setTimeout(()=>{ _doSave(settings,null); },250);
 }
 function _flushSettingsBeforeUnload(){
-  if(!adm) return;
+  if(!adm||!_settingsDirty) return;
   clearTimeout(_syncTimer);
   try{
-    const payload=JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:_buildSettingsPayload(false)});
+    const payload=JSON.stringify({action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID,app_id:APP_ID,settings:_buildSettingsPayload(false)});
     if(navigator.sendBeacon){
       navigator.sendBeacon(API,new Blob([payload],{type:'application/json'}));
     } else {
@@ -2073,7 +2146,7 @@ function _flushSettingsBeforeUnload(){
 async function loadSettingsFromServer(){
   if(!adm) return;
   try{
-    const r=await api({action:"load-settings",adminEmail:adm.email,adminPassword:adm.password});
+    const r=await api({action:"load-settings",adminEmail:adm.email,adminPassword:adm.password,app_id:APP_ID});
     if(!r.ok||!r.settings) return;
     const s=r.settings;
     const safeSet=(k,v)=>{try{localStorage.setItem(k,v);sessionStorage.setItem(k+"_bak",v)}catch(e){}};
@@ -2140,6 +2213,8 @@ async function loadSettingsFromServer(){
     try{initBatchPrefix();}catch(e){}
     try{restoreScanSettings();}catch(e){}
     try{applyCompanyBranding();initLogoPreview();}catch(e){}
+    // Check for pending failed save from previous session
+    try{const pending=localStorage.getItem("_pendingSavePayload");if(pending){_showSaveBar("Save failed","failed")}}catch(e){}
   }catch(e){console.warn("Load settings failed",e)}
 }
 function initFeatureTogglesUI(){
@@ -3826,7 +3901,7 @@ function removeLogo(){
 }
 function syncSettingsToServerWithLogo(){
   if(!adm) return;
-  const payload={action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,settings:_buildSettingsPayload(true)};
+  const payload={action:"save-settings",adminEmail:adm.email,adminPassword:adm.password,app_id:APP_ID,settings:_buildSettingsPayload(true)};
   api(payload).catch(e=>console.warn("Logo sync failed",e));
 }
 
