@@ -1222,6 +1222,7 @@ async function publicTrack(fromUrl){
             cH+='<span style="font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;'+(delivered?'background:#064e3b;color:#34d399':'background:#172554;color:#93c5fd')+'">'+(delivered?'DELIVERED':(c.carrier_status||'Pending'))+'</span></div>';
             if(c.carrier_location)cH+='<div style="font-size:11px;color:#94a3b8;margin-top:4px">Location: '+c.carrier_location+'</div>';
             if(c.carrier_eta&&!delivered)cH+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(c.carrier_eta).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
+            if(delivered&&c.carrier_delivered_at)cH+='<div style="font-size:11px;color:#34d399;margin-top:2px">Delivered: '+new Date(c.carrier_delivered_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
             if(c.carrier_tracking_number)cH+='<div style="font-size:10px;color:#475569;margin-top:4px">'+c.carrier_tracking_number+'</div>';
             cH+='</div>';
             cards[idx].insertAdjacentHTML('beforeend',cH);
@@ -1251,6 +1252,7 @@ async function publicTrack(fromUrl){
         if(c.carrier_status)html+='<div style="font-size:12px;color:#e2e8f0;margin-top:4px">'+esc(c.carrier_status)+'</div>';
         if(c.carrier_location)html+='<div style="font-size:11px;color:#94a3b8;margin-top:3px">Location: '+esc(c.carrier_location)+'</div>';
         if(c.carrier_eta&&!delivered)html+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(c.carrier_eta).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
+        if(delivered&&c.carrier_delivered_at)html+='<div style="font-size:11px;color:#34d399;margin-top:2px">Delivered: '+new Date(c.carrier_delivered_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
         if(c.last_synced_at)html+='<div style="font-size:10px;color:#475569;margin-top:4px">Updated: '+fmtShort(c.last_synced_at)+'</div>';
         html+='</div></div>';
       });
@@ -1279,6 +1281,7 @@ async function publicTrack(fromUrl){
         if(t.statusDetail&&t.statusDetail!==t.status)html+='<div style="font-size:11px;color:#cbd5e1;margin-top:2px">'+esc(t.statusDetail)+'</div>';
         if(t.location)html+='<div style="font-size:11px;color:#94a3b8;margin-top:3px">Location: '+esc(t.location)+'</div>';
         if(t.eta&&!delivered)html+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(t.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
+        if(delivered&&t.deliveredAt)html+='<div style="font-size:11px;color:#34d399;margin-top:2px">Delivered: '+new Date(t.deliveredAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
         html+='</div></div>';
         resultsDiv.innerHTML=html+'<div class="pt-note">Auto-refreshes every 60s</div>';
         _savePtHistory(input,[input]);_renderPtHistory();startPtAutoRefresh();
@@ -1293,8 +1296,7 @@ async function publicTrack(fromUrl){
     // Not a recognized carrier format and no cached results — ask for full number
     resultsDiv.innerHTML='<div class="pt-empty">No internal record found.<br><span style="font-size:12px;color:#94a3b8;margin-top:6px;display:inline-block">Enter your full carrier tracking number (e.g. 1Z...) to check UPS/FedEx/USPS status.</span></div>';
   }catch(e){
-    console.log("DEBUG catch error:",e);
-    resultsDiv.innerHTML='<div class="pt-empty er">[PATH-E] Connection error: '+(e.message||e)+' — <a href="#" onclick="publicTrack(\''+esc(lastTracked).replace(/'/g,"\\'")+'\');return false" style="color:#3b82f6;text-decoration:underline">tap to retry</a></div>';
+    resultsDiv.innerHTML='<div class="pt-empty er">Connection error — <a href="#" onclick="publicTrack(\''+esc(lastTracked).replace(/'/g,"\\'")+'\');return false" style="color:#3b82f6;text-decoration:underline">tap to retry</a></div>';
   }
 }
 
