@@ -948,6 +948,12 @@ async function carrierPublicStatus(entryIds){
   if(!entryIds.length)return[];
   try{const res=await fetch(CARRIER_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"public-carrier-status",entryIds})});const d=await res.json();return d.carriers||[]}catch(e){return[]}
 }
+async function carrierPublicSearch(trackingNumber){
+  try{const res=await fetch(CARRIER_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"public-carrier-search",trackingNumber})});const d=await res.json();return d.ok?d:null}catch(e){return null}
+}
+async function carrierLiveTrack(trackingNumber){
+  try{const res=await fetch(CARRIER_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"public-carrier-live-track",trackingNumber})});const d=await res.json();return d}catch(e){return{ok:false,error:"Connection error"}}
+}
 function esc(s){const d=document.createElement("div");d.textContent=s||"";return d.innerHTML}
 function fmt(iso){const d=new Date(iso);return d.toLocaleDateString("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",year:"numeric"})+" at "+d.toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"})}
 function fmtShort(iso){const d=new Date(iso);return d.toLocaleDateString("en-US",{timeZone:"America/New_York",month:"short",day:"numeric"})+" "+d.toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"})}
@@ -1146,123 +1152,149 @@ async function publicTrack(fromUrl){
   resultsDiv.innerHTML='<div class="pt-empty">Searching...</div>';
 
   try{
+    // Step 1: Check internal entries
     const r=await api({action:"public-track",trackingNumber:input});
+    const hasEntries=r.ok&&r.entries&&r.entries.length;
 
-    if(!r.ok||!r.entries||!r.entries.length){
-      resultsDiv.innerHTML='<div class="pt-empty">No tracking found</div>';
+    if(hasEntries){
+      // ── INTERNAL FOUND — show internal status above, carrier info below ──
+      if(r.custom_status_colors&&typeof r.custom_status_colors==='object'){
+        try{localStorage.setItem("custom_status_colors",JSON.stringify(r.custom_status_colors))}catch(e){}
+      }
+      const groups={};
+      r.entries.forEach(e=>{const tk=e.tracking_number;if(!groups[tk])groups[tk]=[];groups[tk].push(e)});
+      let html="";
+      for(const tk in groups){
+        const events=groups[tk];const latest=events[0];const latestStatus=latest.status||"Scanned";
+        const latestEta=events.find(e=>e.eta);
+        const allHistory=[];
+        events.forEach(e=>{if(e.status_history&&e.status_history.length)e.status_history.forEach(h=>allHistory.push(h))});
+        allHistory.sort((a,b)=>new Date(b.changed_at)-new Date(a.changed_at));
+        const _internalStatuses=["Assigned","Consolidated","Split","Archived"];
+        const clientHistory=allHistory.filter(h=>!_internalStatuses.includes(h.status));
+        const clientStatus=clientHistory.length?clientHistory[0].status:latestStatus;
+        const displayStatus=_internalStatuses.includes(clientStatus)?"In Transit":clientStatus;
+        html+='<div class="ei" style="margin-bottom:10px">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">'+esc(tk)+'</div>'+statusBadge(displayStatus)+'</div>';
+        let route=latest.scan_location?esc(latest.scan_location):'';
+        if(latest.destination) route+=(route?' &rarr; ':'')+esc(latest.destination);
+        if(route) html+='<div style="font-size:11px;color:#94a3b8;margin-top:2px">'+route+'</div>';
+        if(latestEta) html+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(latestEta.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
+        if(clientHistory.length){
+          html+='<div style="margin-top:8px;padding-left:12px;border-left:2px solid #334155">';
+          clientHistory.forEach(h=>{html+='<div style="padding:5px 0;display:flex;align-items:center;gap:8px"><span style="font-size:10px;color:#94a3b8;white-space:nowrap;min-width:90px">'+fmtShort(h.changed_at)+'</span>'+statusBadge(h.status)+'</div>'});
+          html+='</div>';
+        } else {
+          html+='<div style="margin-top:6px;padding-left:12px;border-left:2px solid #334155">';
+          events.forEach(e=>{html+='<div style="padding:5px 0;display:flex;align-items:center;gap:8px"><span style="font-size:11px;color:#94a3b8">'+fmt(e.created_at)+'</span>'+statusBadge(e.status||"Scanned")+'</div>'});
+          html+='</div>';
+        }
+        html+='</div>';
+      }
+      resultsDiv.innerHTML=html+'<div class="pt-note">Auto-refreshes every 60s</div>';
+      // Also fetch carrier info (by entry_id link OR by tracking number match) and inject below
+      const allEntryIds=r.entries.map(e=>e.id);
+      const allTks=[...new Set(r.entries.map(e=>e.tracking_number))];
+      Promise.all([carrierPublicStatus(allEntryIds),carrierPublicSearch(allTks[0])]).then(([byId,byTn])=>{
+        const carrierMap={};
+        (byId||[]).forEach(c=>{if(c.entry_id)carrierMap[c.entry_id]=c});
+        const carrierByTk={};
+        for(const tk in groups){
+          for(const e of groups[tk]){if(carrierMap[e.id]){carrierByTk[tk]=carrierMap[e.id];break}}
+        }
+        // Also check tracking-number match from carrier search
+        if(byTn&&byTn.carriers){
+          byTn.carriers.forEach(c=>{
+            for(const tk in groups){if(!carrierByTk[tk]){carrierByTk[tk]=c;break}}
+          });
+        }
+        if(!Object.keys(carrierByTk).length)return;
+        const cards=resultsDiv.querySelectorAll('.ei');let idx=0;
+        for(const tk in groups){
+          const c=carrierByTk[tk];
+          if(c&&cards[idx]){
+            const cColors={ups:"#fbbf24",fedex:"#a78bfa",usps:"#60a5fa"};
+            const cNames={ups:"UPS",fedex:"FedEx",usps:"USPS"};
+            const color=cColors[c.carrier]||"#94a3b8";const name=cNames[c.carrier]||c.carrier;
+            const delivered=!!c.carrier_delivered_at;
+            let cH='<div style="margin-top:8px;padding:10px;background:#0f172a;border:1px solid #1e293b;border-left:3px solid '+color+';border-radius:6px">';
+            cH+='<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:700;color:'+color+'">'+name+' Tracking</span>';
+            cH+='<span style="font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;'+(delivered?'background:#064e3b;color:#34d399':'background:#172554;color:#93c5fd')+'">'+(delivered?'DELIVERED':(c.carrier_status||'Pending'))+'</span></div>';
+            if(c.carrier_location)cH+='<div style="font-size:11px;color:#94a3b8;margin-top:4px">Location: '+c.carrier_location+'</div>';
+            if(c.carrier_eta&&!delivered)cH+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(c.carrier_eta).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
+            if(c.carrier_tracking_number)cH+='<div style="font-size:10px;color:#475569;margin-top:4px">'+c.carrier_tracking_number+'</div>';
+            cH+='</div>';
+            cards[idx].insertAdjacentHTML('beforeend',cH);
+          }
+          idx++;
+        }
+      });
+      _savePtHistory(input,Object.keys(groups));_renderPtHistory();startPtAutoRefresh();
       return;
     }
 
-    // Store server-provided custom status colors for statusBadge() to use
-    if(r.custom_status_colors&&typeof r.custom_status_colors==='object'){
-      try{localStorage.setItem("custom_status_colors",JSON.stringify(r.custom_status_colors))}catch(e){}
-    }
-
-    // Group by tracking number
-    const groups={};
-    r.entries.forEach(e=>{
-      const tk=e.tracking_number;
-      if(!groups[tk]) groups[tk]=[];
-      groups[tk].push(e);
-    });
-
-    let html="";
-    for(const tk in groups){
-      const events=groups[tk];
-      const latest=events[0];
-      const latestStatus=latest.status||"Scanned";
-      const latestEta=events.find(e=>e.eta);
-      // Merge all status_history from all scan events for this tracking number
-      const allHistory=[];
-      events.forEach(e=>{
-        if(e.status_history&&e.status_history.length){
-          e.status_history.forEach(h=>allHistory.push(h));
-        }
+    // ── NO INTERNAL MATCH — check carrier_tracking cache first ──
+    const cSearch=await carrierPublicSearch(input);
+    if(cSearch&&cSearch.carriers&&cSearch.carriers.length){
+      // Found cached carrier record (from a previous live API pull)
+      const cColors={ups:"#fbbf24",fedex:"#a78bfa",usps:"#60a5fa"};
+      const cNames={ups:"UPS",fedex:"FedEx",usps:"USPS"};
+      let html="";
+      cSearch.carriers.forEach(c=>{
+        const color=cColors[c.carrier]||"#94a3b8";const name=cNames[c.carrier]||c.carrier;
+        const delivered=!!c.carrier_delivered_at;
+        html+='<div class="ei" style="margin-bottom:10px">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">'+esc(c.carrier_tracking_number)+'</div>';
+        html+='<span style="font-size:11px;padding:3px 10px;border-radius:6px;font-weight:700;'+(delivered?'background:#064e3b;color:#34d399':'background:#172554;color:#93c5fd')+'">'+(delivered?'DELIVERED':(c.carrier_status||'Pending'))+'</span></div>';
+        html+='<div style="margin-top:8px;padding:10px;background:#0f172a;border:1px solid #1e293b;border-left:3px solid '+color+';border-radius:6px">';
+        html+='<div style="font-size:11px;font-weight:700;color:'+color+'">'+name+' Tracking</div>';
+        if(c.carrier_status)html+='<div style="font-size:12px;color:#e2e8f0;margin-top:4px">'+esc(c.carrier_status)+'</div>';
+        if(c.carrier_location)html+='<div style="font-size:11px;color:#94a3b8;margin-top:3px">Location: '+esc(c.carrier_location)+'</div>';
+        if(c.carrier_eta&&!delivered)html+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(c.carrier_eta).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
+        if(c.last_synced_at)html+='<div style="font-size:10px;color:#475569;margin-top:4px">Updated: '+fmtShort(c.last_synced_at)+'</div>';
+        html+='</div></div>';
       });
-      // Sort by date descending (latest first)
-      allHistory.sort((a,b)=>new Date(b.changed_at)-new Date(a.changed_at));
-      // Internal statuses hidden from client view
-      const _internalStatuses=["Assigned","Consolidated","Split","Archived"];
-      // Find the latest CLIENT-visible status for the header badge
-      const clientHistory=allHistory.filter(h=>!_internalStatuses.includes(h.status));
-      const clientStatus=clientHistory.length?clientHistory[0].status:latestStatus;
-      const displayStatus=_internalStatuses.includes(clientStatus)?"In Transit":clientStatus;
-      html+='<div class="ei" style="margin-bottom:10px">';
-      html+='<div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">'+esc(tk)+'</div>'+statusBadge(displayStatus)+'</div>';
-      let route=latest.scan_location?esc(latest.scan_location):'';
-      if(latest.destination) route+=(route?' &rarr; ':'')+esc(latest.destination);
-      if(route) html+='<div style="font-size:11px;color:#94a3b8;margin-top:2px">'+route+'</div>';
-      if(latestEta) html+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(latestEta.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
-      // Status timeline — only show client-relevant statuses
-      if(clientHistory.length){
-        html+='<div style="margin-top:8px;padding-left:12px;border-left:2px solid #334155">';
-        clientHistory.forEach((h,i)=>{
-          html+='<div style="padding:5px 0;display:flex;align-items:center;gap:8px">';
-          html+='<span style="font-size:10px;color:#94a3b8;white-space:nowrap;min-width:90px">'+fmtShort(h.changed_at)+'</span>';
-          html+=statusBadge(h.status);
-          html+='</div>';
-        });
-        html+='</div>';
-      } else {
-        // Fallback if no history yet
-        html+='<div style="margin-top:6px;padding-left:12px;border-left:2px solid #334155">';
-        events.forEach((e,i)=>{
-          html+='<div style="padding:5px 0;display:flex;align-items:center;gap:8px">';
-          html+='<span style="font-size:11px;color:#94a3b8">'+fmt(e.created_at)+'</span>';
-          html+=statusBadge(e.status||"Scanned");
-          html+='</div>';
-        });
-        html+='</div>';
-      }
-      html+='</div>';
+      resultsDiv.innerHTML=html+'<div class="pt-note">Auto-refreshes every 60s</div>';
+      _savePtHistory(input,[input]);_renderPtHistory();startPtAutoRefresh();
+      return;
     }
 
-    resultsDiv.innerHTML=html+'<div class="pt-note">Auto-refreshes every 60s · Tap "Track My Package" below to sign in for full history</div>';
-    // Fetch carrier tracking info for these entries
-    const allEntryIds=r.entries.map(e=>e.id);
-    carrierPublicStatus(allEntryIds).then(carriers=>{
-      if(!carriers.length)return;
-      const byEntry={};
-      carriers.forEach(c=>{if(c.entry_id)byEntry[c.entry_id]=c});
-      // Find which tracking groups have carrier info
-      const carrierByTk={};
-      for(const tk in groups){
-        const entries=groups[tk];
-        for(const e of entries){if(byEntry[e.id]){carrierByTk[tk]=byEntry[e.id];break}}
+    // ── NO CACHE — try live carrier API if full tracking number ──
+    const detectedCarrier=_detectCarrierJS(input);
+    if(detectedCarrier){
+      resultsDiv.innerHTML='<div class="pt-empty">Checking '+detectedCarrier.toUpperCase()+' tracking...</div>';
+      const live=await carrierLiveTrack(input);
+      if(live&&live.ok&&live.tracking){
+        const t=live.tracking;
+        const cColors={ups:"#fbbf24",fedex:"#a78bfa",usps:"#60a5fa"};
+        const cNames={ups:"UPS",fedex:"FedEx",usps:"USPS"};
+        const color=cColors[t.carrier]||"#94a3b8";const name=cNames[t.carrier]||t.carrier;
+        const delivered=!!t.delivered;
+        let html='<div class="ei" style="margin-bottom:10px">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:center"><div class="tk">'+esc(input)+'</div>';
+        html+='<span style="font-size:11px;padding:3px 10px;border-radius:6px;font-weight:700;'+(delivered?'background:#064e3b;color:#34d399':'background:#172554;color:#93c5fd')+'">'+(delivered?'DELIVERED':(t.status||'Pending'))+'</span></div>';
+        html+='<div style="margin-top:8px;padding:10px;background:#0f172a;border:1px solid #1e293b;border-left:3px solid '+color+';border-radius:6px">';
+        html+='<div style="font-size:11px;font-weight:700;color:'+color+'">'+name+' Tracking</div>';
+        if(t.status)html+='<div style="font-size:12px;color:#e2e8f0;margin-top:4px">'+esc(t.status)+'</div>';
+        if(t.statusDetail&&t.statusDetail!==t.status)html+='<div style="font-size:11px;color:#cbd5e1;margin-top:2px">'+esc(t.statusDetail)+'</div>';
+        if(t.location)html+='<div style="font-size:11px;color:#94a3b8;margin-top:3px">Location: '+esc(t.location)+'</div>';
+        if(t.eta&&!delivered)html+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(t.eta+'T00:00:00').toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
+        html+='</div></div>';
+        resultsDiv.innerHTML=html+'<div class="pt-note">Auto-refreshes every 60s</div>';
+        _savePtHistory(input,[input]);_renderPtHistory();startPtAutoRefresh();
+        return;
       }
-      if(!Object.keys(carrierByTk).length)return;
-      // Inject carrier info under each tracking group
-      const cards=resultsDiv.querySelectorAll('.ei');
-      let idx=0;
-      for(const tk in groups){
-        const c=carrierByTk[tk];
-        if(c&&cards[idx]){
-          const cColors={ups:"#fbbf24",fedex:"#a78bfa",usps:"#60a5fa"};
-          const cNames={ups:"UPS",fedex:"FedEx",usps:"USPS"};
-          const color=cColors[c.carrier]||"#94a3b8";
-          const name=cNames[c.carrier]||c.carrier;
-          const delivered=!!c.carrier_delivered_at;
-          let cHtml='<div style="margin-top:8px;padding:10px;background:#0f172a;border:1px solid #1e293b;border-left:3px solid '+color+';border-radius:6px">';
-          cHtml+='<div style="display:flex;justify-content:space-between;align-items:center">';
-          cHtml+='<span style="font-size:11px;font-weight:700;color:'+color+'">'+name+' Tracking</span>';
-          cHtml+='<span style="font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;'+(delivered?'background:#064e3b;color:#34d399':'background:#172554;color:#93c5fd')+'">'+(delivered?'DELIVERED':(c.carrier_status||'Pending'))+'</span>';
-          cHtml+='</div>';
-          if(c.carrier_location)cHtml+='<div style="font-size:11px;color:#94a3b8;margin-top:4px">Location: '+c.carrier_location+'</div>';
-          if(c.carrier_eta&&!delivered)cHtml+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(c.carrier_eta).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
-          if(c.carrier_tracking_number)cHtml+='<div style="font-size:10px;color:#475569;margin-top:4px">'+c.carrier_tracking_number+'</div>';
-          cHtml+='</div>';
-          cards[idx].insertAdjacentHTML('beforeend',cHtml);
-        }
-        idx++;
+      if(live&&live.error){
+        resultsDiv.innerHTML='<div class="pt-empty er">'+esc(live.error)+'</div>';
+        return;
       }
-    });
-    // Save successful search to history with the tracking numbers found
-    const foundTracks=Object.keys(groups);
-    _savePtHistory(input,foundTracks);
-    _renderPtHistory();
-    startPtAutoRefresh();
+    }
+
+    // Not a recognized carrier format and no cached results — ask for full number
+    resultsDiv.innerHTML='<div class="pt-empty">No internal record found.<br><span style="font-size:12px;color:#94a3b8;margin-top:6px;display:inline-block">Enter your full carrier tracking number (e.g. 1Z...) to check UPS/FedEx/USPS status.</span></div>';
   }catch(e){
-    resultsDiv.innerHTML='<div class="pt-empty er">Connection error — <a href="#" onclick="publicTrack(\''+esc(lastTracked).replace(/'/g,"\\'")+'\');return false" style="color:#3b82f6;text-decoration:underline">tap to retry</a></div>';
+    console.log("DEBUG catch error:",e);
+    resultsDiv.innerHTML='<div class="pt-empty er">[PATH-E] Connection error: '+(e.message||e)+' — <a href="#" onclick="publicTrack(\''+esc(lastTracked).replace(/'/g,"\\'")+'\');return false" style="color:#3b82f6;text-decoration:underline">tap to retry</a></div>';
   }
 }
 
