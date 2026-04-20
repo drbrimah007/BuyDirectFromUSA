@@ -22,7 +22,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100dvh;overflow-x:hidden}
 .bnav{position:fixed;bottom:0;left:0;right:0;background:#1e293b;border-top:1px solid #334155;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
-.bnav button{flex:1;padding:10px 0 8px;background:none;border:none;color:#64748b;font-size:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.bnav button{flex:1;padding:10px 0 8px;background:none;border:none;color:#64748b;font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
 .bnav button.on{color:#3b82f6}
 .bnav svg{width:22px;height:22px}
 .pg{display:none;padding-bottom:68px}.pg.on{display:block}
@@ -270,7 +270,6 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
   <div class="bnav" id="adm-bnav" style="display:none">
     <button id="tab-scan" class="on" onclick="switchAdmTab('scan')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>Scan</button>
     <button id="tab-deliver" onclick="switchAdmTab('deliver')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8h14l-1.5 9H6.5L5 8z"/><path d="M3 3h2l.4 2"/><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></svg>Deliver</button>
-    <button id="tab-carrier" onclick="switchAdmTab('carrier')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 3h15v13H1z"/><path d="M16 8h4l3 4v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Carrier</button>
     <button id="tab-settings" onclick="switchAdmTab('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/></svg>Settings</button>
   </div>
   <!-- Scan content -->
@@ -482,102 +481,6 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       </div>
     </div>
   </div><!-- end deliver-content -->
-
-  <!-- Carrier Tracking content -->
-  <div id="carrier-content" style="display:none">
-    <div class="hdr"><h1>Carrier Tracking</h1><p>Track packages via UPS, FedEx, USPS</p></div>
-
-    <!-- Manual Lookup -->
-    <div class="cd" style="padding:14px">
-      <label class="fl" style="margin-bottom:8px;font-size:13px;font-weight:700">Track a Carrier Package</label>
-      <div style="display:flex;gap:6px;margin-bottom:8px">
-        <input class="fi" id="ct-track-input" placeholder="Enter UPS/FedEx/USPS tracking #" style="flex:1;font-size:14px">
-        <select class="fi" id="ct-carrier-select" style="width:90px;font-size:12px;padding:8px">
-          <option value="">Auto</option>
-          <option value="ups">UPS</option>
-          <option value="fedex">FedEx</option>
-          <option value="usps">USPS</option>
-        </select>
-      </div>
-      <div style="display:flex;gap:6px">
-        <button class="bt" onclick="carrierTrackManual()" style="flex:1;background:#3b82f6;color:#fff;font-size:13px;padding:10px;border-radius:8px">Track</button>
-        <button class="bt" onclick="carrierSyncAll()" style="padding:10px 14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:8px;font-size:12px">Sync All</button>
-      </div>
-      <div id="ct-track-result" style="margin-top:10px"></div>
-    </div>
-
-    <!-- Active Tracking Records -->
-    <div class="cd" style="padding:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <label class="fl" style="margin-bottom:0;font-size:13px;font-weight:700">Active Tracking</label>
-        <label style="font-size:11px;color:#64748b"><input type="checkbox" id="ct-show-all" onchange="carrierLoadRecords()"> Show delivered</label>
-      </div>
-      <div id="ct-records-list" style="font-size:12px;color:#94a3b8">No records yet</div>
-    </div>
-
-    <!-- Carrier API Settings -->
-    <div class="cd" style="padding:14px">
-      <label class="fl" style="margin-bottom:8px;font-size:13px;font-weight:700">Carrier API Credentials</label>
-      <p style="font-size:11px;color:#64748b;margin:0 0 10px">Enter your API credentials for each carrier. You need developer accounts from each carrier portal.</p>
-      <div style="display:flex;gap:6px;margin-bottom:6px">
-        <a href="https://developer.ups.com" target="_blank" style="flex:1;display:block;padding:8px;background:#4a2500;border:1px solid #7c3f00;border-radius:6px;color:#fbbf24;font-size:11px;font-weight:700;text-align:center;text-decoration:none">UPS Portal</a>
-        <a href="https://developer.fedex.com" target="_blank" style="flex:1;display:block;padding:8px;background:#1a0a3e;border:1px solid #4c1d95;border-radius:6px;color:#a78bfa;font-size:11px;font-weight:700;text-align:center;text-decoration:none">FedEx Portal</a>
-        <a href="https://developers.usps.com" target="_blank" style="flex:1;display:block;padding:8px;background:#002a5c;border:1px solid #1e40af;border-radius:6px;color:#60a5fa;font-size:11px;font-weight:700;text-align:center;text-decoration:none">USPS Portal</a>
-      </div>
-
-      <!-- UPS -->
-      <div style="margin-top:12px;padding:10px;background:#1e293b;border-radius:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:700;color:#fbbf24">UPS</span>
-          <span id="ct-ups-status" style="font-size:10px;color:#64748b">Not configured</span>
-        </div>
-        <input class="fi" id="ct-ups-clientid" placeholder="Client ID" style="font-size:12px;margin-bottom:4px">
-        <input class="fi" id="ct-ups-secret" placeholder="Client Secret" type="password" style="font-size:12px;margin-bottom:4px">
-        <div style="display:flex;gap:6px">
-          <button class="bt" onclick="carrierSaveCred('ups')" style="flex:1;background:#92400e;color:#fbbf24;font-size:11px;padding:8px;border-radius:6px">Save UPS</button>
-          <button class="bt" onclick="carrierTestCred('ups')" style="padding:8px 12px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:6px;font-size:11px">Test</button>
-        </div>
-      </div>
-
-      <!-- FedEx -->
-      <div style="margin-top:8px;padding:10px;background:#1e293b;border-radius:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:700;color:#a78bfa">FedEx</span>
-          <span id="ct-fedex-status" style="font-size:10px;color:#64748b">Not configured</span>
-        </div>
-        <input class="fi" id="ct-fedex-clientid" placeholder="API Key" style="font-size:12px;margin-bottom:4px">
-        <input class="fi" id="ct-fedex-secret" placeholder="Secret Key" type="password" style="font-size:12px;margin-bottom:4px">
-        <div style="display:flex;gap:6px">
-          <button class="bt" onclick="carrierSaveCred('fedex')" style="flex:1;background:#4c1d95;color:#a78bfa;font-size:11px;padding:8px;border-radius:6px">Save FedEx</button>
-          <button class="bt" onclick="carrierTestCred('fedex')" style="padding:8px 12px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:6px;font-size:11px">Test</button>
-        </div>
-      </div>
-
-      <!-- USPS -->
-      <div style="margin-top:8px;padding:10px;background:#1e293b;border-radius:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:700;color:#60a5fa">USPS</span>
-          <span id="ct-usps-status" style="font-size:10px;color:#64748b">Not configured</span>
-        </div>
-        <input class="fi" id="ct-usps-clientid" placeholder="Consumer Key" style="font-size:12px;margin-bottom:4px">
-        <input class="fi" id="ct-usps-secret" placeholder="Consumer Secret" type="password" style="font-size:12px;margin-bottom:4px">
-        <div style="display:flex;gap:6px">
-          <button class="bt" onclick="carrierSaveCred('usps')" style="flex:1;background:#1e40af;color:#60a5fa;font-size:11px;padding:8px;border-radius:6px">Save USPS</button>
-          <button class="bt" onclick="carrierTestCred('usps')" style="padding:8px 12px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:6px;font-size:11px">Test</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- How to get API keys guide -->
-    <div class="cd" style="padding:14px">
-      <label class="fl" style="margin-bottom:8px;font-size:13px;font-weight:700">How to Get API Keys</label>
-      <div style="font-size:11px;color:#94a3b8;line-height:1.6">
-        <div style="margin-bottom:8px"><span style="color:#fbbf24;font-weight:700">UPS:</span> Go to developer.ups.com, create a free account, then create an app. You'll get a Client ID and Client Secret. Select "Tracking" API access.</div>
-        <div style="margin-bottom:8px"><span style="color:#a78bfa;font-weight:700">FedEx:</span> Go to developer.fedex.com, create an organization, then create a project. Select "Track API" and you'll receive an API Key and Secret Key. Free for up to 100K calls/day.</div>
-        <div><span style="color:#60a5fa;font-weight:700">USPS:</span> Go to developers.usps.com (new platform, replaces old Web Tools). Create an account and generate Consumer Key and Consumer Secret. Select "Package Tracking API" access.</div>
-      </div>
-    </div>
-  </div><!-- end carrier-content -->
 
   <!-- Settings content -->
   <div id="settings-content" style="display:none">
@@ -801,6 +704,84 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
       <button id="settings-install-android" onclick="installPWA()" style="display:none;width:100%;padding:12px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:6px">Install on Android</button>
       <button id="settings-install-ios" onclick="showIOSGuide()" style="display:none;width:100%;padding:12px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:6px">Install on iPhone / iPad</button>
       <div id="settings-install-done" style="display:none;text-align:center;color:#4ade80;font-size:13px;padding:8px">App already installed</div>
+    </div>
+
+    <!-- ── Carrier Tracking ── -->
+    <div class="cd" style="padding:14px;margin-top:10px;border:1px solid #1e40af;border-radius:10px">
+      <label class="fl" style="margin-bottom:10px;font-size:14px;font-weight:700;color:#60a5fa">Carrier Tracking (UPS / FedEx / USPS)</label>
+
+      <!-- Manual Lookup -->
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <input class="fi" id="ct-track-input" placeholder="Enter carrier tracking #" style="flex:1;font-size:14px">
+        <select class="fi" id="ct-carrier-select" style="width:80px;font-size:12px;padding:8px">
+          <option value="">Auto</option>
+          <option value="ups">UPS</option>
+          <option value="fedex">FedEx</option>
+          <option value="usps">USPS</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button class="bt" onclick="carrierTrackManual()" style="flex:1;background:#3b82f6;color:#fff;font-size:13px;padding:10px;border-radius:8px">Track</button>
+        <button class="bt" onclick="carrierSyncAll()" style="padding:10px 14px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:8px;font-size:12px">Sync All</button>
+      </div>
+      <div id="ct-track-result"></div>
+
+      <!-- Active Tracking Records -->
+      <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:700;color:#e2e8f0">Active Tracking</span>
+        <label style="font-size:11px;color:#64748b"><input type="checkbox" id="ct-show-all" onchange="carrierLoadRecords()"> Show delivered</label>
+      </div>
+      <div id="ct-records-list" style="font-size:12px;color:#94a3b8">No records yet</div>
+    </div>
+
+    <!-- Carrier API Credentials -->
+    <div class="cd" style="padding:14px;margin-top:8px">
+      <label class="fl" style="margin-bottom:8px;font-size:13px;font-weight:700">Carrier API Credentials</label>
+      <p style="font-size:11px;color:#64748b;margin:0 0 10px">One-time setup. Get free developer keys from each carrier portal.</p>
+      <div style="display:flex;gap:6px;margin-bottom:6px">
+        <a href="https://developer.ups.com" target="_blank" style="flex:1;display:block;padding:8px;background:#4a2500;border:1px solid #7c3f00;border-radius:6px;color:#fbbf24;font-size:11px;font-weight:700;text-align:center;text-decoration:none">UPS Portal</a>
+        <a href="https://developer.fedex.com" target="_blank" style="flex:1;display:block;padding:8px;background:#1a0a3e;border:1px solid #4c1d95;border-radius:6px;color:#a78bfa;font-size:11px;font-weight:700;text-align:center;text-decoration:none">FedEx Portal</a>
+        <a href="https://developers.usps.com" target="_blank" style="flex:1;display:block;padding:8px;background:#002a5c;border:1px solid #1e40af;border-radius:6px;color:#60a5fa;font-size:11px;font-weight:700;text-align:center;text-decoration:none">USPS Portal</a>
+      </div>
+      <!-- UPS -->
+      <div style="margin-top:12px;padding:10px;background:#1e293b;border-radius:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:700;color:#fbbf24">UPS</span>
+          <span id="ct-ups-status" style="font-size:10px;color:#64748b">Not configured</span>
+        </div>
+        <input class="fi" id="ct-ups-clientid" placeholder="Client ID" style="font-size:12px;margin-bottom:4px">
+        <input class="fi" id="ct-ups-secret" placeholder="Client Secret" type="password" style="font-size:12px;margin-bottom:4px">
+        <div style="display:flex;gap:6px">
+          <button class="bt" onclick="carrierSaveCred('ups')" style="flex:1;background:#92400e;color:#fbbf24;font-size:11px;padding:8px;border-radius:6px">Save UPS</button>
+          <button class="bt" onclick="carrierTestCred('ups')" style="padding:8px 12px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:6px;font-size:11px">Test</button>
+        </div>
+      </div>
+      <!-- FedEx -->
+      <div style="margin-top:8px;padding:10px;background:#1e293b;border-radius:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:700;color:#a78bfa">FedEx</span>
+          <span id="ct-fedex-status" style="font-size:10px;color:#64748b">Not configured</span>
+        </div>
+        <input class="fi" id="ct-fedex-clientid" placeholder="API Key" style="font-size:12px;margin-bottom:4px">
+        <input class="fi" id="ct-fedex-secret" placeholder="Secret Key" type="password" style="font-size:12px;margin-bottom:4px">
+        <div style="display:flex;gap:6px">
+          <button class="bt" onclick="carrierSaveCred('fedex')" style="flex:1;background:#4c1d95;color:#a78bfa;font-size:11px;padding:8px;border-radius:6px">Save FedEx</button>
+          <button class="bt" onclick="carrierTestCred('fedex')" style="padding:8px 12px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:6px;font-size:11px">Test</button>
+        </div>
+      </div>
+      <!-- USPS -->
+      <div style="margin-top:8px;padding:10px;background:#1e293b;border-radius:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:700;color:#60a5fa">USPS</span>
+          <span id="ct-usps-status" style="font-size:10px;color:#64748b">Not configured</span>
+        </div>
+        <input class="fi" id="ct-usps-clientid" placeholder="Consumer Key" style="font-size:12px;margin-bottom:4px">
+        <input class="fi" id="ct-usps-secret" placeholder="Consumer Secret" type="password" style="font-size:12px;margin-bottom:4px">
+        <div style="display:flex;gap:6px">
+          <button class="bt" onclick="carrierSaveCred('usps')" style="flex:1;background:#1e40af;color:#60a5fa;font-size:11px;padding:8px;border-radius:6px">Save USPS</button>
+          <button class="bt" onclick="carrierTestCred('usps')" style="padding:8px 12px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:6px;font-size:11px">Test</button>
+        </div>
+      </div>
     </div>
 
     <!-- Logout -->
@@ -1029,18 +1010,15 @@ function switchAdmTab(tab){
   document.getElementById("tab-"+tab).classList.add("on");
   document.getElementById("scan-content").style.display=tab==="scan"?"block":"none";
   document.getElementById("deliver-content").style.display=tab==="deliver"?"block":"none";
-  document.getElementById("carrier-content").style.display=tab==="carrier"?"block":"none";
   document.getElementById("settings-content").style.display=tab==="settings"?"block":"none";
   if(tab==="deliver"){
     populateDelSeriesSelector();
     delLoadEtas();
     try{rebuildAllDynamicStatusButtons()}catch(e){}
   }
-  if(tab==="carrier"){
+  if(tab==="settings"){
     carrierLoadCredentials();
     carrierLoadRecords();
-  }
-  if(tab==="settings"){
     try{initFeatureTogglesUI()}catch(e){}
     initBatchPrefix();
     initSettingsProfile();
