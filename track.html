@@ -708,7 +708,11 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 
     <!-- ── Carrier Tracking ── -->
     <div class="cd" style="padding:14px;margin-top:10px;border:1px solid #1e40af;border-radius:10px">
-      <label class="fl" style="margin-bottom:10px;font-size:14px;font-weight:700;color:#60a5fa">Carrier Tracking (UPS / FedEx / USPS)</label>
+      <div onclick="const p=document.getElementById('ct-panel');p.style.display=p.style.display==='none'?'block':'none';this.querySelector('.ct-arrow').textContent=p.style.display==='none'?'▶':'▼'" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+        <label class="fl" style="margin:0;font-size:14px;font-weight:700;color:#60a5fa;cursor:pointer">Carrier Tracking (UPS / FedEx / USPS)</label>
+        <span class="ct-arrow" style="color:#60a5fa;font-size:12px">▶</span>
+      </div>
+      <div id="ct-panel" style="display:none;margin-top:10px">
 
       <!-- Manual Lookup -->
       <div style="display:flex;gap:6px;margin-bottom:8px">
@@ -732,11 +736,16 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
         <label style="font-size:11px;color:#64748b"><input type="checkbox" id="ct-show-all" onchange="carrierLoadRecords()"> Show delivered</label>
       </div>
       <div id="ct-records-list" style="font-size:12px;color:#94a3b8">No records yet</div>
+      </div><!-- end ct-panel -->
     </div>
 
     <!-- Carrier API Credentials -->
     <div class="cd" style="padding:14px;margin-top:8px">
-      <label class="fl" style="margin-bottom:8px;font-size:13px;font-weight:700">Carrier API Credentials</label>
+      <div onclick="const p=document.getElementById('ct-creds-panel');p.style.display=p.style.display==='none'?'block':'none';this.querySelector('.ct-arrow2').textContent=p.style.display==='none'?'▶':'▼'" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+        <label class="fl" style="margin:0;font-size:13px;font-weight:700;cursor:pointer">Carrier API Credentials</label>
+        <span class="ct-arrow2" style="color:#94a3b8;font-size:12px">▶</span>
+      </div>
+      <div id="ct-creds-panel" style="display:none;margin-top:8px">
       <p style="font-size:11px;color:#64748b;margin:0 0 10px">One-time setup. Get free developer keys from each carrier portal.</p>
       <div style="display:flex;gap:6px;margin-bottom:6px">
         <a href="https://developer.ups.com" target="_blank" style="flex:1;display:block;padding:8px;background:#4a2500;border:1px solid #7c3f00;border-radius:6px;color:#fbbf24;font-size:11px;font-weight:700;text-align:center;text-decoration:none">UPS Portal</a>
@@ -782,6 +791,7 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
           <button class="bt" onclick="carrierTestCred('usps')" style="padding:8px 12px;background:#1e293b;color:#94a3b8;border:1px solid #334155;border-radius:6px;font-size:11px">Test</button>
         </div>
       </div>
+      </div><!-- end ct-creds-panel -->
     </div>
 
     <!-- Logout -->
@@ -933,6 +943,11 @@ select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 <script>
 const API="https://zffevasaeaogjxuslhtw.supabase.co/functions/v1/scanner-api";
 const CARRIER_API="https://zffevasaeaogjxuslhtw.supabase.co/functions/v1/scanner-carrier";
+function _detectCarrierJS(tn){const t=tn.trim().toUpperCase();if(/^1Z[A-Z0-9]{16}$/i.test(t))return"ups";if(/^\d{12}$/.test(t)||/^\d{15}$/.test(t)||/^\d{20}$/.test(t)||/^\d{22}$/.test(t))return"fedex";if(/^\d{20,22}$/.test(t))return"usps";if(/^(94|93|92)\d{18,}$/.test(t))return"usps";if(/^[A-Z]{2}\d{9}US$/i.test(t))return"usps";return null}
+async function carrierPublicStatus(entryIds){
+  if(!entryIds.length)return[];
+  try{const res=await fetch(CARRIER_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"public-carrier-status",entryIds})});const d=await res.json();return d.carriers||[]}catch(e){return[]}
+}
 function esc(s){const d=document.createElement("div");d.textContent=s||"";return d.innerHTML}
 function fmt(iso){const d=new Date(iso);return d.toLocaleDateString("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",year:"numeric"})+" at "+d.toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"})}
 function fmtShort(iso){const d=new Date(iso);return d.toLocaleDateString("en-US",{timeZone:"America/New_York",month:"short",day:"numeric"})+" "+d.toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"})}
@@ -966,18 +981,6 @@ async function api(body){
     if(!res.ok){const msg=(data&&data.error)||"API error "+res.status;const err=new Error(msg);err.status=res.status;err.data=data;throw err}
     return data;
   }catch(e){clearTimeout(timer);console.error("API failed:",e);throw e}
-}
-async function carrierApi(body){
-  body.org_id=ORG_ID;
-  const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(),30000);
-  try{
-    const res=await fetch(CARRIER_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),signal:ctrl.signal});
-    clearTimeout(timer);
-    const data=await res.json().catch(()=>null);
-    if(!res.ok){const msg=(data&&data.error)||"API error "+res.status;const err=new Error(msg);err.status=res.status;err.data=data;throw err}
-    return data;
-  }catch(e){clearTimeout(timer);console.error("Carrier API failed:",e);throw e}
 }
 
 // Status badge helper
@@ -1215,6 +1218,44 @@ async function publicTrack(fromUrl){
     }
 
     resultsDiv.innerHTML=html+'<div class="pt-note">Auto-refreshes every 60s · Tap "Track My Package" below to sign in for full history</div>';
+    // Fetch carrier tracking info for these entries
+    const allEntryIds=r.entries.map(e=>e.id);
+    carrierPublicStatus(allEntryIds).then(carriers=>{
+      if(!carriers.length)return;
+      const byEntry={};
+      carriers.forEach(c=>{if(c.entry_id)byEntry[c.entry_id]=c});
+      // Find which tracking groups have carrier info
+      const carrierByTk={};
+      for(const tk in groups){
+        const entries=groups[tk];
+        for(const e of entries){if(byEntry[e.id]){carrierByTk[tk]=byEntry[e.id];break}}
+      }
+      if(!Object.keys(carrierByTk).length)return;
+      // Inject carrier info under each tracking group
+      const cards=resultsDiv.querySelectorAll('.ei');
+      let idx=0;
+      for(const tk in groups){
+        const c=carrierByTk[tk];
+        if(c&&cards[idx]){
+          const cColors={ups:"#fbbf24",fedex:"#a78bfa",usps:"#60a5fa"};
+          const cNames={ups:"UPS",fedex:"FedEx",usps:"USPS"};
+          const color=cColors[c.carrier]||"#94a3b8";
+          const name=cNames[c.carrier]||c.carrier;
+          const delivered=!!c.carrier_delivered_at;
+          let cHtml='<div style="margin-top:8px;padding:10px;background:#0f172a;border:1px solid #1e293b;border-left:3px solid '+color+';border-radius:6px">';
+          cHtml+='<div style="display:flex;justify-content:space-between;align-items:center">';
+          cHtml+='<span style="font-size:11px;font-weight:700;color:'+color+'">'+name+' Tracking</span>';
+          cHtml+='<span style="font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;'+(delivered?'background:#064e3b;color:#34d399':'background:#172554;color:#93c5fd')+'">'+(delivered?'DELIVERED':(c.carrier_status||'Pending'))+'</span>';
+          cHtml+='</div>';
+          if(c.carrier_location)cHtml+='<div style="font-size:11px;color:#94a3b8;margin-top:4px">Location: '+c.carrier_location+'</div>';
+          if(c.carrier_eta&&!delivered)cHtml+='<div style="font-size:11px;color:#f59e0b;margin-top:2px">ETA: '+new Date(c.carrier_eta).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})+'</div>';
+          if(c.carrier_tracking_number)cHtml+='<div style="font-size:10px;color:#475569;margin-top:4px">'+c.carrier_tracking_number+'</div>';
+          cHtml+='</div>';
+          cards[idx].insertAdjacentHTML('beforeend',cHtml);
+        }
+        idx++;
+      }
+    });
     // Save successful search to history with the tracking numbers found
     const foundTracks=Object.keys(groups);
     _savePtHistory(input,foundTracks);
@@ -1948,6 +1989,10 @@ async function doSave(){
       loadAllEntries();
       loadViewers();
       loadDashStats();
+      // Auto-match: if tracking number is a carrier number, auto-link and track
+      if(r.entry&&r.entry.id&&_detectCarrierJS(tracking)){
+        api({action:"carrier-track",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID,trackingNumber:tracking,entryId:r.entry.id}).catch(()=>{});
+      }
       // Auto-restart camera for next scan
       setTimeout(()=>{ startCam(); },600);
     }
@@ -4676,7 +4721,7 @@ const _ctCarrierNames={ups:"UPS",fedex:"FedEx",usps:"USPS"};
 
 async function carrierLoadCredentials(){
   try{
-    const r=await carrierApi({action:"load-carrier-credentials",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID});
+    const r=await api({action:"load-carrier-credentials",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID});
     if(!r.ok) return;
     (r.credentials||[]).forEach(c=>{
       const idEl=document.getElementById("ct-"+c.carrier+"-clientid");
@@ -4699,7 +4744,7 @@ async function carrierSaveCred(carrier){
   const stEl=document.getElementById("ct-"+carrier+"-status");
   stEl.innerHTML='<span style="color:#f59e0b">Saving...</span>';
   try{
-    const r=await carrierApi({action:"save-carrier-credentials",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID,carrier,clientId:cid,clientSecret:sec});
+    const r=await api({action:"save-carrier-credentials",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID,carrier,clientId:cid,clientSecret:sec});
     if(r.ok) stEl.innerHTML='<span style="color:#22c55e">Saved</span>';
     else stEl.innerHTML='<span style="color:#ef4444">'+(r.error||"Error")+'</span>';
   }catch(e){stEl.innerHTML='<span style="color:#ef4444">Failed</span>'}
@@ -4712,7 +4757,7 @@ async function carrierTestCred(carrier){
   const stEl=document.getElementById("ct-"+carrier+"-status");
   stEl.innerHTML='<span style="color:#f59e0b">Testing...</span>';
   try{
-    const r=await carrierApi({action:"test-carrier-credentials",adminEmail:adm.email,adminPassword:adm.password,carrier,clientId:cid,clientSecret:sec});
+    const r=await api({action:"test-carrier-credentials",adminEmail:adm.email,adminPassword:adm.password,carrier,clientId:cid,clientSecret:sec});
     if(r.ok&&r.connected) stEl.innerHTML='<span style="color:#22c55e">Connected</span>';
     else stEl.innerHTML='<span style="color:#ef4444">Auth failed</span>';
   }catch(e){stEl.innerHTML='<span style="color:#ef4444">Error</span>'}
@@ -4725,7 +4770,7 @@ async function carrierTrackManual(){
   const resEl=document.getElementById("ct-track-result");
   resEl.innerHTML='<div style="padding:10px;color:#f59e0b;font-size:12px">Tracking...</div>';
   try{
-    const r=await carrierApi({action:"carrier-track",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID,trackingNumber:tn,carrier:carrier||undefined});
+    const r=await api({action:"carrier-track",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID,trackingNumber:tn,carrier:carrier||undefined});
     if(!r.ok&&r.error){resEl.innerHTML='<div style="padding:10px;color:#ef4444;font-size:12px">'+r.error+'</div>';return}
     if(r.ok&&r.tracking){
       const t=r.tracking;
@@ -4751,7 +4796,7 @@ async function carrierSyncAll(){
   const resEl=document.getElementById("ct-track-result");
   resEl.innerHTML='<div style="padding:10px;color:#f59e0b;font-size:12px">Syncing all active records...</div>';
   try{
-    const r=await carrierApi({action:"carrier-sync",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID});
+    const r=await api({action:"carrier-sync",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID});
     if(r.ok){
       resEl.innerHTML=`<div style="padding:10px;color:#22c55e;font-size:12px">Synced ${r.synced||0} of ${r.total||0} records${r.errors?' ('+r.errors+' errors)':''}</div>`;
       carrierLoadRecords();
@@ -4765,7 +4810,7 @@ async function carrierLoadRecords(){
   const listEl=document.getElementById("ct-records-list");
   const showAll=document.getElementById("ct-show-all")?.checked;
   try{
-    const r=await carrierApi({action:"list-carrier-tracking",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID,activeOnly:!showAll});
+    const r=await api({action:"list-carrier-tracking",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID,activeOnly:!showAll});
     if(!r.ok||!r.records||!r.records.length){listEl.innerHTML='<div style="color:#64748b;text-align:center;padding:16px">No carrier tracking records</div>';return}
     let html='';
     r.records.forEach(rec=>{
@@ -4807,7 +4852,7 @@ function _timeAgo(isoStr){
 async function carrierDeleteRecord(id){
   if(!confirm("Remove this carrier tracking record?")) return;
   try{
-    await carrierApi({action:"delete-carrier-tracking",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID,recordId:id});
+    await api({action:"delete-carrier-tracking",adminEmail:adm.email,adminPassword:adm.password,org_id:ORG_ID,recordId:id});
     carrierLoadRecords();
   }catch(e){}
 }
