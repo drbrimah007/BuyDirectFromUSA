@@ -42,12 +42,12 @@
     <div class="min-h-screen">
       <header class="border-b border-slate-200 bg-white/90 backdrop-blur">
         <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-          <div>
+          <a href="/" class="block hover:opacity-90 transition">
             <div class="text-xl font-bold tracking-tight text-slate-950">
               <span class="text-slate-950">Buy</span><span class="bg-gradient-to-r from-blue-700 to-red-700 bg-clip-text text-transparent">DirectFromUSA</span><span class="text-[#1f3a8a]">.com</span>
             </div>
             <div class="text-xs text-slate-500">AI-supported sourcing concierge for GCC, Africa, Europe, and worldwide buyers</div>
-          </div>
+          </a>
           <nav class="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
             <a href="#categories" class="transition hover:text-slate-950">Categories</a>
             <a href="#products" class="transition hover:text-slate-950">Products</a>
@@ -55,9 +55,13 @@
             <a href="#suppliers" class="transition hover:text-slate-950">Suppliers</a>
             <a href="track.html" class="transition hover:text-slate-950">Track Shipment</a>
           </nav>
-          <div class="flex items-center gap-3">
-            <a href="dashboard.html" class="hidden rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm md:inline-flex">Sign In</a>
-            <button onclick="document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('rfq-product').focus();" class="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700">Request Sourcing</button>
+          <div class="flex items-center gap-2 sm:gap-3">
+            <a href="track.html" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-400 hover:text-sky-700 sm:px-4">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
+              <span>Track</span>
+            </a>
+            <button onclick="openAuthModal()" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-400 hover:text-sky-700 sm:px-4">Sign In</button>
+            <button onclick="document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('rfq-product').focus();" class="rounded-xl bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700 sm:px-4">Request Sourcing</button>
           </div>
         </div>
       </header>
@@ -90,10 +94,14 @@
                   <span class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">RFQ</span>
                 </div>
 
-                <div class="mt-5 grid gap-4 sm:grid-cols-2">
+                <div id="rfq-accordion" class="mt-5 grid gap-3 sm:grid-cols-2">
+                  <div class="sm:col-span-2">
+                    <label class="mb-1 block text-sm font-semibold text-slate-700">Product needed</label>
+                    <input id="rfq-product" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900" placeholder="Full cream milk powder" />
+                  </div>
                   <div>
-                    <label class="mb-2 block text-sm font-semibold text-slate-700">Request type</label>
-                    <select id="rfq-type" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" onchange="updateRFQFields()">
+                    <label class="mb-1 block text-sm font-semibold text-slate-700">Request type</label>
+                    <select id="rfq-type" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900" onchange="updateRFQFields()">
                       <option value="product_sourcing">Product sourcing</option>
                       <option value="supplier_match">Supplier match</option>
                       <option value="private_label">Private label</option>
@@ -103,37 +111,54 @@
                     </select>
                   </div>
                   <div>
-                    <label class="mb-2 block text-sm font-semibold text-slate-700">Target market</label>
-                    <input id="rfq-country" type="text" placeholder="Type any country..." class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" value="" />
-                  </div>
-                  <div class="sm:col-span-2">
-                    <label class="mb-2 block text-sm font-semibold text-slate-700">Product needed</label>
-                    <input id="rfq-product" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" placeholder="Full cream milk powder" />
+                    <label class="mb-1 block text-sm font-semibold text-slate-700">Target market</label>
+                    <input id="rfq-country" type="text" placeholder="Type any country..." class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900" value="" />
                   </div>
                   <div>
-                    <label class="mb-2 block text-sm font-semibold text-slate-700">Quantity / volume</label>
-                    <input id="rfq-qty" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" placeholder="1 container per month" />
+                    <label class="mb-1 block text-sm font-semibold text-slate-700">Quantity / volume</label>
+                    <input id="rfq-qty" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900" placeholder="1 container per month" />
                   </div>
                   <div>
-                    <label class="mb-2 block text-sm font-semibold text-slate-700">Packaging / format</label>
-                    <input id="rfq-pkg" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" placeholder="25kg bags" />
+                    <label class="mb-1 block text-sm font-semibold text-slate-700">Packaging / format</label>
+                    <input id="rfq-pkg" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900" placeholder="25kg bags" />
                   </div>
-                  <div class="sm:col-span-2">
-                    <label class="mb-2 block text-sm font-semibold text-slate-700">Your name</label>
-                    <input id="rfq-name" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" placeholder="Your full name" />
-                  </div>
-                  <div class="sm:col-span-2">
-                    <label class="mb-2 block text-sm font-semibold text-slate-700">Your email</label>
-                    <input id="rfq-email" type="email" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" placeholder="you@company.com" />
-                  </div>
-                  <!-- Dynamic fields based on request type -->
                   <div id="rfq-dynamic" class="sm:col-span-2 space-y-3" style="display:none;"></div>
 
-                  <div class="sm:col-span-2">
-                    <label class="mb-2 block text-sm font-semibold text-slate-700">Notes / special requirements</label>
-                    <textarea id="rfq-notes" rows="2" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900" placeholder="Any additional details..."></textarea>
-                  </div>
+                  <details id="rfq-details" class="group sm:col-span-2 rounded-2xl border border-slate-200 bg-white">
+                    <summary class="flex cursor-pointer list-none items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold text-slate-900">
+                      <span class="flex items-center gap-2 text-sky-700">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        Enter your details
+                      </span>
+                      <svg class="h-4 w-4 text-slate-400 transition group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </summary>
+                    <div class="grid gap-3 border-t border-slate-100 p-4 sm:grid-cols-2">
+                      <div class="sm:col-span-2">
+                        <label class="mb-1 block text-sm font-semibold text-slate-700">Your name</label>
+                        <input id="rfq-name" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900" placeholder="Your full name" />
+                      </div>
+                      <div class="sm:col-span-2">
+                        <label class="mb-1 block text-sm font-semibold text-slate-700">Your email</label>
+                        <input id="rfq-email" type="email" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900" placeholder="you@company.com" />
+                      </div>
+                      <div class="sm:col-span-2">
+                        <label class="mb-1 block text-sm font-semibold text-slate-700">Notes / special requirements</label>
+                        <textarea id="rfq-notes" rows="2" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900" placeholder="Any additional details..."></textarea>
+                      </div>
+                    </div>
+                  </details>
                 </div>
+                <script>
+                (function(){
+                  var det = document.getElementById('rfq-details');
+                  if (!det) return;
+                  var product = document.getElementById('rfq-product');
+                  if (!product) return;
+                  product.addEventListener('input', function(){
+                    if (product.value.trim() && !det.open) det.open = true;
+                  });
+                })();
+                </script>
 
                 <div class="mt-5 flex flex-col gap-3 sm:flex-row">
                   <button id="rfq-submit-btn" onclick="submitRFQ()" class="rounded-2xl bg-sky-600 px-6 py-3 font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700">Submit Request</button>
@@ -596,6 +621,163 @@
     status.classList.remove('hidden');
   };
   </script>
+  <!-- Auth Modal: Client / Operator -->
+  <div id="auth-modal" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-slate-950/60 backdrop-blur p-4">
+    <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 id="auth-title" class="text-xl font-bold text-slate-950">Sign In</h2>
+          <p id="auth-subtitle" class="mt-1 text-sm text-slate-500">Welcome back to BuyDirectFromUSA</p>
+        </div>
+        <button onclick="closeAuthModal()" class="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Close">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Client / Operator toggle -->
+      <div class="mt-5 flex rounded-xl bg-slate-100 p-1 text-sm font-semibold">
+        <button id="auth-role-client" onclick="setAuthRole('client')" class="flex-1 rounded-lg bg-white py-2 text-slate-900 shadow-sm">Client</button>
+        <button id="auth-role-operator" onclick="setAuthRole('operator')" class="flex-1 rounded-lg py-2 text-slate-500">Operator</button>
+      </div>
+
+      <!-- Sign In / Sign Up tabs -->
+      <div class="mt-4 flex gap-4 border-b border-slate-200 text-sm font-semibold">
+        <button id="auth-tab-signin" onclick="setAuthTab('signin')" class="-mb-px border-b-2 border-sky-600 px-1 pb-2 text-sky-700">Sign In</button>
+        <button id="auth-tab-signup" onclick="setAuthTab('signup')" class="-mb-px border-b-2 border-transparent px-1 pb-2 text-slate-500 hover:text-slate-700">Create Account</button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <div id="auth-name-row" class="hidden">
+          <label class="mb-1 block text-sm font-semibold text-slate-700">Full name</label>
+          <input id="auth-name" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="Your name">
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-semibold text-slate-700">Email</label>
+          <input id="auth-email" type="email" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="you@company.com">
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-semibold text-slate-700">Password</label>
+          <input id="auth-pass" type="password" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="••••••••">
+        </div>
+      </div>
+
+      <button id="auth-submit" onclick="submitAuth()" class="mt-5 w-full rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700">Sign In</button>
+      <p id="auth-error" class="mt-3 hidden text-sm text-red-600"></p>
+      <p class="mt-3 text-center text-xs text-slate-500">By continuing you agree to our terms.</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { supabase } from './js/supabase.js';
+
+    let authState = { role: 'client', tab: 'signin' };
+
+    window.openAuthModal = function() {
+      document.getElementById('auth-modal').classList.remove('hidden');
+      document.getElementById('auth-modal').classList.add('flex');
+      document.getElementById('auth-error').classList.add('hidden');
+    };
+    window.closeAuthModal = function() {
+      document.getElementById('auth-modal').classList.add('hidden');
+      document.getElementById('auth-modal').classList.remove('flex');
+    };
+
+    window.setAuthRole = function(role) {
+      authState.role = role;
+      const c = document.getElementById('auth-role-client');
+      const o = document.getElementById('auth-role-operator');
+      if (role === 'client') {
+        c.className = 'flex-1 rounded-lg bg-white py-2 text-slate-900 shadow-sm';
+        o.className = 'flex-1 rounded-lg py-2 text-slate-500';
+      } else {
+        o.className = 'flex-1 rounded-lg bg-white py-2 text-slate-900 shadow-sm';
+        c.className = 'flex-1 rounded-lg py-2 text-slate-500';
+      }
+      updateAuthCopy();
+    };
+
+    window.setAuthTab = function(tab) {
+      authState.tab = tab;
+      const si = document.getElementById('auth-tab-signin');
+      const su = document.getElementById('auth-tab-signup');
+      if (tab === 'signin') {
+        si.className = '-mb-px border-b-2 border-sky-600 px-1 pb-2 text-sky-700';
+        su.className = '-mb-px border-b-2 border-transparent px-1 pb-2 text-slate-500 hover:text-slate-700';
+        document.getElementById('auth-name-row').classList.add('hidden');
+        document.getElementById('auth-submit').textContent = 'Sign In';
+      } else {
+        su.className = '-mb-px border-b-2 border-sky-600 px-1 pb-2 text-sky-700';
+        si.className = '-mb-px border-b-2 border-transparent px-1 pb-2 text-slate-500 hover:text-slate-700';
+        document.getElementById('auth-name-row').classList.remove('hidden');
+        document.getElementById('auth-submit').textContent = 'Create Account';
+      }
+      updateAuthCopy();
+    };
+
+    function updateAuthCopy() {
+      const t = document.getElementById('auth-title');
+      const s = document.getElementById('auth-subtitle');
+      if (authState.tab === 'signup') {
+        t.textContent = authState.role === 'client' ? 'Create client account' : 'Create operator account';
+        s.textContent = authState.role === 'client'
+          ? 'Track your sourcing requests and quotes.'
+          : 'Manage RFQs, suppliers, and deals.';
+      } else {
+        t.textContent = authState.role === 'client' ? 'Client sign in' : 'Operator sign in';
+        s.textContent = authState.role === 'client'
+          ? 'Welcome back to your portal.'
+          : 'Welcome back to the operations dashboard.';
+      }
+    }
+
+    window.submitAuth = async function() {
+      const email = document.getElementById('auth-email').value.trim();
+      const pass = document.getElementById('auth-pass').value;
+      const name = document.getElementById('auth-name').value.trim();
+      const err = document.getElementById('auth-error');
+      const btn = document.getElementById('auth-submit');
+      err.classList.add('hidden');
+      if (!email || !pass) { err.textContent = 'Email and password required.'; err.classList.remove('hidden'); return; }
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.textContent = 'Working...';
+
+      try {
+        if (authState.tab === 'signin') {
+          const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+          if (error) throw error;
+          window.location.href = (authState.role === 'operator') ? 'dashboard.html' : 'portal.html';
+        } else {
+          const { data, error } = await supabase.auth.signUp({
+            email, password: pass,
+            options: { data: { display_name: name || email.split('@')[0], role: authState.role } }
+          });
+          if (error) throw error;
+          err.textContent = 'Account created. Check your email to confirm, then sign in.';
+          err.className = 'mt-3 text-sm text-emerald-700';
+          err.classList.remove('hidden');
+          window.setAuthTab('signin');
+        }
+      } catch (e) {
+        err.textContent = e.message || 'Something went wrong.';
+        err.className = 'mt-3 text-sm text-red-600';
+        err.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    };
+
+    // Close on backdrop click
+    document.getElementById('auth-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'auth-modal') window.closeAuthModal();
+    });
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !document.getElementById('auth-modal').classList.contains('hidden')) window.closeAuthModal();
+    });
+  </script>
+
   <!-- WhatsApp Floating Button -->
   <a href="https://wa.me/19294275305?text=Hi%2C%20I%27m%20interested%20in%20sourcing%20products%20from%20BuyDirectFromUSA" target="_blank" rel="noopener" style="position:fixed;bottom:24px;right:24px;z-index:9999;width:60px;height:60px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.25);transition:transform 0.3s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
     <svg width="32" height="32" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
