@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuyDirectFromUSA — Listings Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>body{font-family:Inter,ui-sans-serif,system-ui,sans-serif;}</style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+<header class="border-b border-slate-200 bg-white">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+    <div class="flex items-center gap-3">
+      <a href="/" class="text-lg font-bold"><span class="text-slate-950">Buy</span><span class="bg-gradient-to-r from-blue-700 to-red-700 bg-clip-text text-transparent">DirectFromUSA</span></a>
+      <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">Listings Admin</span>
+    </div>
+    <div class="flex items-center gap-3 text-sm">
+      <a href="dashboard.html" class="text-slate-500 hover:text-slate-900">Dashboard</a>
+      <a href="suppliers.html" class="text-slate-500 hover:text-slate-900">Suppliers</a>
+      <span id="who" class="text-slate-500"></span>
+      <button onclick="signOut()" class="text-slate-400 hover:text-slate-900">Sign Out</button>
+    </div>
+  </div>
+</header>
+
+<!-- Login gate -->
+<div id="gate" class="flex min-h-[calc(100vh-52px)] items-center justify-center">
+  <div class="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg">
+    <h2 class="text-xl font-bold">Operator sign in</h2>
+    <p class="mt-1 text-sm text-slate-500">Listings Admin requires an operator/admin account.</p>
+    <div class="mt-5 space-y-3">
+      <input id="g-email" type="email" placeholder="Email" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm">
+      <input id="g-pass" type="password" placeholder="Password" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm">
+      <button onclick="doLogin()" class="w-full rounded-xl bg-sky-600 py-2.5 text-sm font-semibold text-white hover:bg-sky-700">Sign in</button>
+      <p id="g-err" class="hidden text-sm text-red-600"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Main UI -->
+<div id="main" class="mx-auto hidden max-w-6xl px-6 py-8">
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold">Listings</h1>
+      <p class="text-sm text-slate-500">Add products and toggle which appear on the homepage.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+        <input id="filter-featured" type="checkbox" class="h-4 w-4 rounded border-slate-300">Show featured only
+      </label>
+      <button onclick="openProductForm()" class="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700">+ Add Product</button>
+    </div>
+  </div>
+
+  <div id="list"><p class="text-slate-400 text-sm">Loading...</p></div>
+</div>
+
+<!-- Modal slot -->
+<div id="modal-root"></div>
+
+<script type="module">
+  import { supabase } from './js/supabase.js';
+  import { listProducts, addProduct, updateProduct, deleteProduct, toggleFeatured, listSuppliersBasic } from './js/products.js';
+
+  let user = null;
+  let suppliersCache = [];
+
+  const $ = (id) => document.getElementById(id);
+  function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+  // ---- Auth ----
+  async function init() {
+    const { data: { user: u } } = await supabase.auth.getUser();
+    if (!u) { showGate(); return; }
+    user = u;
+    const role = (u.user_metadata?.role) || 'client';
+    if (role !== 'operator' && role !== 'admin') {
+      $('gate').innerHTML = `<div class="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg text-center">
+        <h2 class="text-xl font-bold text-red-700">Operator access required</h2>
+        <p class="mt-2 text-sm text-slate-500">You're signed in as <strong>${esc(u.email)}</strong> (${esc(role)}).</p>
+        <button onclick="signOut()" class="mt-4 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold">Sign out</button>
+      </div>`;
+      $('gate').classList.remove('hidden');
+      return;
+    }
+    enterApp();
+  }
+
+  function showGate() { $('gate').classList.remove('hidden'); $('main').classList.add('hidden'); }
+  async function enterApp() {
+    $('gate').classList.add('hidden');
+    $('main').classList.remove('hidden');
+    $('who').textContent = user.email;
+    suppliersCache = await listSuppliersBasic();
+    loadList();
+  }
+
+  window.doLogin = async function() {
+    const email = $('g-email').value.trim();
+    const pass = $('g-pass').value;
+    const err = $('g-err');
+    err.classList.add('hidden');
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    if (error) { err.textContent = error.message; err.classList.remove('hidden'); return; }
+    user = data.user;
+    init();
+  };
+  window.signOut = async function() { await supabase.auth.signOut(); location.reload(); };
+
+  // ---- List ----
+  $('filter-featured').addEventListener('change', loadList);
+
+  async function loadList() {
+    const products = await listProducts({ featuredOnly: $('filter-featured').checked });
+    const el = $('list');
+    if (products.length === 0) {
+      el.innerHTML = `<div class="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
+        <p>No products yet.</p>
+        <button onclick="openProductForm()" class="mt-3 rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700">+ Add Product</button>
+      </div>`;
+      return;
+    }
+    el.innerHTML = `<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <table class="w-full text-sm">
+        <thead class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase text-slate-500">
+          <tr>
+            <th class="px-3 py-3">Image</th>
+            <th class="px-3 py-3">Product</th>
+            <th class="px-3 py-3">Supplier</th>
+            <th class="px-3 py-3">SKU</th>
+            <th class="px-3 py-3">Featured</th>
+            <th class="px-3 py-3 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${products.map(p => `<tr class="border-b border-slate-100 hover:bg-slate-50">
+            <td class="px-3 py-3">
+              ${p.image_url ? `<img src="${esc(p.image_url)}" class="h-12 w-12 rounded-md object-cover" alt="">` : `<div class="h-12 w-12 rounded-md bg-slate-100"></div>`}
+            </td>
+            <td class="px-3 py-3"><div class="font-semibold">${esc(p.name)}</div>${p.description ? `<div class="text-xs text-slate-500 line-clamp-1">${esc(p.description)}</div>` : ''}</td>
+            <td class="px-3 py-3 text-slate-600">${esc(p.supplier?.company_name || '—')}${p.supplier?.us_state ? ` <span class="text-xs text-slate-400">· ${esc(p.supplier.us_state)}</span>` : ''}</td>
+            <td class="px-3 py-3 text-slate-500">${esc(p.sku || '—')}</td>
+            <td class="px-3 py-3">
+              <label class="inline-flex cursor-pointer items-center">
+                <input type="checkbox" ${p.featured ? 'checked' : ''} data-toggle-id="${esc(p.id)}" class="proc-toggle peer sr-only">
+                <span class="relative inline-block h-5 w-9 rounded-full bg-slate-200 transition peer-checked:bg-sky-600">
+                  <span class="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white transition" style="${p.featured ? 'transform:translateX(16px);' : ''}"></span>
+                </span>
+              </label>
+            </td>
+            <td class="px-3 py-3 text-right space-x-2">
+              <button data-edit-id="${esc(p.id)}" class="proc-edit rounded-lg border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100">Edit</button>
+              <button data-del-id="${esc(p.id)}" class="proc-del rounded-lg border border-red-300 px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50">Delete</button>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+    el.querySelectorAll('.proc-toggle').forEach(t => t.addEventListener('change', async () => {
+      await toggleFeatured(t.dataset.toggleId, t.checked);
+      loadList();
+    }));
+    el.querySelectorAll('.proc-edit').forEach(b => b.addEventListener('click', () => openProductForm(b.dataset.editId, products.find(p => p.id === b.dataset.editId))));
+    el.querySelectorAll('.proc-del').forEach(b => b.addEventListener('click', async () => {
+      if (!confirm('Delete this product?')) return;
+      await deleteProduct(b.dataset.delId);
+      loadList();
+    }));
+  }
+
+  // ---- Add / Edit modal ----
+  window.openProductForm = function(id, p) {
+    p = p || { name:'', sku:'', image_url:'', description:'', supplier_id: suppliersCache[0]?.id || '', featured:false, status:'active' };
+    const root = $('modal-root');
+    root.innerHTML = `<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onclick="if(event.target===this)closeModal()">
+      <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl" onclick="event.stopPropagation()">
+        <div class="flex items-start justify-between">
+          <h3 class="text-lg font-bold">${id ? 'Edit Product' : 'Add Product'}</h3>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+        </div>
+        <div class="mt-4 space-y-3">
+          <div><label class="text-xs font-semibold text-slate-600">Supplier</label>
+            <select id="pf-supplier" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm">
+              ${suppliersCache.map(s => `<option value="${esc(s.id)}" ${p.supplier_id === s.id ? 'selected' : ''}>${esc(s.company_name)}${s.us_state ? ' · ' + esc(s.us_state) : ''}</option>`).join('')}
+            </select>
+            ${suppliersCache.length === 0 ? '<p class="mt-1 text-xs text-amber-700">No active suppliers — create one in <a href="suppliers.html" class="underline">Suppliers</a> first.</p>' : ''}
+          </div>
+          <div><label class="text-xs font-semibold text-slate-600">Product name *</label>
+            <input id="pf-name" value="${esc(p.name)}" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm" placeholder="e.g. Full Cream Milk Powder 25kg">
+          </div>
+          <div><label class="text-xs font-semibold text-slate-600">Image URL</label>
+            <input id="pf-image" value="${esc(p.image_url)}" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm" placeholder="https://example.com/photo.jpg">
+            ${p.image_url ? `<img src="${esc(p.image_url)}" alt="" class="mt-2 h-20 w-20 rounded-lg object-cover">` : ''}
+          </div>
+          <div><label class="text-xs font-semibold text-slate-600">SKU</label>
+            <input id="pf-sku" value="${esc(p.sku)}" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm">
+          </div>
+          <div><label class="text-xs font-semibold text-slate-600">Description</label>
+            <textarea id="pf-desc" rows="3" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm">${esc(p.description)}</textarea>
+          </div>
+          <label class="flex items-center gap-2 text-sm">
+            <input id="pf-featured" type="checkbox" ${p.featured ? 'checked' : ''} class="h-4 w-4 rounded border-slate-300">
+            Show on homepage (Featured)
+          </label>
+        </div>
+        <div class="mt-5 flex justify-end gap-2">
+          <button onclick="closeModal()" class="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold">Cancel</button>
+          <button onclick="saveProduct('${esc(id || '')}')" class="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700">${id ? 'Save' : 'Add'}</button>
+        </div>
+        <p id="pf-err" class="mt-3 hidden text-sm text-red-600"></p>
+      </div>
+    </div>`;
+  };
+
+  window.closeModal = function() { $('modal-root').innerHTML = ''; };
+
+  window.saveProduct = async function(id) {
+    const supplierId = $('pf-supplier')?.value;
+    const name = $('pf-name').value.trim();
+    const imageUrl = $('pf-image').value.trim();
+    const sku = $('pf-sku').value.trim();
+    const description = $('pf-desc').value.trim();
+    const featured = $('pf-featured').checked;
+    const err = $('pf-err');
+    err.classList.add('hidden');
+
+    if (!supplierId) { err.textContent = 'Pick a supplier first.'; err.classList.remove('hidden'); return; }
+    if (!name) { err.textContent = 'Product name is required.'; err.classList.remove('hidden'); return; }
+
+    const payload = { supplierId, name, imageUrl, sku, description, featured };
+    const { error } = id ? await updateProduct(id, payload) : await addProduct(payload);
+    if (error) { err.textContent = error; err.classList.remove('hidden'); return; }
+    closeModal();
+    loadList();
+  };
+
+  init();
+</script>
+
+</body>
+</html>

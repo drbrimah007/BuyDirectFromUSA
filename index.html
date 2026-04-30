@@ -40,40 +40,43 @@
   </head>
   <body class="bg-slate-50 text-slate-900">
     <div class="min-h-screen">
-      <header class="border-b border-slate-200 bg-white/90 backdrop-blur">
-        <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-          <a href="/" class="block hover:opacity-90 transition">
-            <div class="text-xl font-bold tracking-tight text-slate-950">
+      <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
+        <div class="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
+          <a href="/" class="block min-w-0 flex-1 hover:opacity-90 transition sm:flex-initial">
+            <div class="text-base font-bold tracking-tight text-slate-950 sm:text-xl">
               <span class="text-slate-950">Buy</span><span class="bg-gradient-to-r from-blue-700 to-red-700 bg-clip-text text-transparent">DirectFromUSA</span><span class="text-[#1f3a8a]">.com</span>
             </div>
-            <div class="text-xs text-slate-500">AI-supported sourcing concierge for GCC, Africa, Europe, and worldwide buyers</div>
+            <div class="hidden text-xs text-slate-500 sm:block">AI-supported sourcing concierge for GCC, Africa, Europe, and worldwide buyers</div>
           </a>
-          <nav class="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
+          <nav class="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex">
             <a href="#categories" class="transition hover:text-slate-950">Categories</a>
-            <a href="#products" class="transition hover:text-slate-950">Products</a>
-            <a href="#ai" class="transition hover:text-slate-950">AI Assistant</a>
-            <a href="#suppliers" class="transition hover:text-slate-950">Suppliers</a>
-            <a href="track.html" class="transition hover:text-slate-950">Track Shipment</a>
+            <a href="#listings" class="transition hover:text-slate-950">Listings</a>
+            <a href="for-suppliers.html" class="transition hover:text-slate-950">For Suppliers</a>
           </nav>
-          <div class="flex items-center gap-2 sm:gap-3">
-            <a href="track.html" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-400 hover:text-sky-700 sm:px-4">
+          <div class="flex items-center gap-1.5 sm:gap-3">
+            <a href="track.html" aria-label="Track shipment" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white p-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-400 hover:text-sky-700 sm:px-4 sm:py-2">
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
-              <span>Track</span>
+              <span class="hidden sm:inline">Track</span>
             </a>
-            <button onclick="openAuthModal()" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-400 hover:text-sky-700 sm:px-4">Sign In</button>
-            <button onclick="document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('rfq-product').focus();" class="rounded-xl bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700 sm:px-4">Request Sourcing</button>
+            <button id="bdusa-signin-btn" onclick="openAuthModal()" class="rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-sky-400 hover:text-sky-700 sm:px-4 sm:text-sm">Sign In</button>
+            <div id="bdusa-user-cluster" class="hidden items-center gap-1.5 sm:gap-2">
+              <a id="bdusa-portal-link" href="portal.html" class="rounded-xl border border-sky-300 bg-sky-50 px-2.5 py-2 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 sm:px-4 sm:text-sm">Portal</a>
+              <button onclick="bdusaSignOut()" title="Sign out" aria-label="Sign out" class="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-slate-300 hover:text-slate-700">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+              </button>
+            </div>
+            <button onclick="document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('rfq-product').focus();" class="hidden rounded-xl bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700 sm:inline-block sm:px-4">Request Sourcing</button>
           </div>
         </div>
       </header>
-
       <section class="relative overflow-hidden bg-slate-950 text-white">
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(2,132,199,0.28),_transparent_35%),radial-gradient(circle_at_left,_rgba(16,185,129,0.16),_transparent_30%)]"></div>
-        <div class="relative mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-2 lg:px-8 lg:py-24">
+        <div class="relative mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:gap-12 sm:px-6 sm:py-20 lg:grid-cols-2 lg:px-8 lg:py-24">
           <div>
             <div class="inline-flex items-center rounded-full border border-sky-400/20 bg-white/5 px-4 py-2 text-sm font-medium text-sky-200">
               Export-ready U.S. products &bull; sourcing concierge model &bull; sourcing pros since 2007
             </div>
-            <h1 class="mt-6 max-w-4xl text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
+            <h1 class="mt-6 max-w-4xl text-3xl font-bold tracking-tight sm:text-5xl lg:text-7xl">
               <span class="block">Source U.S. Products</span>
               <span class="mt-2 block">for <span class="text-sky-400 market-rotator"><span>GCC</span><span>Africa</span><span>Europe</span><span>Worldwide</span></span></span>
             </h1>
@@ -83,13 +86,453 @@
 
             <!-- Search bar moved to right column -->
 
+            <!-- Procurement Request Form (primary) -->
+            <div class="mt-6 rounded-2xl border-2 border-sky-400/40 bg-white/5 p-3 shadow-2xl ring-4 ring-sky-400/10 backdrop-blur sm:rounded-3xl sm:p-5">
+              <div class="rounded-2xl bg-white p-4 text-slate-900 sm:rounded-[1.5rem] sm:p-5">
+                <div>
+                  <p class="text-sm font-semibold text-sky-700">Order / Procurement</p>
+                  <h3 class="mt-1 text-xl font-bold text-slate-950">Order / Procurement Request</h3>
+                  <p class="mt-1 text-xs text-slate-600">Item(s), Auto, Parts, Vehicles, and general procurement.</p>
+                </div>
+
+                <div class="relative mt-4">
+                  <label class="mb-1 block text-sm font-semibold text-slate-700">Shipping to</label>
+                  <input id="proc-country" autocomplete="off" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="Start typing a country...">
+                  <div id="proc-country-suggest" class="absolute left-0 right-0 z-30 mt-1 hidden max-h-64 overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg"></div>
+                </div>
+
+                <div id="proc-stepper" class="mt-3 space-y-3"></div>
+
+                <div id="proc-summary" class="mt-4 hidden rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm">
+                  <div id="proc-summary-rows" class="space-y-1.5 text-slate-700"></div>
+                  <p class="mt-3 text-xs text-slate-500">Estimate only. Final invoice issued after we source live listings and confirm shipping.</p>
+                </div>
+
+                <div id="proc-submit-row" class="mt-4 hidden">
+                  <button id="proc-submit-btn" onclick="submitProcurement()" class="w-full rounded-xl bg-sky-600 px-6 py-3 text-base font-bold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700">Submit Request</button>
+                  <p id="proc-status" class="mt-3 hidden"></p>
+                </div>
+              </div>
+            </div>
+
+            <script type="module">
+              import { submitRequest } from './js/requests.js';
+
+              const SHIP_RATES = {
+                'Nigeria': { perLb: 5, vehicle: 2000 },
+                'Ghana': { perLb: 6, vehicle: 2200 },
+                'Kenya': { perLb: 6, vehicle: 2400 },
+                'South Africa': { perLb: 6, vehicle: 2400 },
+                'UAE': { perLb: 4, vehicle: 1800 },
+                'Saudi Arabia': { perLb: 4, vehicle: 1800 },
+                'United Kingdom': { perLb: 4, vehicle: 1500 },
+                'India': { perLb: 5, vehicle: 2200 },
+                'Philippines': { perLb: 5, vehicle: 2300 },
+                'Bangladesh': { perLb: 5, vehicle: 2300 },
+                'United States': { perLb: 1, vehicle: 800 },
+              };
+              const NY_TAX = 0.089, SERVICE_FEE = 0.10;
+              const WEIGHTS = {
+                shirt:1,tshirt:1,blouse:1,dress:2,suit:4,pants:2,jeans:3,shorts:1,skirt:1,jacket:4,coat:6,
+                shoes:4,sneakers:4,boots:6,sandals:2,heels:3,bag:3,handbag:2,backpack:4,suitcase:12,wallet:1,
+                watch:1,jewelry:1,perfume:2,sunglasses:1,belt:1,phone:1,iphone:1,smartphone:1,tablet:2,ipad:2,
+                laptop:6,macbook:5,computer:15,monitor:18,keyboard:2,mouse:1,headphones:2,earbuds:1,speaker:5,
+                soundbar:8,tv:35,television:35,camera:4,drone:5,console:8,playstation:9,xbox:9,nintendo:3,
+                controller:1,cable:1,charger:1,adapter:1,router:3,modem:3,'milk powder':30,formula:5,vitamins:1,
+                supplements:1,medicine:1,lotion:2,cream:1,shampoo:2,soap:1,toothpaste:1,makeup:1,lipstick:1,
+                'baby formula':4,diapers:10,'baby food':1,stroller:25,'car seat':18,toy:3,book:2,pen:0.2,
+                notebook:1,calculator:1,blender:8,toaster:5,microwave:30,fridge:200,fan:12,heater:15,vacuum:18,
+                'protein powder':5,gym:30,dumbbell:30,treadmill:200,tool:5,drill:6,hammer:2,wrench:2,
+                brake:25,battery:40,alternator:12,starter:10,tire:25,wheel:30,bumper:35,hood:50,door:65,
+                mirror:6,light:4,headlight:8,taillight:5,sensor:2
+              };
+              function estimateWeight(name){const n=(name||'').toLowerCase();let w=5;for(const k of Object.keys(WEIGHTS)){if(n.includes(k)){w=WEIGHTS[k];break;}}return Math.max(2, w);}
+              const SHIP_MIN = 65; // floor for non-vehicle shipping
+
+              const state = { country:'', region:'', city:'', category:'', items:[], vehicle:null, parts:[], other:'', contact:null };
+              window.procState = state;
+              const $ = id => document.getElementById(id);
+
+              // Edge function URL fetch — auto-fill item details from product URLs
+              const FETCH_URL = 'https://zffevasaeaogjxuslhtw.supabase.co/functions/v1/fetch-product';
+              const SUPA_ANON = 'sb_publishable_RT45PjUDX9CmFFgjrazm4w_hWnrcrMg';
+              const fetchTimers = {};
+              async function fetchProductDetails(url, idx) {
+                try {
+                  const r = await fetch(FETCH_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'apikey': SUPA_ANON, 'Authorization': 'Bearer ' + SUPA_ANON },
+                    body: JSON.stringify({ url })
+                  });
+                  const data = await r.json();
+                  if (!r.ok) throw new Error(data.error || ('HTTP ' + r.status));
+                  return data;
+                } catch (e) {
+                  return { error: e.message || String(e) };
+                }
+              }
+
+              // Country autocomplete — populate datalist as user types
+              const ALL_COUNTRIES = ['Algeria','Angola','Argentina','Australia','Austria','Bahrain','Bangladesh','Belgium','Benin','Brazil','Burkina Faso','Cameroon','Canada','Chad','Chile','China','Colombia','Côte d\'Ivoire','Democratic Republic of the Congo','Denmark','Egypt','Ethiopia','France','Gabon','Gambia','Germany','Ghana','Greece','Guinea','India','Indonesia','Iraq','Ireland','Italy','Japan','Jordan','Kenya','Kuwait','Lebanon','Liberia','Libya','Madagascar','Malawi','Malaysia','Mali','Mauritania','Mexico','Morocco','Mozambique','Namibia','Netherlands','Niger','Nigeria','Norway','Oman','Pakistan','Philippines','Poland','Portugal','Qatar','Rwanda','Saudi Arabia','Senegal','Sierra Leone','Singapore','Somalia','South Africa','South Korea','South Sudan','Spain','Sri Lanka','Sudan','Sweden','Switzerland','Tanzania','Thailand','Togo','Tunisia','Turkey','UAE','Uganda','United Kingdom','United States','Vietnam','Yemen','Zambia','Zimbabwe'];
+
+              // Custom autocomplete for country (replaces browser <datalist>)
+              const cInput = $('proc-country');
+              const cSug = $('proc-country-suggest');
+              let cActive = -1;
+
+              function filterCountries(q) {
+                const lq = q.toLowerCase();
+                if (!lq) return [];
+                const starts = ALL_COUNTRIES.filter(c => c.toLowerCase().startsWith(lq));
+                const contains = ALL_COUNTRIES.filter(c => !c.toLowerCase().startsWith(lq) && c.toLowerCase().includes(lq));
+                return [...starts, ...contains].slice(0, 12);
+              }
+
+              function renderCountrySuggestions(q) {
+                const list = filterCountries(q);
+                if (list.length === 0) { cSug.classList.add('hidden'); cSug.innerHTML = ''; return; }
+                cSug.innerHTML = list.map((c, i) =>
+                  `<button type="button" data-c="${c}" data-i="${i}" class="proc-c-opt block w-full px-3 py-2 text-left text-sm hover:bg-sky-50 ${i === cActive ? 'bg-sky-100' : ''}">${c}</button>`
+                ).join('');
+                cSug.classList.remove('hidden');
+                cSug.querySelectorAll('.proc-c-opt').forEach(b => b.addEventListener('mousedown', (e) => {
+                  e.preventDefault();
+                  pickCountry(b.dataset.c);
+                }));
+              }
+
+              function pickCountry(name) {
+                cInput.value = name;
+                state.country = name;
+                cSug.classList.add('hidden');
+                cActive = -1;
+                render();
+              }
+
+              cInput.addEventListener('input', () => {
+                cActive = -1;
+                renderCountrySuggestions(cInput.value.trim());
+                // If user typed exactly a country, auto-progress (no need to click)
+                const typed = cInput.value.trim();
+                if (ALL_COUNTRIES.includes(typed)) { state.country = typed; render(); }
+                else { state.country = ''; render(); }
+              });
+
+              cInput.addEventListener('keydown', (e) => {
+                const items = cSug.querySelectorAll('.proc-c-opt');
+                if (e.key === 'ArrowDown') { e.preventDefault(); cActive = Math.min(cActive + 1, items.length - 1); renderCountrySuggestions(cInput.value.trim()); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); cActive = Math.max(cActive - 1, 0); renderCountrySuggestions(cInput.value.trim()); }
+                else if (e.key === 'Enter' || e.key === 'Tab') {
+                  if (cActive >= 0 && items[cActive]) { e.preventDefault(); pickCountry(items[cActive].dataset.c); }
+                  else if (items.length > 0) { e.preventDefault(); pickCountry(items[0].dataset.c); }
+                }
+                else if (e.key === 'Escape') { cSug.classList.add('hidden'); }
+              });
+
+              cInput.addEventListener('focus', () => { if (cInput.value.trim()) renderCountrySuggestions(cInput.value.trim()); });
+              document.addEventListener('mousedown', (e) => { if (!cSug.contains(e.target) && e.target !== cInput) cSug.classList.add('hidden'); });
+
+              window.procRender = render;
+              function render() {
+                const wrap = $('proc-stepper');
+                wrap.innerHTML = '';
+                if (!state.country) { hideSummary(); return; }
+                wrap.appendChild(stepRegion());
+                wrap.appendChild(stepCategory());
+                if (state.category === 'consumer') wrap.appendChild(stepConsumer());
+                else if (state.category === 'vehicle') wrap.appendChild(stepVehicle());
+                else if (state.category === 'parts') wrap.appendChild(stepParts());
+                else if (state.category === 'other') wrap.appendChild(stepOther());
+                // Contact section is always shown once a category is picked, regardless of how much is filled
+                if (state.category) wrap.appendChild(stepContact());
+                if (canSummarise()) {
+                  renderSummary();
+                  $('proc-submit-row').classList.remove('hidden');
+                } else hideSummary();
+                // Submit button always shown once contact starts being used
+                if (state.category) $('proc-submit-row').classList.remove('hidden');
+              }
+              function hideSummary() { $('proc-summary').classList.add('hidden'); $('proc-submit-row').classList.add('hidden'); }
+              function block(html){const d=document.createElement('div');d.innerHTML=html;return d.firstElementChild;}
+
+              function stepRegion() {
+                return block(`<div class="grid gap-3 sm:grid-cols-2">
+                  <div><label class="mb-1 block text-xs font-semibold text-slate-600">State / Region</label><input id="proc-region" value="${state.region}" autocomplete="off" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"></div>
+                  <div><label class="mb-1 block text-xs font-semibold text-slate-600">City</label><input id="proc-city" value="${state.city}" autocomplete="off" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"></div>
+                </div>`);
+              }
+              function stepCategory() {
+                const choices = [
+                  { key:'consumer', label:'Consumer goods' },
+                  { key:'vehicle', label:'Vehicle' },
+                  { key:'parts', label:'Auto parts' },
+                  { key:'other', label:'Other' }
+                ];
+                const html = `<div class="grid grid-cols-2 gap-2">${choices.map(c=>`<button type="button" data-key="${c.key}" class="proc-cat-btn rounded-xl border ${state.category===c.key?'border-sky-600 bg-sky-50 text-sky-700':'border-slate-200 bg-white text-slate-700'} px-3 py-2 text-sm font-semibold transition hover:border-sky-400">${c.label}</button>`).join('')}</div>`;
+                const el = block(`<div>${html}</div>`);
+                setTimeout(()=>{
+                  el.querySelectorAll('.proc-cat-btn').forEach(b=>b.addEventListener('click',()=>{ state.category=b.dataset.key; render(); }));
+                  document.getElementById('proc-region')?.addEventListener('input',e=>{ state.region=e.target.value; });
+                  document.getElementById('proc-city')?.addEventListener('input',e=>{ state.city=e.target.value; });
+                });
+                return el;
+              }
+              function stepConsumer() {
+                if(state.items.length===0) state.items.push({name:'',qty:1,price:'',weight:'',image:'',brand:'',url:'',fetching:false,fetchError:''});
+                const items = state.items.map((it,idx)=>{
+                  const urlLine = it.url ? `<div class="mt-1 truncate text-[10px] text-slate-500">URL saved: <a href="${it.url}" target="_blank" rel="noopener" class="underline">${it.url.length > 50 ? it.url.substring(0, 50) + '…' : it.url}</a></div>` : '';
+                  const preview = it.image ? `<div class="mt-2 flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-2"><img src="${it.image}" alt="" class="h-16 w-16 rounded-md object-cover"><div class="min-w-0 text-xs text-slate-700"><div class="font-semibold text-emerald-900">${it.brand ? it.brand + ' • ' : ''}auto-fetched</div><div class="line-clamp-2">${it.name}</div>${urlLine}</div></div>` : (it.url ? `<div class="mt-1 truncate text-[10px] text-slate-500">URL saved: <a href="${it.url}" target="_blank" rel="noopener" class="underline">${it.url}</a></div>` : '');
+                  const fetching = it.fetching ? `<p class="mt-1 text-xs text-sky-600">Fetching item details…</p>` : '';
+                  const ferr = it.fetchError ? `<p class="mt-1 text-xs text-amber-700">${it.fetchError}</p>` : '';
+                  return `<div class="rounded-xl border border-slate-200 bg-white p-3" data-idx="${idx}">
+                  <div class="flex items-center justify-between text-xs font-semibold text-slate-500">Item ${idx+1}${state.items.length>1?` <button type="button" data-rm="${idx}" class="proc-item-rm text-red-600 hover:underline">Remove</button>`:''}</div>
+                  <div class="mt-2 grid gap-2 sm:grid-cols-2">
+                    <div class="sm:col-span-2"><label class="mb-1 block text-xs font-semibold text-slate-600">Item URL or name</label><input data-f="name" data-i="${idx}" value="${it.name.replace(/"/g,'&quot;')}" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" placeholder="https://amazon.com/... or product name"></div>
+                    <div><label class="mb-1 block text-xs font-semibold text-slate-600">Qty</label><input data-f="qty" data-i="${idx}" type="number" min="1" value="${it.qty}" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                    <div><label class="mb-1 block text-xs font-semibold text-slate-600">Listed price (USD)</label><input data-f="price" data-i="${idx}" type="number" step="0.01" value="${it.price}" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" placeholder="If known"></div>
+                  </div>${preview}${fetching}${ferr}${it.name?`<p class="mt-2 text-xs text-slate-500">~${estimateWeight(it.name)} lb estimate</p>`:''}</div>`;
+                }).join('');
+                const el = block(`<div class="space-y-2">${items}<button type="button" id="proc-add-item" class="mt-2 w-full rounded-xl border border-dashed border-slate-300 px-4 py-2 text-sm font-semibold text-sky-700 hover:border-sky-400 hover:bg-sky-50">+ Add another item</button><p class="mt-1 text-xs text-slate-500">Paste an Amazon, eBay, Walmart, Best Buy or similar URL — we'll auto-fetch title, image, and price.</p></div>`);
+                setTimeout(()=>{
+                  el.querySelectorAll('input[data-f]').forEach(inp=>inp.addEventListener('input',e=>{
+                    const i = +e.target.dataset.i, f = e.target.dataset.f;
+                    state.items[i][f] = e.target.value;
+                    if (f === 'name') {
+                      state.items[i].weight = estimateWeight(e.target.value);
+                      // Debounced URL fetch
+                      const v = e.target.value.trim();
+                      clearTimeout(fetchTimers[i]);
+                      if (/^https?:\/\//i.test(v)) {
+                        state.items[i].fetching = true;
+                        state.items[i].fetchError = '';
+                        state.items[i].url = v;
+                        fetchTimers[i] = setTimeout(async () => {
+                          const data = await fetchProductDetails(v, i);
+                          state.items[i].fetching = false;
+                          if (data.error) {
+                            state.items[i].fetchError = 'Could not fetch details: ' + data.error + ' — please enter manually';
+                          } else {
+                            if (data.title) state.items[i].name = data.title;
+                            // Sanitise price: strip $, commas, currency codes — keep numeric only
+                            if (data.price) {
+                              const cleaned = String(data.price).replace(/[^0-9.]/g, '').match(/^\d+(\.\d+)?/);
+                              if (cleaned) state.items[i].price = cleaned[0];
+                            }
+                            if (data.image) state.items[i].image = data.image;
+                            if (data.brand) state.items[i].brand = data.brand;
+                            state.items[i].weight = estimateWeight(data.title || v);
+                          }
+                          render();
+                        }, 700);
+                      }
+                    }
+                    renderSummary();
+                  }));
+                  el.querySelectorAll('.proc-item-rm').forEach(b=>b.addEventListener('click',()=>{state.items.splice(+b.dataset.rm,1); render();}));
+                  $('proc-add-item').addEventListener('click',()=>{state.items.push({name:'',qty:1,price:'',weight:'',image:'',brand:'',url:'',fetching:false,fetchError:''}); render();});
+                });
+                return el;
+              }
+              function stepVehicle() {
+                if(!state.vehicle) state.vehicle={type:'',make:'',model:'',yearFrom:'',yearTo:'',condition:'',mileage:'',color:'',engine:'',budgetCap:''};
+                const v = state.vehicle;
+                const el = block(`<div class="grid gap-2 sm:grid-cols-2">
+                  <div class="relative"><label class="text-xs font-semibold text-slate-600">Type</label><input id="proc-vtype" data-vf="type" autocomplete="off" value="${v.type.replace(/"/g,'&quot;')}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" placeholder="Sedan, SUV, Truck..."><div id="proc-vtype-suggest" class="absolute left-0 right-0 z-30 mt-1 hidden max-h-48 overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg"></div></div>
+                  <div><label class="text-xs font-semibold text-slate-600">Make</label><input data-vf="make" value="${v.make}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                  <div><label class="text-xs font-semibold text-slate-600">Model</label><input data-vf="model" value="${v.model}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                  <div><label class="text-xs font-semibold text-slate-600">New or used</label><input data-vf="condition" value="${v.condition}" list="dl-vcond" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"><datalist id="dl-vcond"><option>New</option><option>Used — like new</option><option>Used — good</option><option>Used — fair</option><option>Salvage</option></datalist></div>
+                  <div><label class="text-xs font-semibold text-slate-600">Year from</label><input data-vf="yearFrom" type="number" min="1980" max="2030" value="${v.yearFrom}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                  <div><label class="text-xs font-semibold text-slate-600">Year to</label><input data-vf="yearTo" type="number" min="1980" max="2030" value="${v.yearTo}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                  <div><label class="text-xs font-semibold text-slate-600">Color</label><input data-vf="color" value="${v.color}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                  <div><label class="text-xs font-semibold text-slate-600">Mileage limit</label><input data-vf="mileage" value="${v.mileage}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                  <div><label class="text-xs font-semibold text-slate-600">Engine / trim</label><input data-vf="engine" value="${v.engine}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                  <div><label class="text-xs font-semibold text-slate-600">Budget cap (USD)</label><input data-vf="budgetCap" type="number" value="${v.budgetCap}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                </div>`);
+                setTimeout(()=>{
+                  el.querySelectorAll('input[data-vf]').forEach(inp=>inp.addEventListener('input',e=>{ state.vehicle[e.target.dataset.vf]=e.target.value; renderSummary(); }));
+                  // Custom autocomplete for vehicle type
+                  const VEHICLE_TYPES = ['Sedan','SUV','Truck','Pickup','Van','Minivan','Coupe','Hatchback','Convertible','Wagon','Crossover','Sports car','Luxury sedan','Hybrid','Electric','Off-road','Motorcycle','Scooter','ATV','UTV','RV','Bus','Box truck','Cargo van','Trailer','Boat','Jet ski','Heavy equipment'];
+                  const tInput = document.getElementById('proc-vtype');
+                  const tSug = document.getElementById('proc-vtype-suggest');
+                  let tActive = -1;
+                  function tFilter(q){const lq=q.toLowerCase();if(!lq)return VEHICLE_TYPES.slice(0,12);const starts=VEHICLE_TYPES.filter(c=>c.toLowerCase().startsWith(lq));const contains=VEHICLE_TYPES.filter(c=>!c.toLowerCase().startsWith(lq)&&c.toLowerCase().includes(lq));return [...starts,...contains].slice(0,12);}
+                  function tRender(){const list=tFilter(tInput.value.trim());if(list.length===0){tSug.classList.add('hidden');tSug.innerHTML='';return;}tSug.innerHTML=list.map((c,i)=>`<button type="button" data-c="${c}" class="proc-vt-opt block w-full px-3 py-2 text-left text-sm hover:bg-sky-50 ${i===tActive?'bg-sky-100':''}">${c}</button>`).join('');tSug.classList.remove('hidden');tSug.querySelectorAll('.proc-vt-opt').forEach(b=>b.addEventListener('mousedown',ev=>{ev.preventDefault();tInput.value=b.dataset.c;state.vehicle.type=b.dataset.c;tSug.classList.add('hidden');renderSummary();}));}
+                  tInput.addEventListener('focus',tRender);
+                  tInput.addEventListener('input',()=>{tActive=-1;tRender();});
+                  tInput.addEventListener('keydown',(e)=>{const items=tSug.querySelectorAll('.proc-vt-opt');if(e.key==='ArrowDown'){e.preventDefault();tActive=Math.min(tActive+1,items.length-1);tRender();}else if(e.key==='ArrowUp'){e.preventDefault();tActive=Math.max(tActive-1,0);tRender();}else if(e.key==='Enter'||e.key==='Tab'){if(tActive>=0&&items[tActive]){e.preventDefault();const c=items[tActive].dataset.c;tInput.value=c;state.vehicle.type=c;tSug.classList.add('hidden');renderSummary();}else if(items.length>0){e.preventDefault();const c=items[0].dataset.c;tInput.value=c;state.vehicle.type=c;tSug.classList.add('hidden');renderSummary();}}else if(e.key==='Escape'){tSug.classList.add('hidden');}});
+                  document.addEventListener('mousedown',(ev)=>{if(!tSug.contains(ev.target)&&ev.target!==tInput)tSug.classList.add('hidden');});
+                });
+                return el;
+              }
+              function stepParts() {
+                if(state.parts.length===0) state.parts.push({oem:'',vin:'',make:'',model:'',year:'',engine:'',bodyType:'',partName:'',url:'',priceEst:''});
+                const items = state.parts.map((p,idx)=>`<div class="rounded-xl border border-slate-200 bg-white p-3" data-pidx="${idx}">
+                  <div class="flex items-center justify-between text-xs font-semibold text-slate-500">Part ${idx+1}${state.parts.length>1?` <button type="button" data-prm="${idx}" class="proc-part-rm text-red-600 hover:underline">Remove</button>`:''}</div>
+                  <div class="mt-2 grid gap-2 sm:grid-cols-2">
+                    <div class="sm:col-span-2"><label class="text-xs font-semibold text-slate-600">Part name or number</label><input data-pf="partName" data-pi="${idx}" value="${p.partName}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                    <div><label class="text-xs font-semibold text-slate-600">OEM or aftermarket</label><input data-pf="oem" data-pi="${idx}" value="${p.oem}" list="dl-oem" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"><datalist id="dl-oem"><option>OEM</option><option>Aftermarket</option><option>Either</option><option>Genuine</option></datalist></div>
+                    <div><label class="text-xs font-semibold text-slate-600">VIN (if available)</label><input data-pf="vin" data-pi="${idx}" value="${p.vin}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                    <div><label class="text-xs font-semibold text-slate-600">Make</label><input data-pf="make" data-pi="${idx}" value="${p.make}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                    <div><label class="text-xs font-semibold text-slate-600">Model</label><input data-pf="model" data-pi="${idx}" value="${p.model}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                    <div><label class="text-xs font-semibold text-slate-600">Year</label><input data-pf="year" data-pi="${idx}" type="number" value="${p.year}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                    <div><label class="text-xs font-semibold text-slate-600">Body type</label><input data-pf="bodyType" data-pi="${idx}" value="${p.bodyType}" list="dl-body" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"><datalist id="dl-body"><option>Sedan</option><option>SUV</option><option>Truck</option><option>Coupe</option><option>Wagon</option><option>Van</option></datalist></div>
+                    <div><label class="text-xs font-semibold text-slate-600">Engine</label><input data-pf="engine" data-pi="${idx}" value="${p.engine}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                    <div><label class="text-xs font-semibold text-slate-600">Listing URL</label><input data-pf="url" data-pi="${idx}" value="${p.url}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                    <div><label class="text-xs font-semibold text-slate-600">Estimated price (USD)</label><input data-pf="priceEst" data-pi="${idx}" type="number" step="0.01" value="${p.priceEst}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                  </div></div>`).join('');
+                const el = block(`<div class="space-y-2">${items}<button type="button" id="proc-add-part" class="mt-2 w-full rounded-xl border border-dashed border-slate-300 px-4 py-2 text-sm font-semibold text-sky-700 hover:border-sky-400 hover:bg-sky-50">+ Add another part</button></div>`);
+                setTimeout(()=>{
+                  el.querySelectorAll('input[data-pf]').forEach(inp=>inp.addEventListener('input',e=>{ state.parts[+e.target.dataset.pi][e.target.dataset.pf]=e.target.value; renderSummary(); }));
+                  el.querySelectorAll('.proc-part-rm').forEach(b=>b.addEventListener('click',()=>{state.parts.splice(+b.dataset.prm,1); render();}));
+                  $('proc-add-part').addEventListener('click',()=>{state.parts.push({oem:'',vin:'',make:'',model:'',year:'',engine:'',bodyType:'',partName:'',url:'',priceEst:''}); render();});
+                });
+                return el;
+              }
+              function stepOther() {
+                const el = block(`<div><textarea id="proc-other" rows="3" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm" placeholder="Describe what you need to procure...">${state.other||''}</textarea></div>`);
+                setTimeout(()=>{ $('proc-other').addEventListener('input',e=>{ state.other=e.target.value; renderSummary(); }); });
+                return el;
+              }
+              function stepContact() {
+                if(!state.contact) state.contact={name:'',email:'',phone:''};
+                const c = state.contact;
+                const u = window.bdusaUser;
+
+                // Logged-in user: don't ask for name/email — just show who's submitting + optional phone
+                if (u) {
+                  const md = u.user_metadata || {};
+                  const displayName = md.display_name || md.full_name || u.email?.split('@')[0] || '';
+                  state.contact.name = state.contact.name || displayName;
+                  state.contact.email = state.contact.email || u.email || '';
+                  const el = block(`<div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <div class="flex items-center justify-between gap-2 text-sm">
+                      <div class="min-w-0">
+                        <p class="text-xs font-semibold text-slate-500">Submitting as</p>
+                        <p class="truncate font-semibold text-slate-900">${displayName} <span class="font-normal text-slate-500">· ${u.email}</span></p>
+                      </div>
+                      <a href="portal.html" class="shrink-0 text-xs font-semibold text-sky-700 hover:underline">My Portal →</a>
+                    </div>
+                    <div class="mt-3"><label class="text-xs font-semibold text-slate-600">Phone (optional)</label><input id="proc-cn-phone" value="${c.phone}" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" placeholder="WhatsApp / mobile"></div>
+                  </div>`);
+                  setTimeout(()=>{
+                    $('proc-cn-phone').addEventListener('input',e=>{state.contact.phone=e.target.value;});
+                  });
+                  return el;
+                }
+
+                // Anonymous: ask for everything
+                const el = block(`<div class="grid gap-2 sm:grid-cols-3">
+                  <div><label class="text-xs font-semibold text-slate-600">Name</label><input id="proc-cn-name" value="${c.name}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                  <div><label class="text-xs font-semibold text-slate-600">Email</label><input id="proc-cn-email" type="email" value="${c.email}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                  <div><label class="text-xs font-semibold text-slate-600">Phone (optional)</label><input id="proc-cn-phone" value="${c.phone}" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"></div>
+                </div>`);
+                setTimeout(()=>{
+                  $('proc-cn-name').addEventListener('input',e=>{state.contact.name=e.target.value;});
+                  $('proc-cn-email').addEventListener('input',e=>{state.contact.email=e.target.value;});
+                  $('proc-cn-phone').addEventListener('input',e=>{state.contact.phone=e.target.value;});
+                });
+                return el;
+              }
+              function calc() {
+                const ship = SHIP_RATES[state.country];
+                let listed=0, weight=0, vehicleShip=0;
+                let pricedCount=0; // how many items have a usable price
+                let extraShip=0;   // sum of (price * 10% * weight) for priced items — non-Nigeria only
+
+                if(state.category==='consumer'){
+                  for(const it of state.items){
+                    const p=parseFloat(it.price)||0, q=parseInt(it.qty)||1, w=Math.max(2, it.weight||estimateWeight(it.name)||5);
+                    listed += p*q;
+                    weight += w*q;
+                    if (p > 0) { pricedCount++; extraShip += p * 0.10 * w * q; }
+                  }
+                } else if(state.category==='parts'){
+                  for(const p of state.parts){
+                    const pr = parseFloat(p.priceEst)||0;
+                    const w = Math.max(2, 15);
+                    listed += pr;
+                    weight += w;
+                    if (pr > 0) { pricedCount++; extraShip += pr * 0.10 * w; }
+                  }
+                } else if(state.category==='vehicle'){
+                  listed += parseFloat(state.vehicle?.budgetCap)||0;
+                  vehicleShip = ship?.vehicle ?? null;
+                }
+
+                const tax = listed*NY_TAX, fee = listed*SERVICE_FEE;
+
+                // Shipping calc:
+                //   Vehicle: flat per-country
+                //   Nigeria (consumer/parts): weight × per-lb
+                //   Other countries: $90 base + per-priced-item (price × 10% × weight) — but ONLY once at least one item has a price
+                let shipCost = null;
+                if (state.category === 'vehicle') {
+                  shipCost = vehicleShip;
+                } else if (state.country === 'Nigeria') {
+                  shipCost = (ship?.perLb != null && weight > 0) ? Math.max(SHIP_MIN, weight * ship.perLb) : null;
+                } else if (ship?.perLb != null) {
+                  // Non-Nigeria, supported country: $90 base + extras, but only when there's a priced item
+                  shipCost = (pricedCount > 0) ? Math.max(SHIP_MIN, 90 + extraShip) : null;
+                } else {
+                  shipCost = null; // TBA
+                }
+
+                const total = (shipCost == null) ? null : (listed + tax + fee + shipCost);
+                return {listed,weight,tax,fee,shipCost,total,isVehicle:state.category==='vehicle',pricedCount};
+              }
+              function fmt(n){return '$'+Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+              function renderSummary() {
+                if(!canSummarise()){hideSummary();return;}
+                const r=calc(); const rows=[];
+                rows.push(`<div class="flex justify-between"><span>Listed product cost</span><span class="font-semibold">${fmt(r.listed)}</span></div>`);
+                if(!r.isVehicle && r.weight) rows.push(`<div class="flex justify-between text-xs text-slate-500"><span>Estimated total weight</span><span>${r.weight.toFixed(1)} lb</span></div>`);
+                rows.push(`<div class="flex justify-between"><span>NY sales tax (8.9%)</span><span>${fmt(r.tax)}</span></div>`);
+                rows.push(`<div class="flex justify-between"><span>Service fee (10%)</span><span>${fmt(r.fee)}</span></div>`);
+                rows.push(`<div class="flex justify-between"><span>Shipping to ${state.country}</span><span>${r.shipCost==null?'<span class=\"text-amber-700\">TBA</span>':fmt(r.shipCost)}</span></div>`);
+                if(r.total!=null) rows.push(`<div class="mt-2 flex justify-between border-t border-slate-200 pt-2 text-base font-bold text-slate-950"><span>Estimated total</span><span>${fmt(r.total)}</span></div>`);
+                else rows.push(`<div class="mt-2 flex justify-between border-t border-slate-200 pt-2 text-sm font-semibold text-amber-700"><span>Total</span><span>Will quote after sourcing</span></div>`);
+                $('proc-summary-rows').innerHTML=rows.join('');
+                $('proc-summary').classList.remove('hidden');
+                $('proc-submit-row').classList.remove('hidden');
+              }
+              function canSummarise(){
+                if(!state.country||!state.category) return false;
+                if(state.category==='consumer') return state.items.some(i=>i.name);
+                if(state.category==='vehicle') return state.vehicle?.make||state.vehicle?.model;
+                if(state.category==='parts') return state.parts.some(p=>p.partName);
+                if(state.category==='other') return !!state.other;
+                return false;
+              }
+              window.submitProcurement = async function() {
+                const status=$('proc-status'); const btn=$('proc-submit-btn');
+                status.classList.add('hidden');
+                if(!state.contact?.email||!state.contact?.name){status.textContent='Name and email required.';status.className='mt-3 text-sm text-red-600';status.classList.remove('hidden');return;}
+                btn.disabled=true; btn.textContent='Submitting...';
+                try{
+                  const r=calc();
+                  const result=await submitRequest({
+                    clientId: window.bdusaUser?.id || null,
+                    clientName:state.contact.name, clientEmail:state.contact.email,
+                    productNeeded: state.category==='vehicle'?`Vehicle: ${state.vehicle?.make||''} ${state.vehicle?.model||''} ${state.vehicle?.yearFrom||''}-${state.vehicle?.yearTo||''}`.trim():state.category==='parts'?`Auto parts: ${state.parts.map(p=>p.partName).filter(Boolean).join(', ')}`:state.category==='consumer'?state.items.map(i=>i.name).filter(Boolean).join(' | '):(state.other||'Procurement'),
+                    requestType:'custom', targetCountry:state.country,
+                    quantity: state.category==='consumer'?state.items.reduce((s,i)=>s+(parseInt(i.qty)||1),0)+' items':'1',
+                    packaging: state.region?`${state.region}, ${state.city||''}`.replace(/, $/,''):'',
+                    specialNotes:`Phone: ${state.contact.phone||'n/a'}\n\nEstimate (USD):\n  Listed: ${fmt(r.listed)}\n  Tax: ${fmt(r.tax)}\n  Fee: ${fmt(r.fee)}\n  Ship: ${r.shipCost==null?'TBA':fmt(r.shipCost)}\n  Total: ${r.total==null?'TBA':fmt(r.total)}`,
+                    dynamicData:{category:state.category,items:state.items,vehicle:state.vehicle,parts:state.parts,other:state.other,estimate:r}
+                  });
+                  if(result.error){status.textContent='Error: '+result.error;status.className='mt-3 text-sm text-red-600';btn.disabled=false;btn.textContent='Submit Request';}
+                  else{status.innerHTML='<strong>Request submitted!</strong> We\'ll source live listings and confirm a quote shortly.';status.className='mt-3 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl p-3';btn.textContent='Submitted ✓';}
+                  status.classList.remove('hidden');
+                }catch(e){status.textContent='Error: '+(e.message||e);status.className='mt-3 text-sm text-red-600';status.classList.remove('hidden');btn.disabled=false;btn.textContent='Submit Request';}
+              };
+            </script>
+
             <div class="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-2xl backdrop-blur">
               <div class="rounded-[1.5rem] bg-white p-5 text-slate-900">
                 <div class="flex items-start justify-between gap-4">
                   <div>
                     <p class="text-sm font-semibold text-sky-700">Dynamic request form</p>
                     <h3 class="mt-1 text-xl font-bold text-slate-950">Request custom sourcing</h3>
-                    <p class="mt-2 text-sm text-slate-600">A smart RFQ preview that changes fields based on request type and destination market.</p>
                   </div>
                   <span class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">RFQ</span>
                 </div>
@@ -271,7 +714,7 @@
         </div>
       </section>
 
-      <section class="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+      <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
         <div class="grid gap-6 md:grid-cols-3">
           <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
             <div class="text-sm font-semibold text-sky-700">Find Products</div>
@@ -294,201 +737,182 @@
         </div>
       </section>
 
-      <section id="categories" class="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+      <section id="categories" class="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
         <div class="flex items-end justify-between gap-6">
           <div>
             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">Categories</p>
-            <h2 class="mt-3 text-4xl font-bold tracking-tight text-slate-950">Best things to source from the U.S.</h2>
+            <h2 class="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Best things to source from the U.S.</h2>
             <p class="mt-4 max-w-3xl text-lg text-slate-600">Lead with practical, repeat-buy categories that buyers actually move across borders: dairy ingredients, shelf-stable foods, feminine care, medical consumables, filters, and emergency-use products.</p>
           </div>
-          <button onclick="document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('rfq-product').focus();" class="hidden rounded-2xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 lg:block">View all categories</button>
         </div>
 
-        <div class="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-5">
+        <div class="mt-8 grid gap-4 sm:gap-6 sm:grid-cols-2 xl:grid-cols-5">
           <div class="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200">
-            <div class="h-40 rounded-[1.5rem] bg-[linear-gradient(135deg,#e0f2fe,#f8fafc)]"></div>
+            <div class="flex h-40 items-center justify-center rounded-[1.5rem] bg-[linear-gradient(135deg,#e0f2fe,#f8fafc)]">
+              <svg class="h-20 w-20 text-sky-600/70" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3h8l-1 3v3l3 6v6a2 2 0 01-2 2H8a2 2 0 01-2-2v-6l3-6V6L8 3z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6"/></svg>
+            </div>
             <h3 class="mt-5 text-xl font-bold">Dairy / Milk Powder</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Container-based, spec-driven products with repeat distributor demand.</p>
           </div>
           <div class="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200">
-            <div class="h-40 rounded-[1.5rem] bg-[linear-gradient(135deg,#ecfccb,#f8fafc)]"></div>
+            <div class="flex h-40 items-center justify-center rounded-[1.5rem] bg-[linear-gradient(135deg,#ecfccb,#f8fafc)]">
+              <svg class="h-20 w-20 text-lime-700/70" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 7a2 2 0 012-2h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V7z"/><path stroke-linecap="round" stroke-linejoin="round" d="M5 11h14M9 5v2M15 5v2"/></svg>
+            </div>
             <h3 class="mt-5 text-xl font-bold">Shelf-Stable Foods</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Tuna, oats, snack items, pantry goods, and packaged foods with longer shelf life.</p>
           </div>
           <div class="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200">
-            <div class="h-40 rounded-[1.5rem] bg-[linear-gradient(135deg,#fde2e8,#f8fafc)]"></div>
+            <div class="flex h-40 items-center justify-center rounded-[1.5rem] bg-[linear-gradient(135deg,#fde2e8,#f8fafc)]">
+              <svg class="h-20 w-20 text-rose-500/70" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 4h6l-1 4h-4l-1-4z"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 8h8v10a3 3 0 01-3 3h-2a3 3 0 01-3-3V8z"/></svg>
+            </div>
             <h3 class="mt-5 text-xl font-bold">Feminine Care &amp; Personal Care</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Pads, liners, wipes, and beauty/personal care lines where U.S. branding can carry value.</p>
           </div>
           <div class="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200">
-            <div class="h-40 rounded-[1.5rem] bg-[linear-gradient(135deg,#dbeafe,#f8fafc)]"></div>
+            <div class="flex h-40 items-center justify-center rounded-[1.5rem] bg-[linear-gradient(135deg,#dbeafe,#f8fafc)]">
+              <svg class="h-20 w-20 text-blue-600/70" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16M4 12h16"/><circle cx="12" cy="12" r="9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
             <h3 class="mt-5 text-xl font-bold">Medical Consumables</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Practical consumables, gloves, disposables, and support products with clearer buying cycles.</p>
           </div>
           <div class="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200">
-            <div class="h-40 rounded-[1.5rem] bg-[linear-gradient(135deg,#ccfbf1,#f8fafc)]"></div>
+            <div class="flex h-40 items-center justify-center rounded-[1.5rem] bg-[linear-gradient(135deg,#ccfbf1,#f8fafc)]">
+              <svg class="h-20 w-20 text-teal-600/70" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-3 4-6 7-6 11a6 6 0 0012 0c0-4-3-7-6-11z"/></svg>
+            </div>
             <h3 class="mt-5 text-xl font-bold">Water, Filters &amp; Emergency Supply</h3>
             <p class="mt-2 text-sm leading-6 text-slate-600">Filtration, infrastructure, and emergency-use products where reliability matters more than novelty.</p>
           </div>
         </div>
       </section>
 
-      <section id="products" class="bg-white py-16">
+      <section id="listings" class="bg-white py-10 sm:py-16">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
-          <div class="flex items-end justify-between gap-6">
-            <div>
-              <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">Featured sourcing opportunities</p>
-              <h2 class="mt-3 text-4xl font-bold tracking-tight text-slate-950">What buyers actually come looking for</h2>
-              <p class="mt-4 max-w-3xl text-lg text-slate-600">Use the front page to feature the strongest, most sourceable products&#8212;not random catalog filler. Highlight what moves volume, solves a real import need, or gives buyers a reason to ask for concierge support.</p>
-            </div>
-            <button onclick="document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('rfq-product').focus();" class="hidden rounded-2xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 lg:block">Browse all products</button>
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">Listed Suppliers</p>
+            <h2 class="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Featured products from our supplier network</h2>
+            <p class="mt-4 max-w-3xl text-lg text-slate-600">Vetted U.S. suppliers and goods curated by our team. Tap any item to send a sourcing request &mdash; we'll handle the rest.</p>
           </div>
 
-          <div class="mt-10 grid gap-6 lg:grid-cols-4">
-            <div class="rounded-[2rem] border border-slate-200 p-6 shadow-sm">
-              <div class="flex items-center justify-between gap-4">
-                <h3 class="text-xl font-bold">Full Cream Milk Powder</h3>
-                <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">High Demand</span>
-              </div>
-              <p class="mt-4 text-sm text-slate-600">MOQ: 1 container &bull; Markets: UAE, Saudi &bull; Docs: Available</p>
-              <button onclick="document.getElementById('rfq-product').value='Full Cream Milk Powder';document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
-            </div>
-            <div class="rounded-[2rem] border border-slate-200 p-6 shadow-sm">
-              <div class="flex items-center justify-between gap-4">
-                <h3 class="text-xl font-bold">Shelf-Stable Tuna Packs</h3>
-                <span class="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">Repeat Buy</span>
-              </div>
-              <p class="mt-4 text-sm text-slate-600">MOQ: Pallet+ &bull; Markets: GCC, Africa &bull; Docs: Labeling Support</p>
-              <button onclick="document.getElementById('rfq-product').value='Shelf-Stable Tuna Packs';document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
-            </div>
-            <div class="rounded-[2rem] border border-slate-200 p-6 shadow-sm">
-              <div class="flex items-center justify-between gap-4">
-                <h3 class="text-xl font-bold">Feminine Care Packs</h3>
-                <span class="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">Consumer Category</span>
-              </div>
-              <p class="mt-4 text-sm text-slate-600">Pads, liners, wipes &bull; Private label or branded &bull; Good retail potential</p>
-              <button onclick="document.getElementById('rfq-product').value='Feminine Care Packs';document.getElementById('rfq-type').value='private_label';updateRFQFields();document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
-            </div>
-            <div class="rounded-[2rem] border border-slate-200 p-6 shadow-sm">
-              <div class="flex items-center justify-between gap-4">
-                <h3 class="text-xl font-bold">Industrial Water Filters</h3>
-                <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Project Supply</span>
-              </div>
-              <p class="mt-4 text-sm text-slate-600">MOQ: Project-based &bull; Markets: UAE, Qatar, Africa &bull; Docs: On Request</p>
-              <button onclick="document.getElementById('rfq-product').value='Industrial Water Filters';document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="mt-6 rounded-2xl bg-slate-950 px-5 py-3 font-semibold text-white">Request Quote</button>
-            </div>
+          <div id="listings-grid" class="mt-8 grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="col-span-full text-center text-sm text-slate-400">Loading featured listings...</div>
           </div>
         </div>
       </section>
 
-      <section class="mx-auto max-w-7xl px-6 py-16 lg:px-8">
+      <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        const grid = document.getElementById('listings-grid');
+
+        function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+        async function loadFeatured() {
+          const { data, error } = await supabase
+            .from('supplier_products')
+            .select('id, name, description, image_url, sku, supplier:suppliers(company_name, us_state)')
+            .eq('featured', true)
+            .eq('status', 'active')
+            .limit(12);
+
+          if (error) {
+            grid.innerHTML = `<div class="col-span-full text-center text-sm text-slate-400">Could not load listings.</div>`;
+            console.error('[listings]', error);
+            return;
+          }
+          if (!data || data.length === 0) {
+            grid.innerHTML = `<div class="col-span-full rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">No featured listings yet. <span class="text-slate-700">Suppliers can list products from the supplier portal &mdash; admin marks them as featured to appear here.</span></div>`;
+            return;
+          }
+
+          grid.innerHTML = data.map(p => {
+            const img = p.image_url
+              ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" class="h-40 w-full rounded-2xl object-cover" loading="lazy">`
+              : `<div class="flex h-40 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50"><svg class="h-12 w-12 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7a3 3 0 013-3h10a3 3 0 013 3v10a3 3 0 01-3 3H7a3 3 0 01-3-3V7z"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 16l4-4 3 3 5-6"/></svg></div>`;
+            const sup = p.supplier?.company_name ? `<div class="mt-1 text-xs text-slate-500">${esc(p.supplier.company_name)}${p.supplier.us_state ? ' · ' + esc(p.supplier.us_state) : ''}</div>` : '';
+            return `<div class="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md">
+              ${img}
+              <h3 class="mt-4 line-clamp-2 text-base font-bold text-slate-950">${esc(p.name)}</h3>
+              ${sup}
+              <button data-listing-id="${esc(p.id)}" data-listing-name="${esc(p.name)}" class="listing-request-btn mt-4 w-full rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800">Request Supply</button>
+            </div>`;
+          }).join('');
+
+          // Wire request buttons via data-attributes (avoids inline-string escaping bugs)
+          grid.querySelectorAll('.listing-request-btn').forEach(b => {
+            b.addEventListener('click', () => {
+              window.requestSupply(b.dataset.listingId, b.dataset.listingName);
+            });
+          });
+        }
+
+        // Click handler: prefill the procurement form's first item with this listing's name + scroll up
+        window.requestSupply = function(productId, productName) {
+          if (window.procState) {
+            window.procState.category = 'consumer';
+            if (!window.procState.items) window.procState.items = [];
+            // Replace items[0] (or push) with this product
+            window.procState.items = [{ name: productName, qty: 1, price: '', weight: '', image: '', brand: '', url: '', listingId: productId, fetching: false, fetchError: '' }];
+            if (typeof window.procRender === 'function') window.procRender();
+          }
+          const el = document.getElementById('proc-country');
+          if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
+        };
+
+        loadFeatured();
+      </script>
+
+      <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
         <div class="grid gap-8 lg:grid-cols-2">
           <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">Business model</p>
-            <h2 class="mt-3 text-3xl font-bold tracking-tight text-slate-950">This should be a sourcing concierge, not just a catalog</h2>
-            <p class="mt-4 text-lg leading-8 text-slate-600">The strongest model is to use the homepage to showcase the best sourceable products, then drive buyers into RFQs, private sourcing requests, and supplier matching. The site should feel like a trade desk with AI support, not a random product directory.</p>
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">Full-service concierge</p>
+            <h2 class="mt-3 text-3xl font-bold tracking-tight text-slate-950">AI-assisted sourcing, packed and shipped — door to door</h2>
+            <p class="mt-4 text-lg leading-8 text-slate-600">We are a hands-on sourcing concierge. We use AI tooling to find the right U.S. supplier and product fast, handle the order end-to-end, consolidate at our New York warehouse, and freight to your door by air or sea. You give us the spec — we do the rest.</p>
             <ul class="mt-6 space-y-3 text-sm text-slate-700">
-              <li>&bull; Public front page shows best opportunities and trust signals</li>
-              <li>&bull; RFQ and private sourcing bring in serious buyers</li>
-              <li>&bull; Concierge layer helps with spec matching, docs, and supplier introductions</li>
-              <li>&bull; Revenue can come from supplier subscriptions, sourcing fees, and closed-deal commissions</li>
+              <li class="flex gap-2"><span class="text-sky-600">✓</span><span>AI-assisted product matching and supplier shortlisting from your URL or description</span></li>
+              <li class="flex gap-2"><span class="text-sky-600">✓</span><span>Live price &amp; specs pulled from Amazon, eBay, Walmart, Best Buy and more</span></li>
+              <li class="flex gap-2"><span class="text-sky-600">✓</span><span>U.S. purchase, payment, and supplier coordination on your behalf</span></li>
+              <li class="flex gap-2"><span class="text-sky-600">✓</span><span>Consolidation, inspection, and export packaging at our Brooklyn warehouse</span></li>
+              <li class="flex gap-2"><span class="text-sky-600">✓</span><span>Air freight (5–10 days) or sea freight (4–8 weeks) — your choice, our forwarder</span></li>
+              <li class="flex gap-2"><span class="text-sky-600">✓</span><span>Door-to-door tracking, customs paperwork, and last-mile delivery to the destination</span></li>
             </ul>
           </div>
           <div class="rounded-[2rem] border border-slate-200 bg-slate-950 p-8 text-white shadow-sm">
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-300">Concierge sourcing</p>
-            <h2 class="mt-3 text-3xl font-bold tracking-tight">Help buyers get what they actually need</h2>
-            <p class="mt-4 text-lg leading-8 text-slate-300">Make the concierge offer explicit: tell buyers you can source hard-to-find items, compare suppliers, review documentation, and help shape a quote request before they waste time.</p>
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-300">What you get</p>
+            <h2 class="mt-3 text-3xl font-bold tracking-tight">Every step we run for you</h2>
+            <p class="mt-4 text-lg leading-8 text-slate-300">From the first link you paste to the box landing at your door, we handle the entire chain. You stay informed in your portal — we stay on the phones, the docks, and the dashboards.</p>
             <div class="mt-6 grid gap-3 sm:grid-cols-2">
-              <div class="rounded-2xl bg-white/5 p-4">Custom sourcing requests</div>
-              <div class="rounded-2xl bg-white/5 p-4">Distributor matching</div>
-              <div class="rounded-2xl bg-white/5 p-4">Compliance guidance</div>
-              <div class="rounded-2xl bg-white/5 p-4">Quote comparison support</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="ai" class="mx-auto max-w-7xl px-6 py-16 lg:px-8">
-        <div class="grid gap-8 lg:grid-cols-2">
-          <div>
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">AI Assistant</p>
-            <h2 class="mt-3 text-4xl font-bold tracking-tight text-slate-950">AI-assisted sourcing and concierge guidance</h2>
-            <p class="mt-4 max-w-xl text-lg text-slate-600">Use AI to narrow suppliers, compare product suitability, and identify documentation or destination issues before sending requests.</p>
-            <div class="mt-6 space-y-3 text-sm text-slate-700">
-              <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200">Can this product ship to Saudi Arabia?</div>
-              <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200">Which suppliers match this RFQ?</div>
-              <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200">What documents are missing for UAE?</div>
-              <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200">Compare three milk powder suppliers for GCC distribution.</div>
-            </div>
-          </div>
-          <div class="rounded-[2rem] border border-slate-200 bg-slate-950 p-5 shadow-xl">
-            <div class="rounded-[1.5rem] bg-slate-900 p-5 text-white">
-              <div class="rounded-2xl bg-white/5 p-4 text-sm text-slate-200">
-                Find U.S. suppliers for feminine care packs for Nairobi retail, private label options, and mixed-carton shipment support.
+              <div class="rounded-2xl bg-white/5 p-4">
+                <p class="text-sm font-semibold text-white">Custom product sourcing</p>
+                <p class="mt-1 text-xs text-slate-400">URL, name, or photo — we find it.</p>
               </div>
-              <div class="mt-4 rounded-2xl bg-sky-500/10 p-4 text-sm text-sky-100 ring-1 ring-sky-400/20">
-                Recommended next step: shortlist verified suppliers, confirm destination labeling requirements, and open a concierge-assisted RFQ.
+              <div class="rounded-2xl bg-white/5 p-4">
+                <p class="text-sm font-semibold text-white">Vehicle &amp; auto parts procurement</p>
+                <p class="mt-1 text-xs text-slate-400">Cars, OEM parts, VIN-matched fitment.</p>
               </div>
-              <div class="mt-4 grid gap-3 sm:grid-cols-2">
-                <div class="rounded-2xl bg-white/5 p-4">
-                  <p class="text-xs uppercase tracking-wide text-slate-400">Best market fit</p>
-                  <p class="mt-2 font-semibold">GCC &bull; Africa</p>
-                </div>
-                <div class="rounded-2xl bg-white/5 p-4">
-                  <p class="text-xs uppercase tracking-wide text-slate-400">Risk flag</p>
-                  <p class="mt-2 font-semibold">Verify labeling</p>
-                </div>
+              <div class="rounded-2xl bg-white/5 p-4">
+                <p class="text-sm font-semibold text-white">Supplier match &amp; private label</p>
+                <p class="mt-1 text-xs text-slate-400">Vetted U.S. manufacturers, your brand.</p>
+              </div>
+              <div class="rounded-2xl bg-white/5 p-4">
+                <p class="text-sm font-semibold text-white">Compliance &amp; documentation</p>
+                <p class="mt-1 text-xs text-slate-400">FDA, Halal, FCC, COO &mdash; we know the paperwork.</p>
+              </div>
+              <div class="rounded-2xl bg-white/5 p-4">
+                <p class="text-sm font-semibold text-white">Air &amp; sea freight</p>
+                <p class="mt-1 text-xs text-slate-400">Insured, tracked, customs-cleared.</p>
+              </div>
+              <div class="rounded-2xl bg-white/5 p-4">
+                <p class="text-sm font-semibold text-white">Escrow &amp; dispute mediation</p>
+                <p class="mt-1 text-xs text-slate-400">Funds released only after delivery.</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="bg-slate-950 py-16 text-white">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8">
-          <div class="grid gap-10 lg:grid-cols-3">
-            <div>
-              <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sky-300">How it works</p>
-              <h2 class="mt-3 text-4xl font-bold tracking-tight">Built for serious international sourcing</h2>
-            </div>
-            <div class="rounded-[2rem] border border-white/10 bg-white/5 p-6">
-              <div class="text-sm font-semibold text-sky-300">01</div>
-              <h3 class="mt-3 text-xl font-bold">Submit your requirement</h3>
-              <p class="mt-3 text-slate-300">Tell us the product, destination, packaging, and volume you need.</p>
-            </div>
-            <div class="rounded-[2rem] border border-white/10 bg-white/5 p-6">
-              <div class="text-sm font-semibold text-sky-300">02</div>
-              <h3 class="mt-3 text-xl font-bold">Get matched</h3>
-              <p class="mt-3 text-slate-300">We connect your request with suitable U.S. suppliers and export-ready offers.</p>
-            </div>
-          </div>
-          <div class="mt-6 grid gap-6 lg:grid-cols-3">
-            <div class="rounded-[2rem] border border-white/10 bg-white/5 p-6 lg:col-start-2">
-              <div class="text-sm font-semibold text-sky-300">03</div>
-              <h3 class="mt-3 text-xl font-bold">Review quotes and proceed</h3>
-              <p class="mt-3 text-slate-300">Move into pricing, documents, and supplier communication with fewer blind spots.</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section id="suppliers" class="mx-auto max-w-7xl px-6 py-16 lg:px-8">
-        <div class="rounded-[2rem] bg-gradient-to-r from-sky-600 to-cyan-500 px-8 py-12 text-white shadow-2xl">
-          <div class="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p class="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">For suppliers</p>
-              <h2 class="mt-3 text-4xl font-bold tracking-tight">Sell to GCC, Africa, Europe, and global buyers</h2>
-              <p class="mt-4 max-w-2xl text-lg text-white/90">List your products, upload export documents, and connect with buyers looking for U.S. supply.</p>
-            </div>
-            <div class="flex flex-col gap-3 sm:flex-row">
-              <a href="suppliers.html" class="rounded-2xl bg-white px-6 py-3 font-semibold text-sky-700 shadow-lg text-center">List Your Products</a>
-              <button onclick="document.getElementById('rfq-product').value='Supplier inquiry';document.getElementById('rfq-notes').value='I am a U.S. supplier interested in listing my products on BuyDirectFromUSA.';document.getElementById('rfq-product').scrollIntoView({behavior:'smooth',block:'center'});" class="rounded-2xl border border-white/40 px-6 py-3 font-semibold text-white">Talk to Sales</button>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <footer class="border-t border-slate-200 bg-white py-10">
+      <footer class="border-t border-slate-200 bg-white py-8 sm:py-10">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
           <div class="flex flex-col items-center justify-between gap-6 md:flex-row">
             <div>
@@ -497,11 +921,11 @@
               </div>
               <p class="mt-1 text-sm text-slate-500">AI-supported sourcing concierge for international buyers</p>
             </div>
-            <div class="flex gap-8 text-sm text-slate-500">
-              <a href="#ai" class="hover:text-slate-900">About</a>
-              <a href="#suppliers" class="hover:text-slate-900">For Suppliers</a>
-              <a href="#" class="hover:text-slate-900">Privacy</a>
-              <a href="#" class="hover:text-slate-900">Terms</a>
+            <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-500 md:justify-start">
+              <a href="#listings" class="hover:text-slate-900">Listings</a>
+              <a href="for-suppliers.html" class="hover:text-slate-900">For Suppliers</a>
+              <a href="privacy.html" class="hover:text-slate-900">Privacy</a>
+              <a href="terms.html" class="hover:text-slate-900">Terms</a>
               <a href="mailto:info@buydirectfromusa.com" class="hover:text-slate-900">Contact</a>
             </div>
           </div>
@@ -519,43 +943,39 @@
     const fields = {
       private_label: `
         <div><label class="mb-1 block text-sm font-semibold text-slate-700">Brand name</label>
-        <input id="rfq-brand" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="Your brand name"></div>
+        <input id="rfq-brand" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="Your brand name"></div>
         <div><label class="mb-1 block text-sm font-semibold text-slate-700">Label language</label>
-        <input id="rfq-lang" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="English, Arabic, French..."></div>
+        <input id="rfq-lang" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="English, Arabic, French..."></div>
         <div><label class="mb-1 block text-sm font-semibold text-slate-700">Artwork ready?</label>
-        <select id="rfq-artwork" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
-          <option>Yes — ready to send</option><option>No — need design help</option><option>Partially ready</option>
-        </select></div>`,
+        <input id="rfq-artwork" list="dl-artwork" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="Pick or describe">
+        <datalist id="dl-artwork"><option>Yes — ready to send</option><option>No — need design help</option><option>Partially ready</option></datalist></div>`,
       bulk_quote: `
         <div><label class="mb-1 block text-sm font-semibold text-slate-700">Minimum order quantity</label>
-        <input id="rfq-moq" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="e.g. 500 units, 1 container"></div>
+        <input id="rfq-moq" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="e.g. 500 units, 1 container"></div>
         <div><label class="mb-1 block text-sm font-semibold text-slate-700">Delivery timeline</label>
-        <input id="rfq-timeline" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="e.g. Within 30 days"></div>
+        <input id="rfq-timeline" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="e.g. Within 30 days"></div>
         <div><label class="mb-1 block text-sm font-semibold text-slate-700">Budget range</label>
-        <input id="rfq-budget" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="e.g. $5,000 - $20,000"></div>`,
+        <input id="rfq-budget" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="e.g. $5,000 - $20,000"></div>`,
       supplier_match: `
         <div><label class="mb-1 block text-sm font-semibold text-slate-700">Target pricing</label>
-        <input id="rfq-pricing" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="e.g. $2-3 per unit"></div>
+        <input id="rfq-pricing" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="e.g. $2-3 per unit"></div>
         <div><label class="mb-1 block text-sm font-semibold text-slate-700">Required certifications</label>
-        <input id="rfq-certs" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="FDA, Halal, ISO..."></div>
+        <input id="rfq-certs" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="FDA, Halal, ISO..."></div>
         <div><label class="mb-1 block text-sm font-semibold text-slate-700">Supplier type preference</label>
-        <select id="rfq-suptype" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
-          <option>Manufacturer</option><option>Distributor</option><option>Trading company</option><option>Any</option>
-        </select></div>`,
+        <input id="rfq-suptype" list="dl-suptype" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="Pick or describe">
+        <datalist id="dl-suptype"><option>Manufacturer</option><option>Distributor</option><option>Trading company</option><option>Any</option></datalist></div>`,
       compliance_help: `
         <div><label class="mb-1 block text-sm font-semibold text-slate-700">Documents already available</label>
-        <input id="rfq-docs" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="COO, Halal cert, FDA..."></div>
+        <input id="rfq-docs" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="COO, Halal cert, FDA..."></div>
         <div><label class="mb-1 block text-sm font-semibold text-slate-700">What help do you need?</label>
-        <select id="rfq-helptype" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
-          <option>Import documentation</option><option>Labeling requirements</option><option>Certification guidance</option><option>Full compliance review</option>
-        </select></div>`,
+        <input id="rfq-helptype" list="dl-helptype" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="Pick or describe">
+        <datalist id="dl-helptype"><option>Import documentation</option><option>Labeling requirements</option><option>Certification guidance</option><option>Full compliance review</option></datalist></div>`,
       distributor_search: `
         <div><label class="mb-1 block text-sm font-semibold text-slate-700">Distribution channels</label>
-        <select id="rfq-channel" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
-          <option>Retail</option><option>Wholesale</option><option>Online</option><option>Institutional</option><option>Multiple channels</option>
-        </select></div>
+        <input id="rfq-channel" list="dl-channel" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="Pick or describe">
+        <datalist id="dl-channel"><option>Retail</option><option>Wholesale</option><option>Online</option><option>Institutional</option><option>Multiple channels</option></datalist></div>
         <div><label class="mb-1 block text-sm font-semibold text-slate-700">Territory size</label>
-        <input id="rfq-territory" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" placeholder="National, regional, city..."></div>`
+        <input id="rfq-territory" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm" placeholder="National, regional, city..."></div>`
     };
     if (fields[type]) {
       el.innerHTML = fields[type];
@@ -595,6 +1015,7 @@
     });
 
     const result = await submitRequest({
+      clientId: window.bdusaUser?.id || null,
       clientName: name,
       clientEmail: email,
       productNeeded: product,
@@ -621,6 +1042,64 @@
     status.classList.remove('hidden');
   };
   </script>
+  <!-- Auth bootstrap: detect logged-in user, pre-fill forms, flip header -->
+  <script type="module">
+    import { supabase } from './js/supabase.js';
+
+    async function applyAuthState() {
+      const { data: { user } } = await supabase.auth.getUser();
+      window.bdusaUser = user || null;
+      const signinBtn = document.getElementById('bdusa-signin-btn');
+      const cluster = document.getElementById('bdusa-user-cluster');
+      const portalLink = document.getElementById('bdusa-portal-link');
+
+      if (user) {
+        signinBtn?.classList.add('hidden');
+        cluster?.classList.remove('hidden');
+        cluster?.classList.add('flex');
+        const md = user.user_metadata || {};
+        const role = md.role || 'client';
+        const displayName = md.display_name || md.full_name || user.email?.split('@')[0] || 'there';
+
+        // Operators get pointed to the dashboard, not the portal.
+        if (role === 'operator' || role === 'admin') {
+          portalLink.href = 'dashboard.html';
+          portalLink.textContent = 'Dashboard';
+        } else {
+          portalLink.href = 'portal.html';
+          portalLink.textContent = 'My Portal';
+        }
+
+        // Pre-fill the existing RFQ form fields
+        const rfqName = document.getElementById('rfq-name');
+        const rfqEmail = document.getElementById('rfq-email');
+        if (rfqName && !rfqName.value) rfqName.value = displayName;
+        if (rfqEmail && !rfqEmail.value) rfqEmail.value = user.email || '';
+
+        // Pre-fill procurement form contact if it's a client
+        if (window.procState) {
+          window.procState.contact = window.procState.contact || { name: '', email: '', phone: '' };
+          if (!window.procState.contact.name) window.procState.contact.name = displayName;
+          if (!window.procState.contact.email) window.procState.contact.email = user.email || '';
+          if (typeof window.procRender === 'function') window.procRender();
+        }
+      } else {
+        signinBtn?.classList.remove('hidden');
+        cluster?.classList.add('hidden');
+        cluster?.classList.remove('flex');
+      }
+    }
+
+    window.bdusaSignOut = async function() {
+      await supabase.auth.signOut();
+      location.reload();
+    };
+
+    // Run on load and react to auth state changes
+    applyAuthState();
+    supabase.auth.onAuthStateChange((_evt) => applyAuthState());
+  </script>
+
   <!-- Auth Modal: Client / Operator -->
   <div id="auth-modal" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-slate-950/60 backdrop-blur p-4">
     <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
