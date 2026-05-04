@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Overview — BuyDirectFromUSA</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>body{font-family:Inter,ui-sans-serif,system-ui,sans-serif;}</style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+<header class="border-b border-slate-200 bg-white">
+  <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
+    <div class="flex items-center gap-3">
+      <a href="/" class="text-base font-bold tracking-tight sm:text-xl"><span class="text-slate-950">Buy</span><span class="bg-gradient-to-r from-blue-700 to-red-700 bg-clip-text text-transparent">DirectFromUSA</span></a>
+      <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">Admin Overview</span>
+    </div>
+    <nav class="flex items-center gap-3 text-sm">
+      <a href="dashboard.html" class="text-slate-500 hover:text-slate-900">Pipeline</a>
+      <a href="suppliers.html" class="text-slate-500 hover:text-slate-900">Suppliers</a>
+      <a href="listings-admin.html" class="text-slate-500 hover:text-slate-900">Listings</a>
+      <span id="who" class="hidden text-slate-500 sm:inline"></span>
+      <button onclick="signOut()" class="text-slate-400 hover:text-slate-900">Sign Out</button>
+    </nav>
+  </div>
+</header>
+
+<!-- Login gate -->
+<div id="gate" class="flex min-h-[calc(100vh-65px)] items-center justify-center px-4">
+  <div class="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg">
+    <h2 class="text-xl font-bold">Operator sign in</h2>
+    <p class="mt-1 text-sm text-slate-500">Admin access required.</p>
+    <div class="mt-5 space-y-3">
+      <input id="g-email" type="email" placeholder="Email" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm">
+      <input id="g-pass" type="password" placeholder="Password" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm">
+      <button onclick="doLogin()" class="w-full rounded-xl bg-sky-600 py-2.5 text-sm font-semibold text-white hover:bg-sky-700">Sign in</button>
+      <p id="g-err" class="hidden text-sm text-red-600"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Main -->
+<main id="main" class="mx-auto hidden max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight">What needs your attention</h1>
+      <p class="text-sm text-slate-500">Live overview of incoming requests, supplier applications, and messages.</p>
+    </div>
+    <button onclick="refreshAll()" class="rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">↻ Refresh</button>
+  </div>
+
+  <!-- Stat tiles -->
+  <div class="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-2xl bg-white p-5 shadow-sm">
+      <div class="flex items-center justify-between">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">New requests</p>
+        <span id="count-new-deals-badge" class="hidden rounded-full bg-sky-100 px-2 py-0.5 text-xs font-bold text-sky-700">·</span>
+      </div>
+      <p id="count-new-deals" class="mt-2 text-3xl font-bold text-slate-950">—</p>
+      <a href="dashboard.html" class="mt-1 inline-block text-xs font-semibold text-sky-700 hover:underline">Open pipeline →</a>
+    </div>
+    <div class="rounded-2xl bg-white p-5 shadow-sm">
+      <div class="flex items-center justify-between">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Awaiting supplier</p>
+      </div>
+      <p id="count-awaiting" class="mt-2 text-3xl font-bold text-slate-950">—</p>
+      <a href="dashboard.html" class="mt-1 inline-block text-xs font-semibold text-sky-700 hover:underline">Open pipeline →</a>
+    </div>
+    <div class="rounded-2xl bg-white p-5 shadow-sm">
+      <div class="flex items-center justify-between">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Pending suppliers</p>
+        <span id="count-pending-sup-badge" class="hidden rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">·</span>
+      </div>
+      <p id="count-pending-sup" class="mt-2 text-3xl font-bold text-slate-950">—</p>
+      <a href="suppliers.html" class="mt-1 inline-block text-xs font-semibold text-sky-700 hover:underline">Review →</a>
+    </div>
+    <div class="rounded-2xl bg-white p-5 shadow-sm">
+      <div class="flex items-center justify-between">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Unread messages</p>
+        <span id="count-msg-badge" class="hidden rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-700">·</span>
+      </div>
+      <p id="count-msg" class="mt-2 text-3xl font-bold text-slate-950">—</p>
+      <a href="dashboard.html" class="mt-1 inline-block text-xs font-semibold text-sky-700 hover:underline">Open pipeline →</a>
+    </div>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <!-- Recent requests -->
+    <section class="rounded-2xl bg-white shadow-sm">
+      <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+        <h2 class="text-base font-bold">Latest procurement requests</h2>
+        <a href="dashboard.html" class="text-xs font-semibold text-sky-700 hover:underline">View all</a>
+      </div>
+      <div id="recent-deals" class="divide-y divide-slate-100"><div class="px-5 py-6 text-center text-sm text-slate-400">Loading…</div></div>
+    </section>
+
+    <!-- Recent supplier signups -->
+    <section class="rounded-2xl bg-white shadow-sm">
+      <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+        <h2 class="text-base font-bold">Pending supplier applications</h2>
+        <a href="suppliers.html" class="text-xs font-semibold text-sky-700 hover:underline">View all</a>
+      </div>
+      <div id="recent-sups" class="divide-y divide-slate-100"><div class="px-5 py-6 text-center text-sm text-slate-400">Loading…</div></div>
+    </section>
+
+    <!-- Recent messages -->
+    <section class="rounded-2xl bg-white shadow-sm lg:col-span-2">
+      <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+        <h2 class="text-base font-bold">Latest messages from clients</h2>
+        <a href="dashboard.html" class="text-xs font-semibold text-sky-700 hover:underline">Open pipeline</a>
+      </div>
+      <div id="recent-msgs" class="divide-y divide-slate-100"><div class="px-5 py-6 text-center text-sm text-slate-400">Loading…</div></div>
+    </section>
+  </div>
+</main>
+
+<script type="module">
+  import { supabase } from './js/supabase.js';
+
+  let user = null;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; };
+  const fmtDate = (s) => { try { return new Date(s).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); } catch { return s; } };
+
+  async function init() {
+    const { data: { user: u } } = await supabase.auth.getUser();
+    if (!u) return showGate();
+    user = u;
+    const role = u.user_metadata?.role || 'client';
+    if (role !== 'operator' && role !== 'admin') {
+      $('gate').innerHTML = `<div class="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg text-center"><h2 class="text-xl font-bold text-red-700">Operator access required</h2><p class="mt-2 text-sm text-slate-500">You're signed in as <strong>${esc(u.email)}</strong> (${esc(role)}).</p><button onclick="signOut()" class="mt-4 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold">Sign out</button></div>`;
+      $('gate').classList.remove('hidden');
+      return;
+    }
+    enterApp();
+  }
+  function showGate() { $('gate').classList.remove('hidden'); $('main').classList.add('hidden'); }
+  async function enterApp() {
+    $('gate').classList.add('hidden'); $('main').classList.remove('hidden');
+    $('who').textContent = user.email;
+    refreshAll();
+    setInterval(refreshAll, 60000); // auto-refresh every 60s
+  }
+  window.doLogin = async function() {
+    const err = $('g-err'); err.classList.add('hidden');
+    const { data, error } = await supabase.auth.signInWithPassword({ email: $('g-email').value.trim(), password: $('g-pass').value });
+    if (error) { err.textContent = error.message; err.classList.remove('hidden'); return; }
+    user = data.user; init();
+  };
+  window.signOut = async () => { await supabase.auth.signOut(); location.reload(); };
+
+  window.refreshAll = async function() {
+    await Promise.all([loadDeals(), loadPendingSuppliers(), loadRecentMessages()]);
+  };
+
+  async function loadDeals() {
+    // Counts by status
+    const statuses = ['new', 'awaiting_supplier'];
+    const counts = {};
+    for (const s of statuses) {
+      const { count } = await supabase.from('deals').select('*', { count: 'exact', head: true }).eq('status', s);
+      counts[s] = count ?? 0;
+    }
+    $('count-new-deals').textContent = counts.new;
+    $('count-awaiting').textContent = counts.awaiting_supplier;
+    if (counts.new > 0) $('count-new-deals-badge').classList.remove('hidden');
+
+    // Latest 8 deals (any status)
+    const { data: deals } = await supabase.from('deals')
+      .select('id, created_at, client_name, client_email, product_needed, target_country, status, request_type')
+      .order('created_at', { ascending: false }).limit(8);
+    const el = $('recent-deals');
+    if (!deals || deals.length === 0) {
+      el.innerHTML = '<div class="px-5 py-6 text-center text-sm text-slate-400">No requests yet.</div>';
+      return;
+    }
+    el.innerHTML = deals.map(d => `<a href="dashboard.html?deal=${esc(d.id)}" class="block px-5 py-3 hover:bg-slate-50">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="truncate font-semibold text-sm text-slate-900">${esc(d.product_needed || '—')}</p>
+          <p class="mt-0.5 truncate text-xs text-slate-500">${esc(d.client_name || d.client_email || 'Anonymous')} · ${esc(d.target_country || '—')} · ${esc((d.request_type || '').replace(/_/g, ' '))}</p>
+        </div>
+        <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600">${esc(d.status)}</span>
+      </div>
+      <p class="mt-1 text-[11px] text-slate-400">${fmtDate(d.created_at)}</p>
+    </a>`).join('');
+  }
+
+  async function loadPendingSuppliers() {
+    const { data: sups, count } = await supabase.from('suppliers')
+      .select('id, created_at, company_name, contact_name, email, us_state, notes', { count: 'exact' })
+      .eq('status', 'pending').order('created_at', { ascending: false }).limit(8);
+    $('count-pending-sup').textContent = count ?? 0;
+    if ((count ?? 0) > 0) $('count-pending-sup-badge').classList.remove('hidden');
+    const el = $('recent-sups');
+    if (!sups || sups.length === 0) {
+      el.innerHTML = '<div class="px-5 py-6 text-center text-sm text-slate-400">No pending applications.</div>';
+      return;
+    }
+    el.innerHTML = sups.map(s => `<a href="suppliers.html" class="block px-5 py-3 hover:bg-slate-50">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="truncate font-semibold text-sm text-slate-900">${esc(s.company_name)}</p>
+          <p class="mt-0.5 truncate text-xs text-slate-500">${esc(s.contact_name || '—')} · ${esc(s.email || '—')} ${s.us_state ? '· ' + esc(s.us_state) : ''}</p>
+        </div>
+        <span class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-700">PENDING</span>
+      </div>
+      <p class="mt-1 text-[11px] text-slate-400">${fmtDate(s.created_at)}</p>
+    </a>`).join('');
+  }
+
+  async function loadRecentMessages() {
+    // Most recent inbound messages (visible to all or internal/operator)
+    const { data: msgs } = await supabase.from('deal_messages')
+      .select('id, created_at, body, deal_id, sender_id, deal:deals(client_name, product_needed)')
+      .order('created_at', { ascending: false }).limit(8);
+    // Naive "unread" count: messages from clients (sender_id != current operator) within last 7 days
+    const since = new Date(Date.now() - 7 * 86400000).toISOString();
+    const { count } = await supabase.from('deal_messages').select('*', { count: 'exact', head: true })
+      .gte('created_at', since).neq('sender_id', user.id);
+    $('count-msg').textContent = count ?? 0;
+    if ((count ?? 0) > 0) $('count-msg-badge').classList.remove('hidden');
+    const el = $('recent-msgs');
+    if (!msgs || msgs.length === 0) {
+      el.innerHTML = '<div class="px-5 py-6 text-center text-sm text-slate-400">No messages yet.</div>';
+      return;
+    }
+    el.innerHTML = msgs.map(m => {
+      const isMe = m.sender_id === user.id;
+      const body = (m.body || '').replace(/\n/g, ' ').substring(0, 180);
+      return `<a href="dashboard.html?deal=${esc(m.deal_id)}" class="block px-5 py-3 hover:bg-slate-50">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="truncate text-xs font-semibold text-slate-700">${isMe ? 'You' : esc(m.deal?.client_name || 'Client')} · <span class="font-normal text-slate-500">re ${esc(m.deal?.product_needed || '—')}</span></p>
+            <p class="mt-0.5 truncate text-sm text-slate-700">${esc(body)}</p>
+          </div>
+        </div>
+        <p class="mt-1 text-[11px] text-slate-400">${fmtDate(m.created_at)}</p>
+      </a>`;
+    }).join('');
+  }
+
+  init();
+</script>
+
+</body>
+</html>

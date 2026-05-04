@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get Listed — BuyDirectFromUSA Suppliers</title>
+<meta name="description" content="Apply to list your products on BuyDirectFromUSA. Reach global buyers with us handling payments, escrow, customs, and shipping.">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>body{font-family:Inter,ui-sans-serif,system-ui,sans-serif;}</style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+<header class="border-b border-slate-200 bg-white">
+  <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
+    <a href="/" class="block">
+      <div class="text-base font-bold tracking-tight sm:text-xl"><span class="text-slate-950">Buy</span><span class="bg-gradient-to-r from-blue-700 to-red-700 bg-clip-text text-transparent">DirectFromUSA</span><span class="text-[#1f3a8a]">.com</span></div>
+    </a>
+    <a href="for-suppliers.html" class="text-sm text-slate-500 hover:text-slate-900">← Why partner with us</a>
+  </div>
+</header>
+
+<main class="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+  <div class="rounded-2xl border-2 border-sky-400/40 bg-white p-5 shadow-2xl ring-4 ring-sky-100/50 sm:rounded-3xl sm:p-8">
+    <span class="inline-flex items-center rounded-full bg-sky-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-sky-700">Supplier application</span>
+    <h1 class="mt-3 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Get listed on BuyDirectFromUSA</h1>
+    <p class="mt-2 text-sm text-slate-600">Tell us about your business. We review applications within 1–2 business days. Listing is free; we earn from the buyer's service fee.</p>
+
+    <form id="signup-form" class="mt-6 space-y-4">
+      <fieldset>
+        <legend class="text-xs font-bold uppercase tracking-wide text-slate-500">Company</legend>
+        <div class="mt-2 grid gap-3 sm:grid-cols-2">
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm font-semibold text-slate-700">Company name *</label>
+            <input id="company_name" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-semibold text-slate-700">Website</label>
+            <input id="website" placeholder="https://" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-semibold text-slate-700">Country</label>
+            <input id="country" placeholder="USA, Canada, UK..." class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-semibold text-slate-700">State / Region</label>
+            <input id="us_state" placeholder="State, region, or city" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="text-xs font-bold uppercase tracking-wide text-slate-500">Primary contact</legend>
+        <div class="mt-2 grid gap-3 sm:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-sm font-semibold text-slate-700">Your name *</label>
+            <input id="contact_name" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-semibold text-slate-700">Your role</label>
+            <input id="role" placeholder="Founder, Sales Director..." class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-semibold text-slate-700">Email *</label>
+            <input id="email" type="email" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-semibold text-slate-700">Phone</label>
+            <input id="phone" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="text-xs font-bold uppercase tracking-wide text-slate-500">Products</legend>
+        <div class="mt-2 grid gap-3 sm:grid-cols-2">
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm font-semibold text-slate-700">What do you supply? *</label>
+            <textarea id="product_summary" required rows="3" placeholder="Brief description: categories, brands, MOQ, anything we should know" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"></textarea>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-semibold text-slate-700">MOQ range</label>
+            <input id="moq_range" placeholder="e.g. 1 case to 1 container" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-semibold text-slate-700">Markets you can serve</label>
+            <input id="markets" placeholder="GCC, Africa, EU, anywhere..." class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-semibold text-slate-700">Certifications</label>
+            <input id="certifications" placeholder="FDA, Halal, ISO 9001..." class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-semibold text-slate-700 invisible">_</label>
+            <label class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+              <input id="private_label" type="checkbox" class="h-4 w-4 rounded border-slate-300">
+              <span>Open to private-label orders</span>
+            </label>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="text-xs font-bold uppercase tracking-wide text-slate-500">Anything else (optional)</legend>
+        <textarea id="notes" rows="2" placeholder="Volumes, lead times, references, questions..." class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm"></textarea>
+      </fieldset>
+
+      <label class="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700">
+        <input id="agree" type="checkbox" required class="mt-0.5 h-4 w-4 rounded border-slate-300">
+        <span>The information above is accurate to the best of my knowledge.</span>
+      </label>
+
+      <button id="submit-btn" type="submit" class="w-full rounded-xl bg-sky-600 px-6 py-3 text-base font-bold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-700 disabled:opacity-50">Submit application</button>
+      <p id="status" class="hidden text-sm"></p>
+    </form>
+  </div>
+</main>
+
+<footer class="mt-12 border-t border-slate-200 bg-white py-8">
+  <div class="mx-auto max-w-5xl px-4 text-center text-sm text-slate-500 sm:px-6 lg:px-8">
+    <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
+      <a href="/" class="hover:text-slate-900">Home</a>
+      <a href="for-suppliers.html" class="hover:text-slate-900">For Suppliers</a>
+      <a href="privacy.html" class="hover:text-slate-900">Privacy</a>
+      <a href="terms.html" class="hover:text-slate-900">Terms</a>
+      <a href="mailto:suppliers@buydirectfromusa.com" class="hover:text-slate-900">Contact</a>
+    </div>
+    <p class="mt-3 text-xs text-slate-400">&copy; 2026 BuyDirectFromUSA.com</p>
+  </div>
+</footer>
+
+<script type="module">
+  import { supabase } from './js/supabase.js';
+
+  const $ = (id) => document.getElementById(id);
+  const status = $('status');
+  const btn = $('submit-btn');
+
+  function splitArr(s) {
+    return (s || '').split(/[,;\n]+/).map(x => x.trim()).filter(Boolean);
+  }
+
+  $('signup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    status.classList.add('hidden');
+
+    if (!$('agree').checked) {
+      status.textContent = 'Please confirm the statement above.';
+      status.className = 'text-sm text-red-600';
+      status.classList.remove('hidden');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+
+    const role = $('role').value.trim();
+    const productSummary = $('product_summary').value.trim();
+    const notes = $('notes').value.trim();
+    // Stash role + product summary inside notes since they aren't first-class columns
+    const fullNotes = [
+      role ? 'Contact role: ' + role : '',
+      productSummary ? 'Products: ' + productSummary : '',
+      notes ? 'Notes: ' + notes : '',
+    ].filter(Boolean).join('\n\n');
+
+    const payload = {
+      company_name: $('company_name').value.trim(),
+      contact_name: $('contact_name').value.trim(),
+      email: $('email').value.trim(),
+      phone: $('phone').value.trim(),
+      website: $('website').value.trim(),
+      country: $('country').value.trim() || '',
+      us_state: $('us_state').value.trim(),
+      markets_served: splitArr($('markets').value),
+      certifications: splitArr($('certifications').value),
+      moq_range: $('moq_range').value.trim(),
+      private_label: $('private_label').checked,
+      export_ready: true,
+      verified: false,
+      preferred: false,
+      status: 'pending',
+      notes: fullNotes,
+    };
+
+    const { error } = await supabase.from('suppliers').insert(payload);
+
+    if (error) {
+      status.textContent = 'Could not submit: ' + error.message + ' — please try again or email suppliers@buydirectfromusa.com.';
+      status.className = 'text-sm text-red-600';
+      status.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Submit application';
+      return;
+    }
+
+    status.innerHTML = '<strong>Application received.</strong> Our team will review and reach out within 1–2 business days. We sent a confirmation copy to ' + payload.email + '.';
+    status.className = 'rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800';
+    status.classList.remove('hidden');
+    btn.textContent = 'Submitted ✓';
+    $('signup-form').reset();
+  });
+</script>
+
+</body>
+</html>
