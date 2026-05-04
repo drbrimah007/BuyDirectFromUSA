@@ -844,15 +844,35 @@
             groups.get(sid).products.push(p);
           }
 
+          // Stable colour per supplier name so brand placeholders look intentional
+          const palette = [
+            ['from-sky-100','to-sky-50','text-sky-700'],
+            ['from-rose-100','to-rose-50','text-rose-700'],
+            ['from-amber-100','to-amber-50','text-amber-700'],
+            ['from-emerald-100','to-emerald-50','text-emerald-700'],
+            ['from-violet-100','to-violet-50','text-violet-700'],
+            ['from-orange-100','to-orange-50','text-orange-700'],
+          ];
+          const supColor = (name) => {
+            let h = 0; for (const c of (name || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+            return palette[h % palette.length];
+          };
+
           // One supplier-level card per supplier — collage of 4 product squares + meta + 2 CTAs
           grid.innerHTML = Array.from(groups.values()).map(g => {
             const sup = g.supplier || {};
             const collageProducts = g.products.slice(0, 4);
-            // Always 4 cells (pad with placeholders so the 2x2 stays balanced)
-            const placeholderCell = `<div class="aspect-square w-full rounded-md bg-gradient-to-br from-slate-100 to-slate-50"></div>`;
+            const [c1, c2, ct] = supColor(sup.company_name);
+            // Branded fallback: SKU code (or product short label) on a brand-tinted square
+            const skuLabel = (p) => {
+              const s = (p.sku || p.name || '').replace(/^[A-Za-z]+\s*/, '').replace(/\s+\d+(?:["'].*)?$/, '').trim();
+              return esc((s || p.name || 'Product').substring(0, 14));
+            };
+            const brandedCell = (label) => `<div class="relative aspect-square w-full overflow-hidden rounded-md bg-gradient-to-br ${c1} ${c2} flex items-center justify-center px-1.5 text-center"><span class="text-[10px] font-bold uppercase tracking-wide ${ct} leading-tight">${label}</span></div>`;
+            const placeholderCell = brandedCell(esc((sup.company_name || '').substring(0, 14)));
             const tile = (p) => p.image_url
-              ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" class="aspect-square w-full rounded-md object-cover" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'aspect-square w-full rounded-md bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center',innerHTML:'<svg class=\\'h-8 w-8 text-slate-300\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'1.5\\' viewBox=\\'0 0 24 24\\'><path stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' d=\\'M4 7a3 3 0 013-3h10a3 3 0 013 3v10a3 3 0 01-3 3H7a3 3 0 01-3-3V7z\\'/><path stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' d=\\'M7 16l4-4 3 3 5-6\\'/></svg>'}))">`
-              : `<div class="aspect-square w-full rounded-md bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center"><svg class="h-8 w-8 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7a3 3 0 013-3h10a3 3 0 013 3v10a3 3 0 01-3 3H7a3 3 0 01-3-3V7z"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 16l4-4 3 3 5-6"/></svg></div>`;
+              ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" class="aspect-square w-full rounded-md object-cover bg-white" loading="lazy" onerror="this.outerHTML='${brandedCell(skuLabel(p)).replace(/'/g, "\\'")}'">`
+              : brandedCell(skuLabel(p));
             const cells = [];
             for (let i = 0; i < 4; i++) cells.push(collageProducts[i] ? tile(collageProducts[i]) : placeholderCell);
             const collage = `<div class="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-50 p-1.5">${cells.join('')}</div>`;
