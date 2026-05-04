@@ -863,16 +863,20 @@
             const sup = g.supplier || {};
             const collageProducts = g.products.slice(0, 4);
             const [c1, c2, ct] = supColor(sup.company_name);
-            // Branded fallback: SKU code (or product short label) on a brand-tinted square
             const skuLabel = (p) => {
               const s = (p.sku || p.name || '').replace(/^[A-Za-z]+\s*/, '').replace(/\s+\d+(?:["'].*)?$/, '').trim();
               return esc((s || p.name || 'Product').substring(0, 14));
             };
-            const brandedCell = (label) => `<div class="relative aspect-square w-full overflow-hidden rounded-md bg-gradient-to-br ${c1} ${c2} flex items-center justify-center px-1.5 text-center"><span class="text-[10px] font-bold uppercase tracking-wide ${ct} leading-tight">${label}</span></div>`;
+            // Branded square: SKU/short label on a brand-tinted gradient
+            const brandedInner = (label) => `<div class="absolute inset-0 rounded-md bg-gradient-to-br ${c1} ${c2} flex items-center justify-center px-1.5 text-center"><span class="text-[10px] font-bold uppercase tracking-wide ${ct} leading-tight">${label}</span></div>`;
+            const brandedCell = (label) => `<div class="relative aspect-square w-full">${brandedInner(label)}</div>`;
+            // Tile = branded fallback layered under image; image hides on error so the brand square shows
+            const tile = (p) => {
+              const lbl = skuLabel(p);
+              if (!p.image_url) return brandedCell(lbl);
+              return `<div class="relative aspect-square w-full">${brandedInner(lbl)}<img src="${esc(p.image_url)}" alt="${esc(p.name)}" class="relative h-full w-full rounded-md object-cover bg-white" loading="lazy" onerror="this.style.display='none'"></div>`;
+            };
             const placeholderCell = brandedCell(esc((sup.company_name || '').substring(0, 14)));
-            const tile = (p) => p.image_url
-              ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" class="aspect-square w-full rounded-md object-cover bg-white" loading="lazy" onerror="this.outerHTML='${brandedCell(skuLabel(p)).replace(/'/g, "\\'")}'">`
-              : brandedCell(skuLabel(p));
             const cells = [];
             for (let i = 0; i < 4; i++) cells.push(collageProducts[i] ? tile(collageProducts[i]) : placeholderCell);
             const collage = `<div class="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-50 p-1.5">${cells.join('')}</div>`;
