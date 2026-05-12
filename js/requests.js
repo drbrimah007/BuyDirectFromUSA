@@ -1,13 +1,19 @@
 // BuyDirectFromUSA — Client Request Module
 import { supabase } from './supabase.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 
-// Submit a sourcing request (creates a deal)
+// Submit a sourcing request (creates a deal).
+// Anonymous submissions route through the protected edge function
+// (honeypot + time-gate + disposable-email block + per-IP rate-limit + optional Turnstile).
+// Authenticated submissions still use direct insert so we can return the row.
 export async function submitRequest({
   clientId = null, clientName, clientEmail, clientCompany = '', clientCountry = '',
   requestType = 'product_sourcing', productNeeded, categorySlug = '',
   targetCountry = '', targetRegion = '', quantity = '', packaging = '',
   urgency = 'normal', budgetRange = '', privateLabel = false,
-  certifications = '', specialNotes = '', dynamicData = {}
+  certifications = '', specialNotes = '', dynamicData = {},
+  // Bot-control payload — set by chatbot / form before submitting
+  _meta = {}
 }) {
   // Append dynamic form fields to special notes if present
   const dynamicEntries = Object.entries(dynamicData).filter(([,v]) => v);
@@ -22,12 +28,7 @@ export async function submitRequest({
     if (cat) categoryId = cat.id;
   }
 
-  // Anonymous submitters have no SELECT policy on deals, so .select().single()
-  // after insert triggers a second RLS check that fails for the anon role.
-  // Authenticated users (logged-in clients) can safely return the row.
-  const isAuthenticated = !!clientId;
-
-  let query = supabase.from('deals').insert({
+  const payload = {
     client_id: clientId,
     client_name: clientName, client_email: clientEmail,
     client_company: clientCompany, client_country: clientCountry,
@@ -36,17 +37,38 @@ export async function submitRequest({
     target_region: targetRegion, quantity, packaging,
     urgency, budget_range: budgetRange, private_label: privateLabel,
     certifications, special_notes: specialNotes,
-    status: 'new'
-  });
+  };
 
-  // Only request the row back when the caller is authenticated —
-  // anon has INSERT-only access and no SELECT policy on deals.
-  if (isAuthenticated) query = query.select().single();
+  // Authenticated: direct insert (returns row via RLS SELECT policy)
+  if (clientId) {
+    const { data, error } = await supabase.from('deals').insert({ ...payload, status: 'new' }).select().single();
+    if (error) console.error('[submitRequest]', error.message);
+    return { data, error: error?.message };
+  }
 
-  const { data, error } = await query;
-
-  if (error) console.error('[submitRequest]', error.message);
-  return { data, error: error?.message };
+  // Anonymous: route through the protected edge function (no Supabase JS client —
+  // we need full control over headers + body for the bot-control _meta payload).
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/submit-deal-protected`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ ...payload, _meta }),
+    });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      console.error('[submitRequest] protected reject:', out);
+      return { data: null, error: out.code || out.error || `http ${res.status}` };
+    }
+    return { data: { id: out.deal_id }, error: null };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[submitRequest] network error:', msg);
+    return { data: null, error: msg };
+  }
 }
 
 // List my requests (client view)

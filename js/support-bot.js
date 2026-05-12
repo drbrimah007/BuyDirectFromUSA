@@ -25,6 +25,21 @@ const NY_TAX = 0.089;
 const SERVICE_FEE = 0.10;
 const SHIP_MIN = 65;
 
+// Global air shipping rate (ShipStation-aligned international air, ex-Nigeria).
+// Marginal per-lb cost for an average-size, non-oversized parcel:
+//   $90 minimum (covers fixed carrier fees + handling)
+//   0-40 lbs:  $9/lb marginal
+//   40-50 lbs: linear blend $9 → $6/lb (mid-band, avg $7.50/lb)
+//   50+ lbs:   $6/lb marginal
+function globalAirShipping(lbs) {
+  const w = Math.max(0, Number(lbs) || 0);
+  let cost = 0;
+  cost += Math.min(w, 40) * 9;
+  if (w > 40) cost += Math.min(w - 40, 10) * 7.5;
+  if (w > 50) cost += (w - 50) * 6;
+  return Math.max(90, cost);
+}
+
 const state = {
   step: 'greet',          // greet → category → product → quantity → country → contact → review → submitted
   category: null,         // 'consumer' | 'vehicle' | 'parts' | 'other'
@@ -34,6 +49,10 @@ const state = {
   country: '',
   estimate: null,         // {listed, tax, fee, ship, total}
   contact: { name: '', email: '' },
+  // Bot-control payload — sent server-side at submit time
+  _hp: '',                          // honeypot: filled by bots, never by humans
+  _formStarted: Date.now(),         // form-fill timestamp; submissions <5s rejected server-side
+  _turnstile: '',                   // Cloudflare Turnstile token (optional, set if widget rendered)
 };
 
 const $ = (id) => document.getElementById(id);
@@ -64,6 +83,8 @@ function injectUI() {
         <input id="sonia-input" placeholder="Type a reply..." autocomplete="off" style="flex:1;border:1px solid #e2e8f0;border-radius:14px;padding:10px 12px;font-size:14px;outline:none;font-family:inherit;">
         <button id="sonia-send" style="background:#0284c7;border:none;color:white;width:38px;height:38px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;">→</button>
       </div>
+      <!-- Honeypot: hidden from humans, irresistible to bots. If filled, server rejects. -->
+      <input id="sonia-hp" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;">
     </div>`;
   document.body.appendChild(root);
 
@@ -71,7 +92,11 @@ function injectUI() {
     const open = $('sonia-panel').style.display === 'flex';
     $('sonia-panel').style.display = open ? 'none' : 'flex';
     $('sonia-badge').style.display = 'none';
-    if (!open && state.step === 'greet') startGreeting();
+    if (!open) {
+      // Reset bot-control timer on every open — server rejects submissions <5s after this.
+      state._formStarted = Date.now();
+      if (state.step === 'greet') startGreeting();
+    }
   });
   $('sonia-close').addEventListener('click', () => { $('sonia-panel').style.display = 'none'; });
   $('sonia-send').addEventListener('click', sendUserInput);
@@ -350,7 +375,7 @@ function showEstimate() {
   let shipCost = null;
   if (ship?.perLb != null) {
     if (state.country === 'Nigeria') shipCost = Math.max(SHIP_MIN, weight * ship.perLb);
-    else shipCost = Math.max(SHIP_MIN, 90 + (listed * 0.10 * weight));
+    else shipCost = globalAirShipping(weight);
   }
   state.estimate = { listed, weight, tax, fee, shipCost, total: shipCost == null ? null : listed + tax + fee + shipCost };
 
@@ -403,7 +428,13 @@ async function submitToBackend() {
       p?.supplier ? `Suggested supplier: ${p.supplier}` : '',
       r.total ? `Bot estimate: listed ${fmt(r.listed)} + tax ${fmt(r.tax)} + fee ${fmt(r.fee)} + ship ${r.shipCost == null ? 'TBA' : fmt(r.shipCost)} = ${fmt(r.total)}` : 'No bot estimate (price unknown)',
     ].filter(Boolean).join('\n\n'),
-    dynamicData: { channel: 'sonia-chat', product: p, estimate: r }
+    dynamicData: { channel: 'sonia-chat', product: p, estimate: r },
+    // Bot-control payload — read by submit-deal-protected edge function
+    _meta: {
+      hp: (document.getElementById('sonia-hp')?.value || '').trim(),
+      formStarted: state._formStarted,
+      turnstile: state._turnstile || (window.turnstile && window.turnstileToken) || '',
+    }
   });
   if (result.error) {
     botSay(`Hmm, something didn't go through: ${esc(result.error)}. Try again or use the form on the homepage.`);
